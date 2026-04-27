@@ -1,13 +1,15 @@
 import Link from "next/link";
 import { Zap } from "lucide-react";
 
-type Step = "sign-up" | "schedule" | "welcome" | "interview";
+type Step = "sign-up" | "schedule" | "welcome" | "brand-assets" | "record-video" | "record-audio" | "interview" | "complete";
 
 const steps: { key: Step; label: string; href: string }[] = [
-  { key: "sign-up", label: "Sign Up", href: "/sign-up" },
-  { key: "schedule", label: "Schedule Onboarding", href: "/onboarding/schedule" },
   { key: "welcome", label: "Welcome", href: "/onboarding/welcome" },
-  { key: "interview", label: "Interview", href: "/onboarding/interview" },
+  { key: "brand-assets", label: "Brand Assets", href: "/onboarding/brand-assets" },
+  { key: "record-video", label: "Avatar Video", href: "/onboarding/record-video" },
+  { key: "record-audio", label: "Voice Sample", href: "/onboarding/record-audio" },
+  { key: "interview", label: "Brand Interview", href: "/onboarding/interview" },
+  { key: "complete", label: "Complete", href: "/onboarding/complete" },
 ];
 
 export default function OnboardingNav({ current }: { current: Step }) {

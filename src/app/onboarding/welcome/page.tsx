@@ -75,15 +75,15 @@ export default function WelcomePage() {
                   <span className="text-white font-bold text-sm">3</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-primary-900 mb-1">Complete Your Onboarding Interview</p>
+                  <p className="text-sm font-semibold text-primary-900 mb-1">Set Up Your Brand Assets</p>
                   <p className="text-xs text-primary-700 mb-3">
-                    Help us personalise PulseCommand for your business. Takes about 10 minutes.
+                    Add your logo, brand colors, and voice so every piece of content looks and sounds like you.
                   </p>
                   <Link
-                    href="/onboarding/interview"
+                    href="/onboarding/brand-assets"
                     className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-lg hover:bg-primary-700 transition-colors"
                   >
-                    Start Interview <ArrowRight className="w-3.5 h-3.5" />
+                    Set Up Brand <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               </div>

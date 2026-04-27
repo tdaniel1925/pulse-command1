@@ -51,50 +51,110 @@ export async function POST(request: NextRequest) {
 
     switch (type) {
       case 'social': {
-        // Predis.ai API - generate social posts
-        // Note: Predis generates content asynchronously; the webhook at /api/webhooks/predis
-        // will update these rows when content is ready.
-        if (process.env.PREDIS_API_KEY) {
-          const predisResponse = await fetch('https://brain.predis.ai/predis_api/v1/create_content/', {
+        const platforms: string[] = Array.isArray(brandProfile?.priority_channels)
+          ? (brandProfile.priority_channels as string[])
+          : ['Instagram', 'Facebook', 'LinkedIn']
+
+        const predisKey = process.env.PREDIS_API_KEY
+
+        if (!predisKey) {
+          console.log('PREDIS_API_KEY not set — skipping Predis')
+          break
+        }
+
+        // Step 1: Ensure a Predis brand exists for this client
+        // Store predis_brand_id in brand_profiles metadata
+        const existingPredisId = (brandProfile as any)?.metadata?.predis_brand_id as string | undefined
+        let predisBrandId = existingPredisId
+
+        if (!predisBrandId) {
+          // Create brand in Predis
+          const brandRes = await fetch('https://brain.predis.ai/predis_api/v1/add_brand/', {
             method: 'POST',
             headers: {
-              'Authorization': `Bearer ${process.env.PREDIS_API_KEY}`,
+              'Authorization': `Bearer ${predisKey}`,
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-              brand_id: client?.brand_profile_id,
-              text: `Create 5 engaging social media posts for: ${brandProfile?.businessDescription ?? 'this business'}.
-           Tone: ${brandProfile?.toneOfVoice ?? 'professional'}.
-           Target audience: ${brandProfile?.targetAudience ?? 'general audience'}.
-           Content pillars: ${(brandProfile?.contentPillars as string[] ?? []).join(', ')}.`,
-              num_results: 5,
-            })
+              brand_name: client.business_name,
+              primary_color: brandProfile?.primary_color ?? '#2563eb',
+              secondary_color: brandProfile?.secondary_color ?? '#1e40af',
+              logo_url: brandProfile?.logo_url ?? '',
+              brand_description: brandProfile?.business_description ?? '',
+              target_audience: brandProfile?.target_audience ?? '',
+              tone_of_voice: brandProfile?.tone_of_voice ?? 'professional',
+            }),
           })
 
-          if (!predisResponse.ok) {
-            console.error('Predis API error:', await predisResponse.text())
-            // Fall through — insert draft posts below
+          if (brandRes.ok) {
+            const brandData = await brandRes.json()
+            predisBrandId = brandData.brand_id ?? brandData.id
+            // Save predis_brand_id to brand_profiles metadata
+            if (predisBrandId && client.brand_profile_id) {
+              const existingMeta = (brandProfile as any)?.metadata ?? {}
+              await supabase.from('brand_profiles').update({
+                metadata: { ...existingMeta, predis_brand_id: predisBrandId },
+              } as any).eq('id', client.brand_profile_id)
+            }
+          } else {
+            console.error('Predis create brand error:', await brandRes.text())
           }
-        } else {
-          console.log('PREDIS_API_KEY not set — skipping Predis API call, inserting draft posts')
         }
 
-        // TODO: Predis webhook at /api/webhooks/predis will update these rows when async generation completes
-        const draftPosts = Array.from({ length: 5 }, (_, i) => ({
-          client_id: clientId,
-          status: 'draft',
-          content: `Draft social post ${i + 1} for ${client.business_name ?? 'client'} — content pending generation`,
-          platform: ['Instagram', 'Facebook', 'LinkedIn', 'Twitter', 'TikTok'][i],
-        }))
+        if (!predisBrandId) {
+          console.error('Could not get Predis brand ID — skipping post generation')
+          break
+        }
 
-        const { error: postsError } = await supabase.from('social_posts').insert(draftPosts)
-        if (postsError) console.error('Error inserting draft social posts:', postsError)
+        // Step 2: Generate 1 sample post per priority platform
+        const insertedPosts = []
+        for (const platform of platforms) {
+          const postRes = await fetch('https://brain.predis.ai/predis_api/v1/create_post/', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${predisKey}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              brand_id: predisBrandId,
+              text: `Create 1 engaging ${platform} post for ${client.business_name}.
+                     Topic: ${(brandProfile?.content_pillars as string[] ?? ['business value'])[0]}.
+                     Tone: ${brandProfile?.tone_of_voice ?? 'professional'}.
+                     Target audience: ${brandProfile?.target_audience ?? 'general audience'}.
+                     Include relevant hashtags.`,
+              social_platform: platform.toLowerCase(),
+              num_results: 1,
+            }),
+          })
+
+          if (!postRes.ok) {
+            console.error(`Predis post error for ${platform}:`, await postRes.text())
+            continue
+          }
+
+          const postData = await postRes.json()
+          // Predis returns generated posts — extract content and image
+          const generated = postData.posts?.[0] ?? postData.data?.[0] ?? {}
+          const content = generated.caption ?? generated.text ?? `Sample post for ${platform}`
+          const imageUrl = generated.image_url ?? generated.media_url ?? null
+
+          const { data: inserted } = await supabase.from('social_posts').insert({
+            client_id: clientId,
+            status: 'draft',
+            content,
+            image_url: imageUrl,
+            platforms: [platform],
+          }).select('id').single()
+
+          if (inserted) insertedPosts.push(inserted.id)
+        }
 
         await supabase.from('activities').insert({
           client_id: clientId,
-          type: 'content',
-          title: 'Social posts generation triggered',
-          description: '5 draft social posts created, pending Predis generation',
+          type: 'content_published',
+          title: `${insertedPosts.length} sample post(s) generated via Predis`,
+          description: `1 sample post per platform: ${platforms.join(', ')}. Pending client approval.`,
+          created_by: 'system',
         })
         break
       }
