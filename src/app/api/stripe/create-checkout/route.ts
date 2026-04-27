@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+const getStripe = () => new Stripe(process.env.STRIPE_SECRET_KEY!)
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,11 +12,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Create or retrieve Stripe customer
-    const customers = await stripe.customers.list({ email, limit: 1 })
+    const customers = await getStripe().customers.list({ email, limit: 1 })
     let customer = customers.data[0]
 
     if (!customer) {
-      customer = await stripe.customers.create({
+      customer = await getStripe().customers.create({
         email,
         name: `${firstName} ${lastName}`,
         metadata: { businessName },
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create checkout session with 14-day trial
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       customer: customer.id,
       mode: 'subscription',
       payment_method_types: ['card'],
