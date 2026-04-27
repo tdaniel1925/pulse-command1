@@ -1,0 +1,85 @@
+"use client";
+
+import Link from "next/link";
+import { Zap, Menu, X } from "lucide-react";
+import { useState } from "react";
+
+export default function Navbar() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-neutral-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-20">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center text-white">
+              <Zap className="w-6 h-6" />
+            </div>
+            <span className="font-bold text-2xl text-neutral-900 tracking-tight">
+              PulseCommand
+            </span>
+          </Link>
+
+          {/* Desktop Nav */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link
+              href="/#what-you-get"
+              className="text-neutral-600 hover:text-primary-600 font-medium transition-colors"
+            >
+              What&apos;s Included
+            </Link>
+            <Link
+              href="/#pricing"
+              className="text-neutral-600 hover:text-primary-600 font-medium transition-colors"
+            >
+              Pricing
+            </Link>
+            <span className="text-neutral-400 text-sm font-medium">$745/mo</span>
+            <Link
+              href="/sign-up"
+              className="px-5 py-2.5 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
+            >
+              Get Started
+            </Link>
+          </div>
+
+          {/* Mobile toggle */}
+          <button
+            className="md:hidden text-neutral-600 hover:text-neutral-900"
+            onClick={() => setOpen(!open)}
+          >
+            {open ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {open && (
+        <div className="md:hidden bg-white border-t border-neutral-200 px-4 py-4 space-y-3">
+          <Link
+            href="/#what-you-get"
+            className="block text-neutral-700 font-medium py-2"
+            onClick={() => setOpen(false)}
+          >
+            What&apos;s Included
+          </Link>
+          <Link
+            href="/#pricing"
+            className="block text-neutral-700 font-medium py-2"
+            onClick={() => setOpen(false)}
+          >
+            Pricing
+          </Link>
+          <Link
+            href="/sign-up"
+            className="block w-full text-center px-5 py-2.5 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-colors"
+            onClick={() => setOpen(false)}
+          >
+            Get Started — $745/mo
+          </Link>
+        </div>
+      )}
+    </nav>
+  );
+}
