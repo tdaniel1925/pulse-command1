@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, CreditCard, Lock, User, Mail, Building2, Shield, Zap, Share2, Mic, Video, BarChart3, AlertCircle, Phone } from "lucide-react";
+import { Check, User, Mail, Building2, Shield, Zap, Share2, Mic, Video, BarChart3, AlertCircle, Phone } from "lucide-react";
 import OnboardingNav from "@/components/OnboardingNav";
 
 const included = [
@@ -177,41 +177,14 @@ export default function SignUpPage() {
                   </div>
                 </div>
 
-                {/* Payment */}
-                <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-8">
-                  <h3 className="text-lg font-bold text-neutral-900 mb-4 flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-primary-600" /> Payment Details
-                  </h3>
-                  <div className="space-y-5">
-                    <div>
-                      <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Card Number</label>
-                      <div className="relative">
-                        <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                        <input type="text" placeholder="1234 5678 9012 3456" maxLength={19} className={inputWithIconClass} />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-5">
-                      <div>
-                        <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Expiry Date</label>
-                        <input type="text" placeholder="MM / YY" maxLength={7} className={inputClass} />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-neutral-700 mb-1.5">CVV</label>
-                        <div className="relative">
-                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
-                          <input type="text" placeholder="•••" maxLength={4} className={inputWithIconClass} />
-                        </div>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-semibold text-neutral-700 mb-1.5">Name on Card</label>
-                      <input type="text" placeholder="Jane Smith" className={inputClass} />
-                    </div>
+                {/* No payment needed to start */}
+                <div className="bg-green-50 rounded-2xl border border-green-200 p-6 flex items-start gap-4">
+                  <div className="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <Shield className="w-5 h-5 text-green-600" />
                   </div>
-
-                  <div className="flex items-center gap-3 mt-6 p-3 bg-green-50 border border-green-100 rounded-lg">
-                    <Shield className="w-4 h-4 text-green-600 flex-shrink-0" />
-                    <p className="text-xs text-green-700">Your payment is protected by 256-bit SSL encryption. Cancel anytime.</p>
+                  <div>
+                    <p className="font-semibold text-green-900">No payment required to start</p>
+                    <p className="text-sm text-green-700 mt-1">Your 14-day free trial begins the moment you create your account. We&apos;ll collect payment details after your trial — no credit card needed now.</p>
                   </div>
                 </div>
 

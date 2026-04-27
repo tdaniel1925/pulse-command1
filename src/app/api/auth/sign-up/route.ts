@@ -47,19 +47,7 @@ export async function POST(request: NextRequest) {
 
     const userId = authData.user.id
 
-    // Create brand profile
-    const { data: brandProfile, error: brandProfileError } = await supabase
-      .from('brand_profiles')
-      .insert({ business_name: businessName ?? null })
-      .select('id')
-      .single()
-
-    if (brandProfileError) {
-      console.error('Error creating brand profile:', brandProfileError)
-      return NextResponse.json({ error: 'Failed to create brand profile' }, { status: 500 })
-    }
-
-    // Insert client record linked to auth user
+    // Insert client record first
     const { data: client, error: clientError } = await supabase
       .from('clients')
       .insert({
@@ -67,18 +55,32 @@ export async function POST(request: NextRequest) {
         first_name: firstName,
         last_name: lastName,
         email,
-        business_name: businessName ?? null,
+        business_name: businessName ?? '',
         phone: phone ?? null,
-        brand_profile_id: brandProfile.id,
-        subscription_status: 'pending',
-        onboarding_step: 'not_started',
+        status: 'onboarding',
+        subscription_status: 'trialing',
+        onboarding_step: 'signup',
       })
       .select('id')
       .single()
 
-    if (clientError) {
+    if (clientError || !client) {
       console.error('Error creating client record:', clientError)
       return NextResponse.json({ error: 'Failed to create client profile' }, { status: 500 })
+    }
+
+    // Create brand profile linked to client
+    const { data: brandProfile } = await supabase
+      .from('brand_profiles')
+      .insert({ client_id: client.id })
+      .select('id')
+      .single()
+
+    // Link brand profile back to client
+    if (brandProfile) {
+      await supabase.from('clients')
+        .update({ brand_profile_id: brandProfile.id })
+        .eq('id', client.id)
     }
 
     // TODO: create Stripe customer
