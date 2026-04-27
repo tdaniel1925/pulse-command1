@@ -108,12 +108,30 @@ export async function POST(request: NextRequest) {
     // Log activity
     await supabase.from('activities').insert({
       client_id: clientId,
-      type: 'profile',
+      type: 'onboarding_step',
       title: 'Brand profile built from VAPI transcript',
-      description: 'AI analysis completed and brand profile populated',
+      description: 'AI analysis completed. Auto-triggering content generation.',
+      created_by: 'system',
     })
 
-    return NextResponse.json({ success: true, profile: analysis })
+    // Auto-trigger all content generation — fire and forget (don't await)
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:4050'
+    const generateContent = (type: string) =>
+      fetch(`${baseUrl}/api/pipeline/generate-content`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, type }),
+      }).catch(err => console.error(`Auto-generate ${type} failed:`, err))
+
+    // Kick off all 4 content types in parallel
+    Promise.all([
+      generateContent('social'),
+      generateContent('audio'),
+      generateContent('video'),
+      generateContent('landing-page'),
+    ]).then(() => console.log('Auto content generation complete for client:', clientId))
+
+    return NextResponse.json({ success: true, profile: analysis, autoGenerating: true })
   } catch (error) {
     console.error('Analyze transcript error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
