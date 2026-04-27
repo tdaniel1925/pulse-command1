@@ -6,7 +6,6 @@ const deliverables = [
   "AI-generated social media posts (daily across all platforms)",
   "Personalised AI video content via your HeyGen avatar",
   "Audio podcast episodes in your cloned voice via ElevenLabs",
-  "Optimised landing pages deployed on Vercel",
   "Monthly performance & analytics report",
 ];
 

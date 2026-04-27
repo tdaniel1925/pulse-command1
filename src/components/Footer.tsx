@@ -15,7 +15,7 @@ export default function Footer() {
               <span className="font-bold text-xl">PulseCommand</span>
             </div>
             <p className="text-neutral-400 text-sm leading-relaxed">
-              A complete done-for-you AI marketing service. Landing pages, social content, podcast, videos, and monthly reporting — all for $745/mo.
+              A complete done-for-you AI marketing service. Social content, podcast, videos, and monthly reporting — all for $745/mo.
             </p>
           </div>
 
@@ -23,7 +23,6 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-white mb-6">What&apos;s Included</h4>
             <ul className="space-y-3 text-sm text-neutral-400">
-              <li><Link href="/#what-you-get" className="hover:text-primary-400 transition-colors">Landing Pages</Link></li>
               <li><Link href="/#what-you-get" className="hover:text-primary-400 transition-colors">Social Content</Link></li>
               <li><Link href="/#what-you-get" className="hover:text-primary-400 transition-colors">AI Voice Podcast</Link></li>
               <li><Link href="/#what-you-get" className="hover:text-primary-400 transition-colors">HeyGen Videos</Link></li>

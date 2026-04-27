@@ -95,12 +95,6 @@ const initialNodes = [
     position: { x: 680, y: 220 },
     data: { label: "Audio Episodes", sublabel: "via ElevenLabs", status: "running", color: "#7c3aed" },
   },
-  {
-    id: "7",
-    type: "pipeline",
-    position: { x: 680, y: 320 },
-    data: { label: "Landing Pages", sublabel: "via Vercel", status: "running", color: "#0891b2" },
-  },
   // Merge
   {
     id: "8",
@@ -116,11 +110,9 @@ const initialEdges = [
   { id: "e3-4", source: "3", target: "4", animated: true, style: { stroke: "#cbd5e1" } },
   { id: "e3-5", source: "3", target: "5", animated: true, style: { stroke: "#cbd5e1" } },
   { id: "e3-6", source: "3", target: "6", animated: true, style: { stroke: "#cbd5e1" } },
-  { id: "e3-7", source: "3", target: "7", animated: true, style: { stroke: "#cbd5e1" } },
   { id: "e4-8", source: "4", target: "8", animated: true, style: { stroke: "#cbd5e1" } },
   { id: "e5-8", source: "5", target: "8", animated: true, style: { stroke: "#cbd5e1" } },
   { id: "e6-8", source: "6", target: "8", animated: true, style: { stroke: "#cbd5e1" } },
-  { id: "e7-8", source: "7", target: "8", animated: true, style: { stroke: "#cbd5e1" } },
 ];
 
 function WorkflowCanvas() {

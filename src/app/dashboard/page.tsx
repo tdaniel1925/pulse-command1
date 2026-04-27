@@ -94,17 +94,12 @@ export default async function DashboardPage() {
     .from("audio_episodes").select("*", { count: "exact", head: true })
     .eq("client_id", client?.id ?? "").eq("status", "ready");
 
-  const { count: activePages } = await supabase
-    .from("landing_pages").select("*", { count: "exact", head: true })
-    .eq("client_id", client?.id ?? "").eq("status", "live");
-
   const totalPosts = (publishedPosts ?? 0) + (scheduledPosts ?? 0);
 
   const stats = [
     { label: "Posts This Month", value: String(totalPosts), sub: "published + scheduled", icon: Share2, color: "text-blue-600 bg-blue-50" },
     { label: "Videos Ready", value: String(videosReady ?? 0), sub: "ready to view", icon: Video, color: "text-violet-600 bg-violet-50" },
     { label: "Audio Episodes", value: String(audioReady ?? 0), sub: "ready to listen", icon: Mic, color: "text-orange-600 bg-orange-50" },
-    { label: "Active Landing Pages", value: String(activePages ?? 0), sub: "currently live", icon: Globe, color: "text-green-600 bg-green-50" },
   ];
 
   const firstName = client?.first_name ?? "there";
@@ -129,7 +124,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {stats.map((s) => (
           <div key={s.label} className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${s.color}`}>

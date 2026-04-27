@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   Zap,
   Check,
-  Globe,
   Share2,
   Mic,
   Video,
@@ -15,18 +14,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const deliverables = [
-  {
-    icon: <Globe className="w-7 h-7 text-primary-600" />,
-    iconBg: "bg-primary-50",
-    number: "5",
-    unit: "Landing Pages",
-    label: "on signup, +1 every month",
-    headline: "Your Website Grows With You",
-    desc: "We build 5 conversion-ready landing pages the moment you sign up — then add one more every single month. Your digital footprint compounds automatically, no brief required.",
-    accent: "border-primary-200",
-    tag: "Included at signup",
-    tagColor: "bg-primary-50 text-primary-700",
-  },
   {
     icon: <Share2 className="w-7 h-7 text-indigo-600" />,
     iconBg: "bg-indigo-50",
@@ -99,7 +86,6 @@ const testimonials = [
 ];
 
 const included = [
-  "5 landing pages on signup, +1 every month",
   "150 social posts/month across 5 priority channels",
   "Bi-weekly AI voice podcast (26 episodes/year)",
   "4 HeyGen AI presenter videos per month",
@@ -139,12 +125,12 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="text-xl text-neutral-600 mb-6 max-w-2xl mx-auto leading-relaxed">
-              Landing pages. Social content. Podcast. Videos. Monthly reporting. PulseCommand delivers a complete done-for-you marketing operation — powered by AI, built for your business.
+              Social content. Podcast. Videos. Monthly reporting. PulseCommand delivers a complete done-for-you marketing operation — powered by AI, built for your business.
             </p>
 
             {/* Quick deliverables strip */}
             <div className="flex flex-wrap justify-center gap-3 mb-10">
-              {["5 Landing Pages", "150 Posts/mo", "26 Podcast Episodes/yr", "4 Videos/mo", "Monthly Report"].map((item) => (
+              {["150 Posts/mo", "26 Podcast Episodes/yr", "4 Videos/mo", "Monthly Report"].map((item) => (
                 <span key={item} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-neutral-200 rounded-full text-sm text-neutral-700 font-medium shadow-sm">
                   <Check className="w-3.5 h-3.5 text-green-500" /> {item}
                 </span>
@@ -190,7 +176,7 @@ export default function HomePage() {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-neutral-900 mb-4">Everything Included at $745/mo</h2>
             <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-              Five high-impact deliverables, delivered every month without you lifting a finger.
+              Four high-impact deliverables, delivered every month without you lifting a finger.
             </p>
           </div>
 
@@ -339,7 +325,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-4">Ready to Command Your Growth?</h2>
           <p className="text-primary-100 text-lg mb-3">
-            5 landing pages. 150 posts. 26 podcast episodes. 4 videos. Monthly reporting.
+            150 posts. 26 podcast episodes. 4 videos. Monthly reporting.
           </p>
           <p className="text-primary-200 text-sm mb-8">All for $745/month. Setup within 24 hours.</p>
           <Link

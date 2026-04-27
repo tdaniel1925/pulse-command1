@@ -2,11 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Check, CreditCard, Lock, User, Mail, Building2, Shield, Zap, Globe, Share2, Mic, Video, BarChart3, AlertCircle, Phone } from "lucide-react";
+import { Check, CreditCard, Lock, User, Mail, Building2, Shield, Zap, Share2, Mic, Video, BarChart3, AlertCircle, Phone } from "lucide-react";
 import OnboardingNav from "@/components/OnboardingNav";
 
 const included = [
-  { icon: <Globe className="w-4 h-4 text-primary-600" />, text: "5 landing pages on signup, +1 every month" },
   { icon: <Share2 className="w-4 h-4 text-indigo-600" />, text: "150 social posts/month across 5 channels" },
   { icon: <Mic className="w-4 h-4 text-purple-600" />, text: "Bi-weekly AI voice podcast (26 eps/year)" },
   { icon: <Video className="w-4 h-4 text-rose-600" />, text: "4 HeyGen AI presenter videos per month" },

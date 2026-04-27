@@ -144,7 +144,7 @@ export default function WelcomePage() {
                   </div>
                 </div>
                 <div className="space-y-2 pt-3 border-t border-neutral-100">
-                  {["Unlimited Landing Pages", "150 Social Posts/mo", "AI Voice Podcast", "CRM Integration"].map(f => (
+                  {["150 Social Posts/mo", "AI Voice Podcast", "CRM Integration"].map(f => (
                     <div key={f} className="flex items-center gap-2 text-xs text-neutral-600">
                       <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> {f}
                     </div>

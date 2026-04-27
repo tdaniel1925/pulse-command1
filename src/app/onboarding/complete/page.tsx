@@ -5,7 +5,6 @@ import { Check, Clock, ArrowRight } from "lucide-react";
 const timeline = [
   { label: "Within 24 hours", detail: "Your brand profile will be reviewed" },
   { label: "Within 48 hours", detail: "Your first content batch will be generated" },
-  { label: "Within 72 hours", detail: "Your landing pages will go live" },
   { label: "Week 1", detail: "Your first AI video will be ready for review" },
   { label: "Month end", detail: "Your first performance report" },
 ];
