@@ -69,21 +69,18 @@ export async function POST(request: NextRequest) {
 
         if (!predisBrandId) {
           // Create brand in Predis
+          const brandForm = new FormData()
+          brandForm.append('brand_name', client.business_name)
+          if (brandProfile?.logo_url) brandForm.append('logo_url', brandProfile.logo_url)
+          if (brandProfile?.primary_color) brandForm.append('primary_color', brandProfile.primary_color)
+          if (brandProfile?.secondary_color) brandForm.append('secondary_color', brandProfile.secondary_color)
+          if (brandProfile?.business_description) brandForm.append('brand_description', brandProfile.business_description)
+          if (brandProfile?.target_audience) brandForm.append('target_audience', brandProfile.target_audience)
+
           const brandRes = await fetch('https://brain.predis.ai/predis_api/v1/add_brand/', {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${predisKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              brand_name: client.business_name,
-              primary_color: brandProfile?.primary_color ?? '#2563eb',
-              secondary_color: brandProfile?.secondary_color ?? '#1e40af',
-              logo_url: brandProfile?.logo_url ?? '',
-              brand_description: brandProfile?.business_description ?? '',
-              target_audience: brandProfile?.target_audience ?? '',
-              tone_of_voice: brandProfile?.tone_of_voice ?? 'professional',
-            }),
+            headers: { 'Authorization': predisKey },
+            body: brandForm,
           })
 
           if (brandRes.ok) {
@@ -109,22 +106,18 @@ export async function POST(request: NextRequest) {
         // Step 2: Generate 1 sample post per priority platform
         const insertedPosts = []
         for (const platform of platforms) {
-          const postRes = await fetch('https://brain.predis.ai/predis_api/v1/create_post/', {
+          const postRes = await fetch('https://brain.predis.ai/predis_api/v1/create_content/', {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${predisKey}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              brand_id: predisBrandId,
-              text: `Create 1 engaging ${platform} post for ${client.business_name}.
-                     Topic: ${(brandProfile?.content_pillars as string[] ?? ['business value'])[0]}.
-                     Tone: ${brandProfile?.tone_of_voice ?? 'professional'}.
-                     Target audience: ${brandProfile?.target_audience ?? 'general audience'}.
-                     Include relevant hashtags.`,
-              social_platform: platform.toLowerCase(),
-              num_results: 1,
-            }),
+            headers: { 'Authorization': predisKey },
+            // Predis requires form-data
+          body: (() => {
+              const f = new FormData()
+              f.append('brand_id', predisBrandId!)
+              f.append('text', `Create 1 engaging ${platform} post for ${client.business_name}. Topic: ${(brandProfile?.content_pillars as string[] ?? ['business value'])[0]}. Tone: ${brandProfile?.tone_of_voice ?? 'professional'}. Target audience: ${brandProfile?.target_audience ?? 'general audience'}. Include relevant hashtags.`)
+              f.append('media_type', 'single_image')
+              f.append('model_version', '4')
+              return f
+            })(),
           })
 
           if (!postRes.ok) {
