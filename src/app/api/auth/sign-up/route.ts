@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { sendWelcomeEmail } from '@/lib/email'
 
 interface SignUpBody {
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Use anon client for auth only
     const supabase = await createClient()
 
     // Create Supabase auth user
@@ -47,8 +49,11 @@ export async function POST(request: NextRequest) {
 
     const userId = authData.user.id
 
+    // Use admin client for all DB writes — bypasses RLS since session isn't established yet
+    const admin = createAdminClient()
+
     // Insert client record first
-    const { data: client, error: clientError } = await supabase
+    const { data: client, error: clientError } = await admin
       .from('clients')
       .insert({
         user_id: userId,
@@ -70,7 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create brand profile linked to client
-    const { data: brandProfile } = await supabase
+    const { data: brandProfile } = await admin
       .from('brand_profiles')
       .insert({ client_id: client.id })
       .select('id')
@@ -78,21 +83,19 @@ export async function POST(request: NextRequest) {
 
     // Link brand profile back to client
     if (brandProfile) {
-      await supabase.from('clients')
+      await admin.from('clients')
         .update({ brand_profile_id: brandProfile.id })
         .eq('id', client.id)
     }
 
     // TODO: create Stripe customer
-    // const stripeCustomer = await stripe.customers.create({ email, name: `${firstName} ${lastName}` })
-    // await supabase.from('clients').update({ stripe_customer_id: stripeCustomer.id }).eq('id', client.id)
     console.log('TODO: Create Stripe customer for user:', userId)
 
     // Fetch generated onboarding_pin and send welcome email
-    const { data: newClient } = await supabase
+    const { data: newClient } = await admin
       .from('clients')
       .select('id, onboarding_pin')
-      .eq('user_id', authData.user!.id)
+      .eq('user_id', userId)
       .single()
 
     if (newClient) {
