@@ -103,7 +103,7 @@ export default function AboutPage() {
               <div className="relative overflow-hidden h-80">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80"
+                  src="/trent.png"
                   alt="Trent Daniel"
                   className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                 />
@@ -133,7 +133,7 @@ export default function AboutPage() {
               <div className="relative overflow-hidden h-80">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80"
+                  src="/stella.png"
                   alt="Stella Daniel"
                   className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                 />
@@ -223,11 +223,11 @@ export default function AboutPage() {
               <div className="flex items-center gap-4">
                 <div className="flex -space-x-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=80&q=80"
-                    alt="Trent" className="w-12 h-12 rounded-full border-2 border-neutral-700 object-cover" />
+                  <img src="/trent.png"
+                    alt="Trent" className="w-12 h-12 rounded-full border-2 border-neutral-700 object-cover object-top" />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=80&q=80"
-                    alt="Stella" className="w-12 h-12 rounded-full border-2 border-neutral-700 object-cover" />
+                  <img src="/stella.png"
+                    alt="Stella" className="w-12 h-12 rounded-full border-2 border-neutral-700 object-cover object-top" />
                 </div>
                 <div>
                   <p className="text-white font-bold">Trent & Stella Daniel</p>
