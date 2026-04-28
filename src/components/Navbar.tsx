@@ -47,6 +47,12 @@ export default function Navbar() {
                 {l.label}
               </button>
             ))}
+            <Link
+              href="/samples"
+              className="text-neutral-600 hover:text-primary-600 font-medium transition-colors"
+            >
+              See Samples
+            </Link>
             <span className="text-neutral-400 text-sm font-medium">Plans from $99/mo</span>
             <Link
               href="/login"
@@ -90,6 +96,13 @@ export default function Navbar() {
               {l.label}
             </button>
           ))}
+          <Link
+            href="/samples"
+            className="block text-neutral-700 font-medium py-2"
+            onClick={() => setOpen(false)}
+          >
+            See Samples
+          </Link>
           <Link
             href="/login"
             className="block text-neutral-700 font-medium py-2"
