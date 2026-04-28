@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   Share2,
   Video,
@@ -10,6 +11,7 @@ import {
   CheckCircle,
   FileText,
   PlayCircle,
+  Phone,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 
@@ -34,10 +36,11 @@ const PlatformBadge = ({ platform }: { platform: string }) => {
 };
 
 const quickActions = [
-  { label: "View Social Calendar", icon: Calendar, color: "bg-blue-50 text-blue-700" },
-  { label: "Download Report", icon: Download, color: "bg-neutral-100 text-neutral-700" },
-  { label: "Update Profile", icon: User, color: "bg-neutral-100 text-neutral-700" },
-  { label: "View Workflow", icon: GitBranch, color: "bg-violet-50 text-violet-700" },
+  { label: "View Social Calendar", icon: Calendar, color: "bg-blue-50 text-blue-700", href: "/dashboard/social" },
+  { label: "Download Report", icon: Download, color: "bg-neutral-100 text-neutral-700", href: "/dashboard/report" },
+  { label: "Update Profile", icon: User, color: "bg-neutral-100 text-neutral-700", href: "/dashboard/settings" },
+  { label: "View Workflow", icon: GitBranch, color: "bg-violet-50 text-violet-700", href: "/dashboard/workflow" },
+  { label: "Redo Interview", icon: Phone, color: "bg-primary-50 text-primary-700", href: "/onboarding/interview" },
 ];
 
 function timeAgo(dateStr: string): string {
@@ -112,6 +115,30 @@ export default async function DashboardPage() {
         <p className="text-primary-200 text-sm mt-0.5">Your content machine is running.</p>
       </div>
 
+      {/* Interview CTA — shown until interview is done */}
+      {client?.onboarding_step !== 'active' && client?.onboarding_step !== 'avatar_done' && (
+        <div className="bg-primary-50 border border-primary-200 rounded-2xl px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Phone className="w-5 h-5 text-primary-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-primary-900 text-sm">Complete your Brand Interview to activate content generation</p>
+              <p className="text-primary-700 text-xs mt-0.5">
+                Call <span className="font-bold">{process.env.NEXT_PUBLIC_VAPI_PHONE_NUMBER ?? '+1 (936) 237-3368'}</span> and enter your PIN:{' '}
+                <span className="font-bold font-mono tracking-widest">{client?.onboarding_pin ?? '······'}</span>
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/onboarding/interview"
+            className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+          >
+            View Instructions →
+          </Link>
+        </div>
+      )}
+
       {/* Trial status card */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-6 py-4 flex items-center justify-between">
         <div>
@@ -183,17 +210,18 @@ export default async function DashboardPage() {
 
           {/* Quick Actions */}
           <h2 className="font-semibold text-neutral-900 pt-2">Quick Actions</h2>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-5 gap-3">
             {quickActions.map((a) => (
-              <button
+              <Link
                 key={a.label}
-                className={`flex flex-col items-center gap-2 p-4 rounded-2xl border border-neutral-200 bg-white hover:shadow-sm transition-shadow text-center`}
+                href={a.href}
+                className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-neutral-200 bg-white hover:shadow-sm transition-shadow text-center"
               >
                 <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${a.color}`}>
                   <a.icon className="w-4 h-4" />
                 </span>
                 <span className="text-xs font-medium text-neutral-700 leading-tight">{a.label}</span>
-              </button>
+              </Link>
             ))}
           </div>
         </div>
