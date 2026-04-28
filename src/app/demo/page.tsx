@@ -34,7 +34,6 @@ export default function DemoPage() {
     setError("");
     setSubmitting(true);
     try {
-      // Check for duplicate email
       const res = await fetch("/api/demo/check", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -47,7 +46,7 @@ export default function DemoPage() {
       }
       setStep(2);
     } catch {
-      setStep(2); // fail open — don't block legitimate users
+      setStep(2);
     } finally {
       setSubmitting(false);
     }
@@ -73,44 +72,56 @@ export default function DemoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-neutral-950 via-primary-950 to-indigo-950 relative overflow-hidden">
-      {/* Background grid */}
-      <div className="absolute inset-0 opacity-10"
-        style={{ backgroundImage: "radial-gradient(#818cf8 1px, transparent 1px)", backgroundSize: "32px 32px" }} />
+    <div className="min-h-screen bg-neutral-50 relative overflow-hidden">
+      {/* Subtle dot grid background */}
+      <div
+        className="absolute inset-0 opacity-40"
+        style={{
+          backgroundImage: "radial-gradient(#d1d5db 1px, transparent 1px)",
+          backgroundSize: "24px 24px",
+          maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, #000 60%, transparent 100%)",
+          WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, #000 60%, transparent 100%)",
+        }}
+      />
+
+      {/* Teal glow top-left */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-primary-200 rounded-full blur-3xl opacity-30 pointer-events-none" />
+      {/* Orange glow bottom-right */}
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-accent-200 rounded-full blur-3xl opacity-30 pointer-events-none" />
 
       {/* Nav */}
-      <nav className="relative z-10 px-4 py-5">
+      <nav className="relative z-10 bg-white border-b border-neutral-200 px-4 py-4 shadow-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo-white.png" alt="BundledContent" width={140} height={47} className="h-9 w-auto" />
+            <Image src="/logo.png" alt="BundledContent" width={160} height={54} className="h-10 w-auto" />
           </Link>
-          <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors">
+          <Link href="/login" className="text-sm text-neutral-500 hover:text-primary-600 font-medium transition-colors">
             Already a member? Sign in →
           </Link>
         </div>
       </nav>
 
-      <main className="relative z-10 max-w-6xl mx-auto px-4 py-10 lg:py-16">
+      <main className="relative z-10 max-w-6xl mx-auto px-4 py-12 lg:py-20">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
 
           {/* Left — copy */}
-          <div className="text-white space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/20 text-white/90 text-sm font-medium">
+          <div className="space-y-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 border border-primary-200 text-primary-700 text-sm font-medium">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-400" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500" />
               </span>
               Free · No credit card · Takes 3 minutes
             </div>
 
-            <h1 className="text-4xl lg:text-5xl font-bold leading-tight">
+            <h1 className="text-4xl lg:text-5xl font-bold leading-tight text-neutral-900">
               See Your Business as an{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-400 to-indigo-400">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-accent-400">
                 AI Marketing Machine
               </span>
             </h1>
 
-            <p className="text-white/70 text-lg leading-relaxed">
+            <p className="text-neutral-600 text-lg leading-relaxed">
               Enter your website and answer 3 quick questions. We&apos;ll scan your brand,
               generate real sample content, and notify you the moment it&apos;s ready.
             </p>
@@ -118,18 +129,20 @@ export default function DemoPage() {
             {/* What you get */}
             <div className="space-y-3">
               {[
-                { icon: Share2, label: "5 Social Posts", sub: "Instagram, Facebook, LinkedIn, X — written for your brand", color: "text-pink-400" },
-                { icon: Mic, label: "2-Minute Podcast Sample", sub: "AI voice narration of your brand story", color: "text-purple-400" },
-                { icon: Video, label: "AI Presenter Video", sub: "HeyGen avatar delivering your brand message", color: "text-rose-400" },
+                { icon: Share2,  label: "5 Social Posts",         sub: "Instagram, Facebook, LinkedIn, X — written for your brand", iconColor: "text-primary-600", iconBg: "bg-primary-50",  border: "border-primary-100" },
+                { icon: Mic,     label: "2-Minute Podcast Sample", sub: "AI voice narration of your brand story",                    iconColor: "text-purple-600",  iconBg: "bg-purple-50",   border: "border-purple-100"  },
+                { icon: Video,   label: "AI Presenter Video",      sub: "HeyGen avatar delivering your brand message",               iconColor: "text-accent-500",  iconBg: "bg-accent-50",   border: "border-accent-100"  },
               ].map(item => (
-                <div key={item.label} className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                  <item.icon className={`w-5 h-5 flex-shrink-0 ${item.color}`} />
+                <div key={item.label} className={`flex items-center gap-4 bg-white border ${item.border} rounded-xl px-4 py-3 shadow-sm`}>
+                  <div className={`w-9 h-9 ${item.iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                    <item.icon className={`w-5 h-5 ${item.iconColor}`} />
+                  </div>
                   <div>
-                    <p className="font-semibold text-white text-sm">{item.label}</p>
-                    <p className="text-white/50 text-xs">{item.sub}</p>
+                    <p className="font-semibold text-neutral-900 text-sm">{item.label}</p>
+                    <p className="text-neutral-400 text-xs">{item.sub}</p>
                   </div>
                   <div className="ml-auto">
-                    <span className="text-xs font-bold text-green-400 bg-green-400/10 border border-green-400/20 px-2 py-0.5 rounded-full">FREE</span>
+                    <span className="text-xs font-bold text-green-600 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">FREE</span>
                   </div>
                 </div>
               ))}
@@ -139,16 +152,16 @@ export default function DemoPage() {
             <div className="flex items-center gap-4 pt-2">
               <div className="flex -space-x-2">
                 {["JK", "SM", "TR", "AP", "DL"].map(i => (
-                  <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-indigo-500 border-2 border-neutral-900 flex items-center justify-center text-white text-xs font-bold">{i}</div>
+                  <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold shadow-sm">{i}</div>
                 ))}
               </div>
-              <p className="text-white/60 text-sm"><span className="text-white font-semibold">247 businesses</span> generated their demo this week</p>
+              <p className="text-neutral-500 text-sm"><span className="text-neutral-900 font-semibold">247 businesses</span> generated their demo this week</p>
             </div>
 
             {/* Discount teaser */}
-            <div className="bg-gradient-to-r from-primary-500/20 to-indigo-500/20 border border-primary-400/30 rounded-xl px-5 py-4">
-              <p className="text-primary-300 font-bold text-sm">⚡ Limited-time offer</p>
-              <p className="text-white/80 text-sm mt-1">Sign up within 1 hour of seeing your demo and get <span className="text-white font-bold">50% off your first month</span>. Discount shrinks every hour.</p>
+            <div className="bg-gradient-to-r from-accent-50 to-primary-50 border border-accent-200 rounded-xl px-5 py-4">
+              <p className="text-accent-600 font-bold text-sm">⚡ Limited-time offer</p>
+              <p className="text-neutral-600 text-sm mt-1">Sign up within 1 hour of seeing your demo and get <span className="text-neutral-900 font-bold">50% off your first month</span>. Discount shrinks every hour.</p>
             </div>
           </div>
 
@@ -160,20 +173,20 @@ export default function DemoPage() {
                 <div key={s} className="flex items-center gap-2">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold border-2 transition-all ${
                     step === s ? "bg-primary-600 border-primary-500 text-white" :
-                    s < step ? "bg-green-500 border-green-400 text-white" :
-                    "bg-white/10 border-white/20 text-white/40"
+                    s < step  ? "bg-green-500 border-green-400 text-white" :
+                    "bg-neutral-100 border-neutral-200 text-neutral-400"
                   }`}>
                     {s < step ? <Check className="w-4 h-4" /> : s}
                   </div>
-                  <span className={`text-sm font-medium ${step === s ? "text-white" : "text-white/40"}`}>
+                  <span className={`text-sm font-medium ${step === s ? "text-neutral-900" : "text-neutral-400"}`}>
                     {s === 1 ? "Your Info" : "Your Brand"}
                   </span>
-                  {s < 2 && <div className={`w-8 h-px ${step > s ? "bg-green-400" : "bg-white/20"}`} />}
+                  {s < 2 && <div className={`w-8 h-px ${step > s ? "bg-green-400" : "bg-neutral-200"}`} />}
                 </div>
               ))}
             </div>
 
-            <div className="bg-white rounded-2xl shadow-2xl p-8">
+            <div className="bg-white rounded-2xl shadow-xl border border-neutral-200 p-8">
               {step === 1 ? (
                 <form onSubmit={handleStep1} className="space-y-5">
                   <div>
@@ -186,13 +199,13 @@ export default function DemoPage() {
                       <label className="block text-sm font-medium text-neutral-700 mb-1">First Name <span className="text-red-500">*</span></label>
                       <input type="text" required value={name} onChange={e => setName(e.target.value)}
                         placeholder="Jane"
-                        className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600" />
+                        className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400" />
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-neutral-700 mb-1">Email <span className="text-red-500">*</span></label>
                       <input type="email" required value={email} onChange={e => setEmail(e.target.value)}
                         placeholder="jane@example.com"
-                        className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600" />
+                        className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400" />
                     </div>
                   </div>
 
@@ -200,7 +213,7 @@ export default function DemoPage() {
                     <label className="block text-sm font-medium text-neutral-700 mb-1">Phone <span className="text-neutral-400 font-normal">(for SMS when ready)</span></label>
                     <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
                       placeholder="+1 (555) 000-0000"
-                      className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600" />
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400" />
                   </div>
 
                   <div>
@@ -209,13 +222,13 @@ export default function DemoPage() {
                       <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
                       <input type="text" required value={website} onChange={e => setWebsite(e.target.value)}
                         placeholder="yourwebsite.com"
-                        className="w-full pl-10 border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600" />
+                        className="w-full pl-10 border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400" />
                     </div>
                     <p className="text-xs text-neutral-400 mt-1">We&apos;ll scan it to extract your brand, services, and tone automatically.</p>
                   </div>
 
                   <button type="submit" disabled={submitting}
-                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-base">
+                    className="w-full flex items-center justify-center gap-2 py-3.5 bg-accent-400 hover:bg-accent-500 text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-base shadow-md">
                     {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Checking…</> : <>Next — Tell Us About Your Business <ArrowRight className="w-5 h-5" /></>}
                   </button>
 
@@ -231,7 +244,7 @@ export default function DemoPage() {
                 <form onSubmit={handleStep2} className="space-y-5">
                   <div>
                     <h2 className="text-xl font-bold text-neutral-900">3 quick questions</h2>
-                    <p className="text-neutral-500 text-sm mt-1">These 3 answers make your sample content 10x more specific to your business.</p>
+                    <p className="text-neutral-500 text-sm mt-1">These answers make your sample content 10x more specific to your business.</p>
                   </div>
 
                   <div>
@@ -240,16 +253,16 @@ export default function DemoPage() {
                     </label>
                     <input type="text" required value={topService} onChange={e => setTopService(e.target.value)}
                       placeholder="e.g. Commercial roofing installations"
-                      className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600" />
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400" />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-neutral-700 mb-1">
-                      <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-blue-500" /> Who is your ideal customer? <span className="text-red-500">*</span></span>
+                      <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-primary-500" /> Who is your ideal customer? <span className="text-red-500">*</span></span>
                     </label>
                     <input type="text" required value={idealCustomer} onChange={e => setIdealCustomer(e.target.value)}
                       placeholder="e.g. Property managers of 10+ unit buildings"
-                      className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600" />
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400" />
                   </div>
 
                   <div>
@@ -258,7 +271,7 @@ export default function DemoPage() {
                     </label>
                     <input type="text" required value={differentiator} onChange={e => setDifferentiator(e.target.value)}
                       placeholder="e.g. 48-hour emergency response, 10-year warranty"
-                      className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-600" />
+                      className="w-full border border-neutral-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-primary-400" />
                   </div>
 
                   {error && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">{error}</p>}
@@ -269,7 +282,7 @@ export default function DemoPage() {
                       Back
                     </button>
                     <button type="submit" disabled={submitting}
-                      className="flex-1 flex items-center justify-center gap-2 py-3 bg-primary-600 hover:bg-primary-700 text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-sm">
+                      className="flex-1 flex items-center justify-center gap-2 py-3 bg-accent-400 hover:bg-accent-500 text-white font-bold rounded-xl transition-colors disabled:opacity-50 text-sm shadow-md">
                       {submitting ? <><Loader2 className="w-4 h-4 animate-spin" /> Generating your content…</> : <><Sparkles className="w-4 h-4" /> Generate My Free Sample Content</>}
                     </button>
                   </div>
