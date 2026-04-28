@@ -37,6 +37,12 @@ export default function Navbar() {
             </Link>
             <span className="text-neutral-400 text-sm font-medium">$745/mo</span>
             <Link
+              href="/login"
+              className="text-neutral-600 hover:text-primary-600 font-medium transition-colors"
+            >
+              Sign In
+            </Link>
+            <Link
               href="/sign-up"
               className="px-5 py-2.5 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
             >
@@ -70,6 +76,13 @@ export default function Navbar() {
             onClick={() => setOpen(false)}
           >
             Pricing
+          </Link>
+          <Link
+            href="/login"
+            className="block text-neutral-700 font-medium py-2"
+            onClick={() => setOpen(false)}
+          >
+            Sign In
           </Link>
           <Link
             href="/sign-up"

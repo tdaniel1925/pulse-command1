@@ -48,7 +48,7 @@ export default function OnboardingNav({ current }: { current: Step }) {
           <div className="flex items-center gap-3">
             <span className="text-sm text-neutral-500">Already have an account?</span>
             <Link
-              href="#"
+              href="/login"
               className="px-4 py-2 text-primary-600 font-medium border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors text-sm"
             >
               Sign In
