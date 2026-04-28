@@ -176,20 +176,17 @@ export default function HomePage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500" />
               </span>
-              Agency-Quality Content. DIY Pricing. Zero Overhead.
+              One subscription. Every channel. Less than you&apos;re paying now.
             </div>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-neutral-900 tracking-tight mb-8">
-              Agency Service.{" "}
+              Replace Your Entire Social Media Team{" "}
               <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-accent-400">
-                DIY Prices.
+                For Less Than a DIY Tool.
               </span>
             </h1>
-            <p className="text-xl text-neutral-600 mb-3 max-w-3xl mx-auto leading-relaxed">
-              BundledContent gives you a complete done-for-you content operation — social posts, short videos, podcast, newsletter, and more — built by broadcast and brand veterans, powered by AI, and priced for the businesses that need it most.
-            </p>
-            <p className="text-base text-primary-600 font-semibold mb-6 max-w-xl mx-auto">
-              Now you can. Starting at $99/mo.
+            <p className="text-xl text-neutral-600 mb-6 max-w-3xl mx-auto leading-relaxed">
+              BundledContent delivers a full done-for-you content operation — social posts, short videos, podcast, newsletter, and more. Built by broadcast and brand veterans. Powered by AI. Starting at $99/mo.
             </p>
 
             <div className="flex flex-wrap justify-center gap-3 mb-10">
