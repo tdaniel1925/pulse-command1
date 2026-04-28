@@ -5,54 +5,22 @@ import { useRouter } from "next/navigation";
 import OnboardingNav from "@/components/OnboardingNav";
 import { CheckCircle, ChevronRight, Loader2 } from "lucide-react";
 
-// HeyGen stock avatar IDs — swap these for real ones from your HeyGen account
-const AVATARS = [
-  {
-    id: "josh_v3_public",
-    name: "Josh",
-    description: "Professional, confident, business-casual",
-    gender: "Male",
-    style: "Corporate",
-    previewImage: "https://files.heygen.ai/avatar/v3/josh_v3_public/full/2.webp",
-    previewVideo: "https://files.heygen.ai/avatar/v3/josh_v3_public/preview_video/short.mp4",
-  },
-  {
-    id: "anna_v3_public",
-    name: "Anna",
-    description: "Warm, approachable, modern professional",
-    gender: "Female",
-    style: "Modern",
-    previewImage: "https://files.heygen.ai/avatar/v3/anna_v3_public/full/2.webp",
-    previewVideo: "https://files.heygen.ai/avatar/v3/anna_v3_public/preview_video/short.mp4",
-  },
-  {
-    id: "wayne_v3_public",
-    name: "Wayne",
-    description: "Friendly, energetic, casual professional",
-    gender: "Male",
-    style: "Casual",
-    previewImage: "https://files.heygen.ai/avatar/v3/wayne_v3_public/full/2.webp",
-    previewVideo: "https://files.heygen.ai/avatar/v3/wayne_v3_public/preview_video/short.mp4",
-  },
-  {
-    id: "lily_v3_public",
-    name: "Lily",
-    description: "Polished, executive presence, formal",
-    gender: "Female",
-    style: "Executive",
-    previewImage: "https://files.heygen.ai/avatar/v3/lily_v3_public/full/2.webp",
-    previewVideo: "https://files.heygen.ai/avatar/v3/lily_v3_public/preview_video/short.mp4",
-  },
-];
+type Avatar = {
+  id: string;
+  name: string;
+  preview: string;
+};
 
 export default function ChooseAvatarPage() {
   const router = useRouter();
+  const [avatars, setAvatars] = useState<Avatar[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<string | null>(null);
-  const [previewId, setPreviewId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [firstName, setFirstName] = useState("there");
 
   useEffect(() => {
+    // Load user info and existing selection
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d) => {
@@ -60,6 +28,15 @@ export default function ChooseAvatarPage() {
         if (d.heygen_avatar_id) setSelected(d.heygen_avatar_id);
       })
       .catch(() => {});
+
+    // Load real avatars from HeyGen
+    fetch("/api/heygen/avatars")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data)) setAvatars(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   async function handleContinue() {
@@ -77,6 +54,8 @@ export default function ChooseAvatarPage() {
     }
   }
 
+  const selectedAvatar = avatars.find((a) => a.id === selected);
+
   return (
     <div className="min-h-screen bg-neutral-50">
       <OnboardingNav current="choose-avatar" />
@@ -93,80 +72,58 @@ export default function ChooseAvatarPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
-          {AVATARS.map((avatar) => (
-            <div
-              key={avatar.id}
-              onClick={() => setSelected(avatar.id)}
-              className={`relative bg-white rounded-2xl border-2 cursor-pointer transition-all overflow-hidden shadow-sm hover:shadow-md ${
-                selected === avatar.id
-                  ? "border-primary-600 ring-2 ring-primary-100"
-                  : "border-neutral-200 hover:border-neutral-300"
-              }`}
-            >
-              {selected === avatar.id && (
-                <div className="absolute top-3 right-3 z-10 bg-primary-600 rounded-full p-0.5">
-                  <CheckCircle className="w-4 h-4 text-white" />
-                </div>
-              )}
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+            <span className="ml-3 text-neutral-500">Loading avatars…</span>
+          </div>
+        ) : avatars.length === 0 ? (
+          <div className="text-center py-24 text-neutral-400">
+            No avatars available. Please try again later.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
+            {avatars.map((avatar) => (
+              <div
+                key={avatar.id}
+                onClick={() => setSelected(avatar.id)}
+                className={`relative bg-white rounded-2xl border-2 cursor-pointer transition-all overflow-hidden shadow-sm hover:shadow-md ${
+                  selected === avatar.id
+                    ? "border-primary-600 ring-2 ring-primary-100"
+                    : "border-neutral-200 hover:border-neutral-300"
+                }`}
+              >
+                {selected === avatar.id && (
+                  <div className="absolute top-3 right-3 z-10 bg-primary-600 rounded-full p-0.5">
+                    <CheckCircle className="w-4 h-4 text-white" />
+                  </div>
+                )}
 
-              {/* Avatar image */}
-              <div className="aspect-[3/4] bg-neutral-100 overflow-hidden">
-                <img
-                  src={avatar.previewImage}
-                  alt={avatar.name}
-                  className="w-full h-full object-cover object-top"
-                  onError={(e) => {
-                    // Fallback to a placeholder gradient if image fails
-                    (e.target as HTMLImageElement).style.display = "none";
-                  }}
-                />
-                {/* Placeholder shown when image fails */}
-                <div className="w-full h-full bg-gradient-to-br from-neutral-200 to-neutral-300 flex items-center justify-center">
-                  <span className="text-4xl">👤</span>
-                </div>
-              </div>
-
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-bold text-neutral-900">{avatar.name}</h3>
-                  <span className="text-xs bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded-full">
-                    {avatar.gender}
-                  </span>
-                </div>
-                <p className="text-xs text-neutral-500 mb-2">{avatar.description}</p>
-                <span className="text-xs font-medium bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full">
-                  {avatar.style}
-                </span>
-              </div>
-
-              {/* Preview video on hover */}
-              {previewId === avatar.id && (
-                <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-20">
-                  <video
-                    src={avatar.previewVideo}
-                    autoPlay
-                    loop
-                    muted={false}
-                    className="w-full h-full object-cover"
-                    onEnded={() => setPreviewId(null)}
+                {/* Real avatar image */}
+                <div className="aspect-[3/4] bg-neutral-100 overflow-hidden">
+                  <img
+                    src={avatar.preview}
+                    alt={avatar.name}
+                    className="w-full h-full object-cover object-top"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src =
+                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23e5e7eb'/%3E%3Ctext x='50' y='55' text-anchor='middle' font-size='32' fill='%239ca3af'%3E👤%3C/text%3E%3C/svg%3E";
+                    }}
                   />
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setPreviewId(null); }}
-                    className="absolute top-2 right-2 bg-white/20 hover:bg-white/30 text-white rounded-full px-3 py-1 text-xs"
-                  >
-                    Close
-                  </button>
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
+
+                <div className="p-3">
+                  <h3 className="font-semibold text-neutral-900 text-sm truncate">{avatar.name}</h3>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="flex items-center justify-between">
           <p className="text-sm text-neutral-400">
             {selected
-              ? `Selected: ${AVATARS.find((a) => a.id === selected)?.name}`
+              ? `Selected: ${selectedAvatar?.name ?? selected}`
               : "Select an avatar to continue"}
           </p>
           <button
