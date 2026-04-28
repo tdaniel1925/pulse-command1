@@ -59,8 +59,7 @@ export default function Navbar() {
             >
               About Us
             </Link>
-            <span className="text-neutral-400 text-sm font-medium">Plans from $99/mo</span>
-            <Link
+<Link
               href="/login"
               className="text-neutral-600 hover:text-primary-600 font-medium transition-colors"
             >
