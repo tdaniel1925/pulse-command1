@@ -139,16 +139,16 @@ export default function HomePage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/sign-up"
+                href="/demo"
                 className="px-8 py-4 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl text-lg"
               >
-                Get Started — $745/mo
+                Try Free Demo →
               </Link>
               <Link
-                href="/#what-you-get"
+                href="/sign-up"
                 className="px-8 py-4 bg-white text-neutral-700 border border-neutral-200 font-semibold rounded-lg hover:bg-neutral-50 transition-all shadow-sm hover:shadow-md"
               >
-                See What&apos;s Included
+                Get Started — $745/mo
               </Link>
             </div>
             <p className="text-sm text-neutral-400 mt-4">No lock-in contracts. Cancel anytime.</p>
@@ -328,12 +328,20 @@ export default function HomePage() {
             150 posts. 26 podcast episodes. 4 videos. Monthly reporting.
           </p>
           <p className="text-primary-200 text-sm mb-8">All for $745/month. Setup within 24 hours.</p>
-          <Link
-            href="/sign-up"
-            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-700 font-bold rounded-lg hover:bg-primary-50 transition-colors shadow-lg text-lg"
-          >
-            Get Started Today <ChevronRight className="w-5 h-5" />
-          </Link>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/demo"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-700 font-bold rounded-lg hover:bg-primary-50 transition-colors shadow-lg text-lg"
+            >
+              Try Free Demo <ChevronRight className="w-5 h-5" />
+            </Link>
+            <Link
+              href="/sign-up"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-white/15 border border-white/30 text-white font-bold rounded-lg hover:bg-white/25 transition-colors text-lg"
+            >
+              Get Started — $745/mo
+            </Link>
+          </div>
           <p className="text-primary-200 text-xs mt-4">No contracts. Cancel anytime.</p>
         </div>
       </section>

@@ -43,6 +43,12 @@ export default function Navbar() {
               Sign In
             </Link>
             <Link
+              href="/demo"
+              className="px-5 py-2.5 bg-white text-primary-700 font-bold rounded-lg border border-primary-200 hover:bg-primary-50 transition-colors shadow-sm"
+            >
+              Try Demo
+            </Link>
+            <Link
               href="/sign-up"
               className="px-5 py-2.5 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-colors shadow-sm"
             >
@@ -83,6 +89,13 @@ export default function Navbar() {
             onClick={() => setOpen(false)}
           >
             Sign In
+          </Link>
+          <Link
+            href="/demo"
+            className="block w-full text-center px-5 py-2.5 bg-primary-50 text-primary-700 font-bold rounded-lg border border-primary-200 hover:bg-primary-100 transition-colors"
+            onClick={() => setOpen(false)}
+          >
+            Try Free Demo
           </Link>
           <Link
             href="/sign-up"
