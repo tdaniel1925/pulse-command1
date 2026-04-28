@@ -1,95 +1,97 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-
-interface VapiCall {
-  id: string
-  transcript?: string
-  duration?: number
-  phoneNumber?: string
-}
-
-interface VapiWebhookPayload {
-  type: string
-  call: VapiCall
-}
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   try {
-    const payload: VapiWebhookPayload = await request.json()
-    const { type, call } = payload
+    const payload = await request.json()
 
-    if (type !== 'call-ended') {
-      console.log('Ignoring VAPI event type:', type)
+    // VAPI sends different event types — handle both formats
+    // Type can be: 'end-of-call-report', 'call-ended', 'status-update'
+    const type = payload.type ?? payload.message?.type
+    console.log('VAPI webhook received type:', type)
+
+    // Only process end-of-call events
+    if (type !== 'end-of-call-report' && type !== 'call-ended') {
       return NextResponse.json({ success: true })
     }
 
-    const { id: callId, transcript, duration, phoneNumber } = call
-    console.log('VAPI call-ended received:', callId, 'phone:', phoneNumber)
+    // VAPI end-of-call-report payload structure:
+    // { type, call: { id, ... }, transcript, summary, recordingUrl, durationSeconds }
+    // OR nested under message for some versions
+    const data = payload.message ?? payload
+    const call = data.call ?? {}
+    const callId = call.id ?? payload.callId
+    const transcript = data.transcript ?? call.transcript ?? ''
+    const summary = data.summary ?? ''
+    const duration = data.durationSeconds ?? call.duration ?? 0
+    const recordingUrl = data.recordingUrl ?? call.recordingUrl ?? null
+
+    console.log('VAPI call ended:', callId, 'duration:', duration, 'transcript length:', transcript?.length)
+
+    if (!transcript) {
+      console.log('No transcript in VAPI payload for call:', callId)
+      return NextResponse.json({ success: true })
+    }
 
     // Extract 6-digit PIN from transcript
-    const pinMatch = transcript?.match(/\b\d{6}\b/)
-    const pin = pinMatch?.[0]
+    const pinMatch = transcript.match(/\b(\d{6})\b/)
+    const pin = pinMatch?.[1]
 
     if (!pin) {
-      console.log('No PIN found in transcript for call:', callId)
+      console.log('No 6-digit PIN found in transcript for call:', callId)
+      console.log('Transcript preview:', transcript.slice(0, 500))
       return NextResponse.json({ success: true })
     }
 
-    const supabase = await createClient()
+    console.log('Found PIN in transcript:', pin)
+
+    const admin = createAdminClient()
 
     // Look up client by onboarding PIN
-    const { data: client, error: clientError } = await supabase
+    const { data: client, error: clientError } = await admin
       .from('clients')
       .select('id, brand_profile_id')
       .eq('onboarding_pin', pin)
       .single()
 
     if (clientError || !client) {
-      console.log('No client found for PIN:', pin)
+      console.log('No client found for PIN:', pin, clientError?.message)
       return NextResponse.json({ success: true })
     }
 
     console.log('Matched VAPI call to client:', client.id)
 
     // Update client record
-    const { error: updateError } = await supabase
-      .from('clients')
-      .update({
-        vapi_call_id: callId,
-        call_completed_at: new Date().toISOString(),
-        onboarding_step: 'call_done',
-      })
-      .eq('id', client.id)
+    await admin.from('clients').update({
+      vapi_call_id: callId,
+      call_completed_at: new Date().toISOString(),
+      onboarding_step: 'call_done',
+    }).eq('id', client.id)
 
-    if (updateError) console.error('Error updating client after VAPI call:', updateError)
+    // Save transcript + summary to brand_profiles
+    if (client.brand_profile_id) {
+      await admin.from('brand_profiles').update({
+        vapi_transcript: transcript,
+        ai_analysis_raw: summary || null,
+      }).eq('id', client.brand_profile_id)
+    }
 
     // Log activity
-    await supabase.from('activities').insert({
+    await admin.from('activities').insert({
       client_id: client.id,
       type: 'call',
-      title: 'VAPI onboarding interview completed',
-      description: `Call duration: ${duration ?? 0}s`,
+      title: 'Brand interview completed',
+      description: `Call duration: ${Math.round(duration / 60)}min. Transcript: ${transcript.length} chars. Content generation starting.`,
+      created_by: 'system',
     })
 
-    // Save transcript to brand_profiles if one exists
-    if (client.brand_profile_id && transcript) {
-      const { error: transcriptError } = await supabase
-        .from('brand_profiles')
-        .update({ vapi_transcript: transcript })
-        .eq('id', client.brand_profile_id)
-
-      if (transcriptError) console.error('Error saving transcript:', transcriptError)
-    }
-
-    // Trigger Claude Opus transcript analysis + auto content generation
-    if (transcript) {
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-      fetch(`${baseUrl}/api/pipeline/analyze-transcript`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId: client.id, transcript }),
-      }).catch(err => console.error('analyze-transcript trigger failed:', err))
-    }
+    // Trigger Claude Opus transcript analysis + auto content generation (fire and forget)
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pulse-command1.vercel.app'
+    fetch(`${baseUrl}/api/pipeline/analyze-transcript`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId: client.id, transcript }),
+    }).catch(err => console.error('analyze-transcript trigger failed:', err))
 
     return NextResponse.json({ success: true })
   } catch (error) {
