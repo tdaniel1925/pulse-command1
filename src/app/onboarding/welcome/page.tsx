@@ -1,11 +1,66 @@
+"use client";
+
 import Link from "next/link";
-import { Check, Zap, Calendar, Mic, LayoutDashboard, ArrowRight, Star } from "lucide-react";
+import { Check, Zap, Star, ArrowRight, Share2, Mic, Video, BarChart3 } from "lucide-react";
 import OnboardingNav from "@/components/OnboardingNav";
 
-const quickActions = [
-  { icon: <LayoutDashboard className="w-5 h-5 text-primary-600" />, title: "Explore Your Dashboard", desc: "See your marketing command centre", href: "#", cta: "Open Dashboard" },
-  { icon: <Zap className="w-5 h-5 text-indigo-600" />, title: "Create Your First Campaign", desc: "AI generates it in under 60 seconds", href: "#", cta: "Start Creating" },
-  { icon: <Mic className="w-5 h-5 text-purple-600" />, title: "Set Up AI Voice Podcast", desc: "Clone your voice and go live", href: "#", cta: "Get Started" },
+const steps = [
+  {
+    num: 1,
+    title: "Create Your Account",
+    desc: "Account created and plan activated successfully.",
+    done: true,
+    href: null,
+    cta: null,
+  },
+  {
+    num: 2,
+    title: "Set Up Your Brand Assets",
+    desc: "Scan your website, upload your logo, set brand colors and tone of voice.",
+    done: false,
+    href: "/onboarding/brand-assets",
+    cta: "Set Up Brand",
+    active: true,
+  },
+  {
+    num: 3,
+    title: "Record Your Avatar Video",
+    desc: "Record a short video so HeyGen can build your AI presenter avatar.",
+    done: false,
+    href: null,
+    cta: null,
+  },
+  {
+    num: 4,
+    title: "Record Your Voice Sample",
+    desc: "Read a short script so ElevenLabs can clone your voice for podcasts.",
+    done: false,
+    href: null,
+    cta: null,
+  },
+  {
+    num: 5,
+    title: "Complete Your Brand Interview",
+    desc: "A 15-minute AI phone call captures your brand story. This unlocks content generation.",
+    done: false,
+    href: null,
+    cta: null,
+  },
+  {
+    num: 6,
+    title: "Your Content Goes Live",
+    desc: "We build your full content pipeline — 150 posts, videos, podcast episodes, and reports.",
+    done: false,
+    href: null,
+    cta: null,
+  },
+];
+
+const included = [
+  { icon: <Share2 className="w-4 h-4 text-indigo-600" />, text: "150 social posts/month across 5 channels" },
+  { icon: <Mic className="w-4 h-4 text-purple-600" />, text: "Bi-weekly AI voice podcast (26 eps/year)" },
+  { icon: <Video className="w-4 h-4 text-rose-600" />, text: "4 HeyGen AI presenter videos per month" },
+  { icon: <BarChart3 className="w-4 h-4 text-teal-600" />, text: "Monthly performance report & review" },
 ];
 
 export default function WelcomePage() {
@@ -14,148 +69,125 @@ export default function WelcomePage() {
       <OnboardingNav current="welcome" />
 
       <main className="min-h-screen bg-neutral-50">
-        {/* Hero banner */}
+        {/* Hero */}
         <div className="bg-gradient-to-r from-primary-700 via-primary-600 to-indigo-600 py-14 px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 border border-white/25 text-white text-sm font-medium mb-5">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
             </span>
-            Account Active
+            Account Active — 14-Day Free Trial Started
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
-            Welcome to PulseCommand! 🎉
+            Welcome to PulseCommand!
           </h1>
           <p className="text-primary-100 text-base max-w-xl mx-auto">
-            Your account is live. Let&apos;s get your marketing engine running.
+            Your AI marketing engine is ready. Complete the steps below to launch your full content pipeline.
           </p>
         </div>
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-            {/* Left: Steps checklist */}
-            <div className="lg:col-span-2 space-y-5">
-              <h2 className="text-xl font-bold text-neutral-900">Your Getting Started Checklist</h2>
+            {/* Left: Steps */}
+            <div className="lg:col-span-2 space-y-4">
+              <h2 className="text-xl font-bold text-neutral-900">Your Setup Checklist</h2>
+              <p className="text-sm text-neutral-500 mb-2">Complete all steps to activate your content pipeline. Steps 3–6 unlock after brand setup.</p>
 
-              {/* Step 1 - Done */}
-              <div className="flex items-start gap-4 p-4 bg-green-50 border border-green-200 rounded-2xl">
-                <div className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-semibold text-green-900">Create Your Account</p>
-                    <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Done ✓</span>
-                  </div>
-                  <p className="text-xs text-green-700">Account created and plan activated successfully.</p>
-                </div>
-              </div>
+              {steps.map((step) => {
+                const isDone = step.done;
+                const isActive = (step as { active?: boolean }).active;
+                const isLocked = !isDone && !isActive;
 
-              {/* Step 2 - Done */}
-              <div className="flex items-start gap-4 p-4 bg-green-50 border border-green-200 rounded-2xl">
-                <div className="w-9 h-9 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Check className="w-5 h-5 text-white" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-sm font-semibold text-green-900">Schedule Onboarding Session</p>
-                    <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Done ✓</span>
-                  </div>
-                  <p className="text-xs text-green-700">Session booked with your onboarding specialist.</p>
-                </div>
-              </div>
-
-              {/* Step 3 - Action Required */}
-              <div className="flex items-start gap-4 p-4 bg-primary-50 border-2 border-primary-300 rounded-2xl relative overflow-hidden">
-                <div className="absolute top-0 right-0 bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                  ACTION NEEDED
-                </div>
-                <div className="w-9 h-9 bg-primary-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 cta-pulse">
-                  <span className="text-white font-bold text-sm">3</span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-primary-900 mb-1">Set Up Your Brand Assets</p>
-                  <p className="text-xs text-primary-700 mb-3">
-                    Add your logo, brand colors, and voice so every piece of content looks and sounds like you.
-                  </p>
-                  <Link
-                    href="/onboarding/brand-assets"
-                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-lg hover:bg-primary-700 transition-colors"
+                return (
+                  <div
+                    key={step.num}
+                    className={`flex items-start gap-4 p-4 rounded-2xl border transition-all ${
+                      isDone
+                        ? "bg-green-50 border-green-200"
+                        : isActive
+                        ? "bg-primary-50 border-2 border-primary-300 relative overflow-hidden"
+                        : "bg-white border-neutral-200 opacity-50"
+                    }`}
                   >
-                    Set Up Brand <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-
-              {/* Step 4 - Pending */}
-              <div className="flex items-start gap-4 p-4 bg-white border border-neutral-200 rounded-2xl opacity-60">
-                <div className="w-9 h-9 bg-neutral-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <span className="text-neutral-500 font-bold text-sm">4</span>
-                </div>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-neutral-700 mb-1">Launch Your First Campaign</p>
-                  <p className="text-xs text-neutral-500">Unlocked after your onboarding interview.</p>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div className="mt-8">
-                <h3 className="text-lg font-bold text-neutral-900 mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {quickActions.map((action) => (
-                    <Link
-                      key={action.title}
-                      href={action.href}
-                      className="bg-white rounded-2xl border border-neutral-200 p-5 hover:shadow-md transition-shadow group"
-                    >
-                      <div className="w-10 h-10 bg-neutral-50 rounded-xl flex items-center justify-center mb-3 group-hover:bg-primary-50 transition-colors">
-                        {action.icon}
+                    {isActive && (
+                      <div className="absolute top-0 right-0 bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                        START HERE
                       </div>
-                      <p className="text-sm font-bold text-neutral-900 mb-1">{action.title}</p>
-                      <p className="text-xs text-neutral-500 mb-3">{action.desc}</p>
-                      <span className="text-xs text-primary-600 font-semibold flex items-center gap-1">
-                        {action.cta} <ArrowRight className="w-3 h-3" />
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
+                    )}
+
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                      isDone ? "bg-green-500" : isActive ? "bg-primary-600" : "bg-neutral-200"
+                    }`}>
+                      {isDone
+                        ? <Check className="w-5 h-5 text-white" />
+                        : <span className={`font-bold text-sm ${isActive ? "text-white" : "text-neutral-500"}`}>{step.num}</span>
+                      }
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className={`text-sm font-semibold ${isDone ? "text-green-900" : isActive ? "text-primary-900" : "text-neutral-700"}`}>
+                          {step.title}
+                        </p>
+                        {isDone && <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Done ✓</span>}
+                        {isLocked && <span className="text-xs text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-full">Locked</span>}
+                      </div>
+                      <p className={`text-xs mb-3 ${isDone ? "text-green-700" : isActive ? "text-primary-700" : "text-neutral-500"}`}>
+                        {step.desc}
+                      </p>
+                      {step.href && step.cta && (
+                        <Link
+                          href={step.href}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-lg hover:bg-primary-700 transition-colors"
+                        >
+                          {step.cta} <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
             {/* Right: Sidebar */}
             <div className="space-y-5">
-              {/* Plan card */}
-              <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
-                <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-4">Your Active Plan</p>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center">
-                      <Zap className="w-5 h-5 text-indigo-600" />
-                    </div>
-                    <div>
-                      <p className="font-bold text-neutral-900 text-sm">PulseFlow</p>
-                      <p className="text-xs text-neutral-500">The Growth Tier</p>
-                    </div>
+              {/* Plan */}
+              <div className="bg-neutral-900 rounded-2xl p-6 text-white">
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-9 h-9 bg-primary-600 rounded-lg flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-white" />
                   </div>
-                  <div className="text-right">
-                    <p className="font-bold text-neutral-900">$129<span className="text-xs text-neutral-500 font-normal">/mo</span></p>
-                    <p className="text-xs text-green-600 font-medium">Member Price</p>
+                  <div>
+                    <p className="font-bold text-sm">PulseCommand</p>
+                    <p className="text-neutral-400 text-xs">Complete AI Marketing Service</p>
                   </div>
                 </div>
-                <div className="space-y-2 pt-3 border-t border-neutral-100">
-                  {["150 Social Posts/mo", "AI Voice Podcast", "CRM Integration"].map(f => (
-                    <div key={f} className="flex items-center gap-2 text-xs text-neutral-600">
-                      <Check className="w-3.5 h-3.5 text-green-500 flex-shrink-0" /> {f}
+
+                <div className="mb-4 pb-4 border-b border-neutral-800">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <span className="text-3xl font-bold">$745</span>
+                      <span className="text-neutral-400 text-sm">/mo</span>
+                    </div>
+                    <span className="text-xs text-green-400 font-medium bg-green-400/10 px-2 py-1 rounded-full">No lock-in</span>
+                  </div>
+                  <p className="text-neutral-500 text-xs mt-1">First charge after 14-day free trial</p>
+                </div>
+
+                <div className="space-y-3">
+                  {included.map(({ icon, text }) => (
+                    <div key={text} className="flex items-start gap-3">
+                      <div className="w-6 h-6 bg-neutral-800 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                        {icon}
+                      </div>
+                      <span className="text-neutral-300 text-xs leading-relaxed">{text}</span>
                     </div>
                   ))}
                 </div>
-                <Link href="/#pricing" className="mt-4 block w-full text-center py-2 text-xs font-semibold text-primary-600 border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors">
-                  Upgrade Plan
-                </Link>
               </div>
 
-              {/* Trial card */}
+              {/* Trial */}
               <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-200 p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <Star className="w-4 h-4 text-green-600" />
@@ -168,15 +200,13 @@ export default function WelcomePage() {
                 <p className="text-xs text-green-600 mt-2">Trial ends in 14 days</p>
               </div>
 
-              {/* Session reminder */}
-              <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
-                <div className="flex items-center gap-2 mb-3">
-                  <Calendar className="w-4 h-4 text-primary-600" />
-                  <p className="text-sm font-bold text-neutral-900">Upcoming Session</p>
-                </div>
-                <p className="text-xs text-neutral-600 mb-1">Onboarding call with your specialist</p>
-                <p className="text-xs text-primary-600 font-semibold">Check your email for details</p>
-              </div>
+              {/* Next step CTA */}
+              <Link
+                href="/onboarding/brand-assets"
+                className="block w-full py-3 bg-primary-600 text-white text-sm font-bold rounded-xl text-center hover:bg-primary-700 transition-colors shadow-md"
+              >
+                Start Step 2: Brand Assets →
+              </Link>
             </div>
           </div>
         </div>
