@@ -1,5 +1,3 @@
-'use client';
-
 import {
   Document,
   Page,
@@ -7,6 +5,7 @@ import {
   View,
   StyleSheet,
   Font,
+  type DocumentProps,
 } from '@react-pdf/renderer';
 
 interface Section {
@@ -25,7 +24,7 @@ interface LeadMagnetContent {
   cta_action: string;
 }
 
-interface LeadMagnetDocumentProps {
+interface LeadMagnetDocumentProps extends DocumentProps {
   businessName: string;
   website: string;
   primaryColor: string;
