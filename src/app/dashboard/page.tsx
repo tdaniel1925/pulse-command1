@@ -103,6 +103,14 @@ export default async function DashboardPage() {
     .from("audio_episodes").select("*", { count: "exact", head: true })
     .eq("client_id", client?.id ?? "").eq("status", "ready");
 
+  // Check content_mode for manual mode banner
+  const { data: modeSetting } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", "content_mode")
+    .maybeSingle();
+  const contentMode = modeSetting?.value ?? "auto";
+
   const totalPosts = (publishedPosts ?? 0) + (scheduledPosts ?? 0);
 
   const stats = [
@@ -150,6 +158,21 @@ export default async function DashboardPage() {
           >
             View Instructions →
           </Link>
+        </div>
+      )}
+
+      {/* Manual mode — 48h message shown after call completes */}
+      {contentMode === "manual" && client?.onboarding_step === "call_done" && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4 flex items-center gap-4">
+          <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Bell className="w-5 h-5 text-amber-600" />
+          </div>
+          <div>
+            <p className="font-semibold text-amber-900 text-sm">Your brand profile is complete!</p>
+            <p className="text-amber-700 text-xs mt-0.5">
+              We&apos;re preparing your first content samples and will have them ready within 48 hours. You&apos;ll receive a notification as soon as they&apos;re ready for your review.
+            </p>
+          </div>
         </div>
       )}
 

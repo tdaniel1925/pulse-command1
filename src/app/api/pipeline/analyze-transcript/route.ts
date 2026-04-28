@@ -109,31 +109,60 @@ ${transcript}`,
       .update({ onboarding_step: 'profile_built' })
       .eq('id', clientId)
 
-    // Log activity
-    await admin.from('activities').insert({
-      client_id: clientId,
-      type: 'onboarding_step',
-      title: 'Brand profile built from VAPI transcript',
-      description: 'Claude Opus analysis completed. Auto-triggering content generation.',
-      created_by: 'system',
-    })
+    // Check content_mode setting
+    const { data: modeSetting } = await admin
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'content_mode')
+      .single()
+    const contentMode = modeSetting?.value ?? 'manual'
 
-    // Auto-trigger all content generation — fire and forget
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    const generateContent = (type: string) =>
-      fetch(`${baseUrl}/api/pipeline/generate-content`, {
+
+    if (contentMode === 'auto') {
+      // Log activity
+      await admin.from('activities').insert({
+        client_id: clientId,
+        type: 'onboarding_step',
+        title: 'Brand profile built from VAPI transcript',
+        description: 'Claude Opus analysis completed. Auto-triggering content generation.',
+        created_by: 'system',
+      })
+
+      // Auto-trigger all content generation — fire and forget
+      const generateContent = (type: string) =>
+        fetch(`${baseUrl}/api/pipeline/generate-content`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clientId, type }),
+        }).catch(err => console.error(`Auto-generate ${type} failed:`, err))
+
+      Promise.all([
+        generateContent('social'),
+        generateContent('audio'),
+        generateContent('video'),
+      ]).then(() => console.log('Auto content generation complete for client:', clientId))
+
+      return NextResponse.json({ success: true, profile: analysis, autoGenerating: true })
+    } else {
+      // Manual mode — generate content brief only, no pipeline calls
+      await admin.from('activities').insert({
+        client_id: clientId,
+        type: 'onboarding_step',
+        title: 'Brand profile built from VAPI transcript',
+        description: 'Claude Opus analysis completed. Content brief will be generated for admin review (manual mode).',
+        created_by: 'system',
+      })
+
+      // Fire generate-brief — fire and forget
+      fetch(`${baseUrl}/api/pipeline/generate-brief`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clientId, type }),
-      }).catch(err => console.error(`Auto-generate ${type} failed:`, err))
+        body: JSON.stringify({ clientId }),
+      }).catch(err => console.error('generate-brief failed:', err))
 
-    Promise.all([
-      generateContent('social'),
-      generateContent('audio'),
-      generateContent('video'),
-    ]).then(() => console.log('Auto content generation complete for client:', clientId))
-
-    return NextResponse.json({ success: true, profile: analysis, autoGenerating: true })
+      return NextResponse.json({ success: true, profile: analysis, autoGenerating: false, mode: 'manual' })
+    }
   } catch (error) {
     console.error('Analyze transcript error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

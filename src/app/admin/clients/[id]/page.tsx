@@ -5,7 +5,10 @@ import {
   Circle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { ClientActions } from "@/components/admin/ClientActions";
+import ManualContentCreator from "@/components/admin/ManualContentCreator";
+import HeygenVideoLinker from "@/components/admin/HeygenVideoLinker";
 
 const onboardingStepOrder = [
   { key: "signed_up", label: "Signed Up" },
@@ -51,6 +54,24 @@ export default async function ClientDetailPage({
   const { data: activities } = await supabase
     .from("activities")
     .select("*")
+    .eq("client_id", id)
+    .order("created_at", { ascending: false })
+    .limit(10);
+
+  // Fetch content brief (admin-only, bypass RLS)
+  const adminClient = createAdminClient();
+  const { data: contentBrief } = await adminClient
+    .from("content_briefs")
+    .select("*")
+    .eq("client_id", id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  // Fetch pending content requests
+  const { data: contentRequests } = await adminClient
+    .from("content_requests")
+    .select("*, content_request_files(id, file_url, file_name, file_type)")
     .eq("client_id", id)
     .order("created_at", { ascending: false })
     .limit(10);
@@ -205,6 +226,114 @@ export default async function ClientDetailPage({
               <p className="text-sm text-neutral-400">No brand profile yet.</p>
             )}
           </div>
+
+          {/* Content Brief (admin-only) */}
+          {contentBrief && (
+            <div className="bg-white rounded-2xl border border-amber-200 shadow-sm p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-semibold text-neutral-900">Content Brief</h2>
+                <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Admin Only</span>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Social Post Suggestions</p>
+                  <div className="bg-neutral-50 rounded-lg p-3 text-sm text-neutral-700 whitespace-pre-wrap max-h-48 overflow-y-auto">
+                    {contentBrief.social_posts_copy ?? "—"}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Video Script</p>
+                  <div className="bg-neutral-50 rounded-lg p-3 text-sm text-neutral-700 whitespace-pre-wrap max-h-36 overflow-y-auto">
+                    {contentBrief.video_script ?? "—"}
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1">Audio Script</p>
+                  <div className="bg-neutral-50 rounded-lg p-3 text-sm text-neutral-700 whitespace-pre-wrap max-h-36 overflow-y-auto">
+                    {contentBrief.audio_script ?? "—"}
+                  </div>
+                </div>
+                {(contentBrief.hashtags ?? []).length > 0 && (
+                  <div>
+                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-1.5">Hashtags</p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(contentBrief.hashtags as string[]).map((h: string) => (
+                        <span key={h} className="text-xs bg-primary-50 text-primary-700 border border-primary-100 px-2 py-0.5 rounded-full">{h}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <p className="text-xs text-neutral-400">
+                Generated {new Date(contentBrief.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+              </p>
+            </div>
+          )}
+
+          {/* Manual Content Creator */}
+          <ManualContentCreator clientId={id} />
+
+          {/* HeyGen Video Linker */}
+          <HeygenVideoLinker clientId={id} />
+
+          {/* Content Requests from Client */}
+          {contentRequests && contentRequests.length > 0 && (
+            <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 space-y-4">
+              <h2 className="text-base font-semibold text-neutral-900">Client Content Requests</h2>
+              <div className="space-y-3">
+                {contentRequests.map((req) => {
+                  const statusColors: Record<string, string> = {
+                    pending: "bg-amber-100 text-amber-700",
+                    in_progress: "bg-blue-100 text-blue-700",
+                    done: "bg-green-100 text-green-700",
+                  };
+                  const files = (req.content_request_files ?? []) as { id: string; file_url: string; file_name: string; file_type: string }[];
+                  return (
+                    <div key={req.id} className="border border-neutral-100 rounded-xl p-4 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-semibold text-sm text-neutral-900">{req.occasion}</p>
+                          {req.description && <p className="text-xs text-neutral-500 mt-0.5">{req.description}</p>}
+                        </div>
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${statusColors[req.status] ?? "bg-neutral-100 text-neutral-600"}`}>
+                          {req.status}
+                        </span>
+                      </div>
+                      {req.target_date && (
+                        <p className="text-xs text-neutral-400">Target: {new Date(req.target_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</p>
+                      )}
+                      {(req.platforms ?? []).length > 0 && (
+                        <div className="flex gap-1 flex-wrap">
+                          {(req.platforms as string[]).map((p: string) => (
+                            <span key={p} className="text-xs bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded">{p}</span>
+                          ))}
+                        </div>
+                      )}
+                      {files.length > 0 && (
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {files.map((f) => (
+                            f.file_type?.startsWith('image/') ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <a key={f.id} href={f.file_url} target="_blank" rel="noreferrer">
+                                <img src={f.file_url} alt={f.file_name} className="w-16 h-16 object-cover rounded-lg border border-neutral-200" />
+                              </a>
+                            ) : (
+                              <a key={f.id} href={f.file_url} target="_blank" rel="noreferrer" className="text-xs text-primary-600 underline">
+                                {f.file_name}
+                              </a>
+                            )
+                          ))}
+                        </div>
+                      )}
+                      <p className="text-xs text-neutral-400">{files.length} file{files.length !== 1 ? "s" : ""} · Submitted {new Date(req.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric" })}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Onboarding Progress */}
           <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">

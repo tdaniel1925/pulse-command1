@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Edit2, Check, X, UserPlus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Edit2, Check, X, UserPlus, Loader2 } from "lucide-react";
 
-type Tab = "general" | "integrations" | "notifications" | "team";
+type Tab = "general" | "integrations" | "notifications" | "team" | "pipeline";
 
 // ─── Integrations ────────────────────────────────────────────────────────────
 type Integration = {
@@ -64,6 +64,38 @@ export default function SettingsPage() {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
+  // Pipeline tab state
+  const [contentMode, setContentMode] = useState<"auto" | "manual" | null>(null);
+  const [modeLoading, setModeLoading] = useState(false);
+  const [modeSaving, setModeSaving] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === "pipeline" && contentMode === null) {
+      setModeLoading(true);
+      fetch("/api/admin/settings/content-mode")
+        .then(r => r.json())
+        .then(d => setContentMode(d.mode ?? "manual"))
+        .catch(() => setContentMode("manual"))
+        .finally(() => setModeLoading(false));
+    }
+  }, [activeTab, contentMode]);
+
+  async function toggleMode() {
+    if (!contentMode || modeSaving) return;
+    const next = contentMode === "auto" ? "manual" : "auto";
+    setModeSaving(true);
+    try {
+      await fetch("/api/admin/settings/content-mode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: next }),
+      });
+      setContentMode(next);
+    } finally {
+      setModeSaving(false);
+    }
+  }
+
   function handleSave() {
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -74,6 +106,7 @@ export default function SettingsPage() {
     { key: "integrations", label: "Integrations" },
     { key: "notifications", label: "Notifications" },
     { key: "team", label: "Team" },
+    { key: "pipeline", label: "Pipeline" },
   ];
 
   const toggleNotif = (idx: number, field: "email" | "sms") => {
@@ -235,6 +268,78 @@ export default function SettingsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* ── Pipeline ── */}
+      {activeTab === "pipeline" && (
+        <div className="space-y-4 max-w-xl">
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 space-y-5">
+            <div>
+              <h2 className="font-semibold text-neutral-900">Content Pipeline Mode</h2>
+              <p className="text-sm text-neutral-500 mt-1">
+                Controls what happens automatically after a client completes their brand interview call.
+              </p>
+            </div>
+
+            {modeLoading ? (
+              <div className="flex items-center gap-2 text-neutral-400">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span className="text-sm">Loading…</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl border border-neutral-200">
+                <div>
+                  <p className="font-semibold text-neutral-900 text-sm">
+                    {contentMode === "auto" ? "Auto Mode" : "Manual Mode"}
+                  </p>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    {contentMode === "auto"
+                      ? "Full pipeline fires automatically — social posts, video, and audio are generated and sent to client queue."
+                      : "Claude analyzes the transcript and creates a content brief only. Admin reviews and creates content manually."}
+                  </p>
+                </div>
+                <button
+                  onClick={toggleMode}
+                  disabled={modeSaving}
+                  className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ml-4 ${
+                    contentMode === "auto" ? "bg-primary-600" : "bg-neutral-300"
+                  } disabled:opacity-50`}
+                >
+                  {modeSaving ? (
+                    <Loader2 className="w-3 h-3 animate-spin text-white absolute top-1.5 left-1/2 -translate-x-1/2" />
+                  ) : (
+                    <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                      contentMode === "auto" ? "translate-x-7" : "translate-x-1"
+                    }`} />
+                  )}
+                </button>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className={`p-4 rounded-xl border-2 transition-colors ${contentMode === "manual" ? "border-primary-600 bg-primary-50" : "border-neutral-100 bg-neutral-50"}`}>
+                <p className="font-semibold text-sm text-neutral-900 mb-1">Manual Mode</p>
+                <ul className="text-xs text-neutral-600 space-y-1 list-disc list-inside">
+                  <li>VAPI call analyzed by Claude</li>
+                  <li>Content brief generated (admin-only)</li>
+                  <li>Admin creates posts manually</li>
+                  <li>No auto Predis/HeyGen/ElevenLabs calls</li>
+                  <li>Client sees 48-hour message</li>
+                </ul>
+              </div>
+              <div className={`p-4 rounded-xl border-2 transition-colors ${contentMode === "auto" ? "border-primary-600 bg-primary-50" : "border-neutral-100 bg-neutral-50"}`}>
+                <p className="font-semibold text-sm text-neutral-900 mb-1">Auto Mode</p>
+                <ul className="text-xs text-neutral-600 space-y-1 list-disc list-inside">
+                  <li>VAPI call analyzed by Claude</li>
+                  <li>Social posts auto-generated via Predis</li>
+                  <li>Video auto-submitted to HeyGen</li>
+                  <li>Audio auto-rendered via ElevenLabs</li>
+                  <li>Content goes to client approval queue</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
