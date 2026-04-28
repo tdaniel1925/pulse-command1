@@ -89,7 +89,7 @@ export default function ChooseVoicePage() {
     <div className="min-h-screen bg-neutral-50">
       <OnboardingNav current="choose-voice" />
 
-      <main className="max-w-4xl mx-auto px-4 py-12">
+      <main className="max-w-6xl mx-auto px-4 py-12">
         <div className="mb-10 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary-600 text-white mb-4">
             <span className="text-xl">🎙️</span>
@@ -100,79 +100,69 @@ export default function ChooseVoicePage() {
           </p>
         </div>
 
-        <div className="space-y-3 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
           {VOICES.map((voice) => (
             <div
               key={voice.id}
               onClick={() => setSelected(voice.id)}
-              className={`bg-white rounded-2xl border-2 cursor-pointer transition-all shadow-sm hover:shadow-md p-4 ${
+              className={`relative bg-white rounded-2xl border-2 cursor-pointer transition-all shadow-sm hover:shadow-md p-4 flex flex-col items-center text-center gap-3 ${
                 selected === voice.id
                   ? "border-primary-600 ring-2 ring-primary-100"
                   : "border-neutral-200 hover:border-neutral-300"
               }`}
             >
-              <div className="flex items-center gap-4">
-                {/* Play button */}
-                <button
-                  onClick={(e) => { e.stopPropagation(); togglePlay(voice); }}
-                  className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-                    playingId === voice.id
-                      ? "bg-primary-600 text-white"
-                      : "bg-neutral-100 text-neutral-600 hover:bg-primary-50 hover:text-primary-600"
-                  }`}
-                >
-                  {playingId === voice.id ? (
-                    <Square className="w-4 h-4 fill-current" />
-                  ) : (
-                    <Play className="w-4 h-4 fill-current ml-0.5" />
-                  )}
-                </button>
-
-                {/* Voice info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-bold text-neutral-900">{voice.name}</h3>
-                    <span className="text-xs bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded-full">
-                      {voice.gender}
-                    </span>
-                    <span className="text-xs bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded-full">
-                      {voice.accent}
-                    </span>
-                    <span className="text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">
-                      {voice.style}
-                    </span>
-                  </div>
-                  <p className="text-sm text-neutral-500 mt-0.5">{voice.description}</p>
-                  <p className="text-xs text-neutral-400 mt-0.5">Best for: {voice.useCase}</p>
+              {/* Selected check */}
+              {selected === voice.id && (
+                <div className="absolute top-2 right-2">
+                  <CheckCircle className="w-4 h-4 text-primary-600" />
                 </div>
+              )}
 
-                {/* Selected indicator */}
-                <div className="flex-shrink-0">
-                  {selected === voice.id ? (
-                    <CheckCircle className="w-6 h-6 text-primary-600" />
-                  ) : (
-                    <div className="w-6 h-6 rounded-full border-2 border-neutral-200" />
-                  )}
-                </div>
-              </div>
+              {/* Play button */}
+              <button
+                onClick={(e) => { e.stopPropagation(); togglePlay(voice); }}
+                className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${
+                  playingId === voice.id
+                    ? "bg-primary-600 text-white"
+                    : "bg-neutral-100 text-neutral-600 hover:bg-primary-50 hover:text-primary-600"
+                }`}
+              >
+                {playingId === voice.id ? (
+                  <Square className="w-4 h-4 fill-current" />
+                ) : (
+                  <Play className="w-4 h-4 fill-current ml-0.5" />
+                )}
+              </button>
 
-              {/* Waveform animation when playing */}
-              {playingId === voice.id && (
-                <div className="mt-3 flex items-center gap-0.5 h-6 px-16">
-                  {Array.from({ length: 30 }).map((_, i) => (
+              {/* Waveform when playing */}
+              {playingId === voice.id ? (
+                <div className="flex items-center gap-0.5 h-5 w-full justify-center">
+                  {Array.from({ length: 16 }).map((_, i) => (
                     <div
                       key={i}
-                      className="flex-1 bg-primary-400 rounded-full"
+                      className="w-1 bg-primary-400 rounded-full"
                       style={{
-                        height: `${20 + Math.sin(i * 0.8) * 12}px`,
+                        height: `${10 + Math.sin(i * 0.8) * 8}px`,
                         animation: `pulse-bar ${0.5 + (i % 5) * 0.1}s ease-in-out infinite alternate`,
-                        animationDelay: `${i * 0.03}s`,
+                        animationDelay: `${i * 0.04}s`,
                       }}
                     />
                   ))}
                   <style>{`@keyframes pulse-bar { from { transform: scaleY(0.3); } to { transform: scaleY(1); } }`}</style>
                 </div>
+              ) : (
+                <div className="h-5" />
               )}
+
+              {/* Voice info */}
+              <div className="space-y-1">
+                <p className="font-bold text-neutral-900 text-sm">{voice.name}</p>
+                <p className="text-xs text-neutral-500">{voice.accent} · {voice.gender}</p>
+                <span className="inline-block text-xs bg-primary-50 text-primary-700 px-2 py-0.5 rounded-full font-medium">
+                  {voice.style}
+                </span>
+                <p className="text-xs text-neutral-400 leading-snug">{voice.description}</p>
+              </div>
             </div>
           ))}
         </div>
