@@ -81,13 +81,15 @@ export async function POST(request: NextRequest) {
       if (transcriptError) console.error('Error saving transcript:', transcriptError)
     }
 
-    // TODO: implement — trigger OpenAI transcript analysis
-    // await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/pipeline/analyze-transcript`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ clientId: client.id, transcript }),
-    // })
-    console.log('TODO: trigger /api/pipeline/analyze-transcript for client:', client.id)
+    // Trigger Claude Opus transcript analysis + auto content generation
+    if (transcript) {
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+      fetch(`${baseUrl}/api/pipeline/analyze-transcript`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId: client.id, transcript }),
+      }).catch(err => console.error('analyze-transcript trigger failed:', err))
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import OpenAI from 'openai'
+import { createAdminClient } from '@/lib/supabase/admin'
+import Anthropic from '@anthropic-ai/sdk'
+
+const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 interface AnalyzeTranscriptBody {
   clientId: string
@@ -19,20 +22,20 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json(
-        { error: 'OpenAI not configured', details: 'OPENAI_API_KEY environment variable is not set' },
+        { error: 'Anthropic not configured' },
         { status: 503 }
       )
     }
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o',
+    // Use Claude Opus for high-quality brand analysis
+    const message = await getAnthropic().messages.create({
+      model: 'claude-opus-4-6',
+      max_tokens: 2048,
       messages: [
         {
-          role: 'system',
+          role: 'user',
           content: `You are a brand strategist. Analyze this onboarding interview transcript and extract structured information about the business. Return ONLY valid JSON with these exact keys:
 {
   "businessDescription": "string",
@@ -49,22 +52,23 @@ export async function POST(request: NextRequest) {
   "priorityChannels": ["string", "string", "string"],
   "postingFrequency": "string",
   "bestTimes": "string"
-}`
+}
+
+Here is the onboarding interview transcript:
+
+${transcript}`,
         },
-        {
-          role: 'user',
-          content: `Here is the onboarding interview transcript:\n\n${transcript}`
-        }
       ],
-      response_format: { type: 'json_object' }
     })
 
-    const analysis = JSON.parse(completion.choices[0].message.content ?? '{}')
+    const raw = message.content[0].type === 'text' ? message.content[0].text : '{}'
+    const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/i, '').trim()
+    const analysis = JSON.parse(jsonStr)
 
-    const supabase = await createClient()
+    const admin = createAdminClient()
 
     // Get client's brand_profile_id
-    const { data: client, error: clientError } = await supabase
+    const { data: client, error: clientError } = await admin
       .from('clients')
       .select('id, brand_profile_id')
       .eq('id', clientId)
@@ -74,9 +78,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Client not found' }, { status: 404 })
     }
 
-    // Upsert brand profile with analysis results
+    // Update brand profile with analysis results
     if (client.brand_profile_id) {
-      const { error: profileError } = await supabase
+      const { error: profileError } = await admin
         .from('brand_profiles')
         .update({
           business_description: analysis.businessDescription,
@@ -100,22 +104,22 @@ export async function POST(request: NextRequest) {
     }
 
     // Update client onboarding step
-    await supabase
+    await admin
       .from('clients')
       .update({ onboarding_step: 'profile_built' })
       .eq('id', clientId)
 
     // Log activity
-    await supabase.from('activities').insert({
+    await admin.from('activities').insert({
       client_id: clientId,
       type: 'onboarding_step',
       title: 'Brand profile built from VAPI transcript',
-      description: 'AI analysis completed. Auto-triggering content generation.',
+      description: 'Claude Opus analysis completed. Auto-triggering content generation.',
       created_by: 'system',
     })
 
-    // Auto-trigger all content generation — fire and forget (don't await)
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:4050'
+    // Auto-trigger all content generation — fire and forget
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
     const generateContent = (type: string) =>
       fetch(`${baseUrl}/api/pipeline/generate-content`, {
         method: 'POST',
@@ -123,12 +127,10 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({ clientId, type }),
       }).catch(err => console.error(`Auto-generate ${type} failed:`, err))
 
-    // Kick off all 4 content types in parallel
     Promise.all([
       generateContent('social'),
       generateContent('audio'),
       generateContent('video'),
-      generateContent('landing-page'),
     ]).then(() => console.log('Auto content generation complete for client:', clientId))
 
     return NextResponse.json({ success: true, profile: analysis, autoGenerating: true })
