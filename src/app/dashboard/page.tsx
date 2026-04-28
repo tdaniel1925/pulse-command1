@@ -110,9 +110,17 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       {/* Welcome banner */}
-      <div className="bg-primary-600 rounded-2xl px-6 py-5 text-white">
-        <p className="text-lg font-bold">Good morning, {firstName}!</p>
-        <p className="text-primary-200 text-sm mt-0.5">Your content machine is running.</p>
+      <div className="bg-primary-600 rounded-2xl px-6 py-5 text-white flex items-center justify-between gap-4">
+        <div>
+          <p className="text-lg font-bold">Good morning, {firstName}!</p>
+          <p className="text-primary-200 text-sm mt-0.5">Your content machine is running.</p>
+        </div>
+        <Link
+          href="/onboarding/welcome"
+          className="flex-shrink-0 px-4 py-2 bg-white/15 hover:bg-white/25 border border-white/30 text-white text-xs font-semibold rounded-lg transition-colors"
+        >
+          Redo Onboarding →
+        </Link>
       </div>
 
       {/* Interview CTA — shown until interview is done */}
