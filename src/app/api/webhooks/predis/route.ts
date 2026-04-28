@@ -28,6 +28,17 @@ export async function POST(request: NextRequest) {
       .filter('metadata->>predis_post_id', 'eq', postId)
       .maybeSingle()
 
+    // Check client's auto_approve setting
+    let autoApprove = true
+    if (existingPost) {
+      const { data: clientRow } = await admin
+        .from('clients')
+        .select('auto_approve')
+        .eq('id', existingPost.client_id)
+        .maybeSingle()
+      autoApprove = clientRow?.auto_approve ?? true
+    }
+
     if (status === 'failed' || !imageUrl) {
       console.error('Predis generation failed for post_id:', postId)
       if (existingPost) {
@@ -45,26 +56,35 @@ export async function POST(request: NextRequest) {
       : caption
 
     if (existingPost) {
+      const newStatus = autoApprove ? 'scheduled' : 'pending_approval'
+
       // Update the placeholder with real content
       await admin
         .from('social_posts')
         .update({
           content: fullContent,
           image_url: imageUrl,
-          status: 'pending_approval',
+          status: newStatus,
         })
         .eq('id', existingPost.id)
 
       // Notify client via activity feed
+      const activityTitle = autoApprove
+        ? 'Social post scheduled'
+        : 'Social post ready for approval'
+      const activityDescription = autoApprove
+        ? 'A new AI-generated social post has been automatically scheduled.'
+        : 'A new AI-generated social post with image is ready for your review.'
+
       await admin.from('activities').insert({
         client_id: existingPost.client_id,
         type: 'post',
-        title: 'Social post ready for approval',
-        description: 'A new AI-generated social post with image is ready for your review.',
+        title: activityTitle,
+        description: activityDescription,
         created_by: 'system',
       } as never)
 
-      console.log(`[predis webhook] Updated post ${existingPost.id} → pending_approval`)
+      console.log(`[predis webhook] Updated post ${existingPost.id} → ${newStatus} (auto_approve=${autoApprove})`)
     } else {
       // Fallback: no placeholder found — log for debugging
       console.warn(`[predis webhook] No matching social_post found for predis_post_id: ${postId}`)

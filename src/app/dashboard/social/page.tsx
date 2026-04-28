@@ -1,6 +1,7 @@
 import { CheckCircle, Clock, FileEdit, AlertCircle, Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { ApproveButton } from "@/components/dashboard/ApproveButton";
+import { AutoApproveToggle } from "@/components/dashboard/AutoApproveToggle";
 
 const platformStyles: Record<string, string> = {
   instagram: "bg-pink-100 text-pink-700",
@@ -37,7 +38,7 @@ export default async function SocialPage() {
   const { data: { user } } = await supabase.auth.getUser();
   const { data: client } = await supabase
     .from("clients")
-    .select("id")
+    .select("id, auto_approve")
     .eq("user_id", user?.id ?? "")
     .single();
 
@@ -63,11 +64,17 @@ export default async function SocialPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-neutral-900">Social Posts</h1>
           <p className="text-sm text-neutral-500 mt-1">Your AI-generated content across all platforms.</p>
         </div>
+        {client && (
+          <AutoApproveToggle
+            clientId={client.id}
+            defaultValue={client.auto_approve ?? true}
+          />
+        )}
       </div>
 
       {/* Stats row */}
