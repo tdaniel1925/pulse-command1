@@ -33,6 +33,11 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // Protect onboarding routes — must be logged in
+  if (path.startsWith('/onboarding') && !user) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
   // Protect admin routes — must be admin
   if (path.startsWith('/admin')) {
     if (!user) {
