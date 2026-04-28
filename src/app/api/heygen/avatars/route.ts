@@ -20,17 +20,19 @@ export async function GET() {
     }
 
     const data = await res.json()
-    const avatars: { avatar_id: string; avatar_name: string; preview_image_url: string }[] = data.data?.avatars ?? []
+    const avatars: { avatar_id: string; avatar_name: string; preview_image_url: string; gender: string }[] = data.data?.avatars ?? []
 
-    // Dedupe by avatar_id, filter out entries without preview images and BotMakers spam
+    // UUID pattern — custom/client avatars have 32-char hex IDs
+    const uuidRe = /^[0-9a-f]{32}$/i
+
+    // Keep only stock (non-UUID) avatars, dedupe, require preview image
     const seen = new Set<string>()
     const clean = avatars
       .filter(a => {
+        if (uuidRe.test(a.avatar_id)) return false // skip custom/client avatars
         if (seen.has(a.avatar_id)) return false
         seen.add(a.avatar_id)
         if (!a.preview_image_url) return false
-        if (a.avatar_name.toLowerCase().includes('botmakers')) return false
-        if (a.avatar_name.toLowerCase().includes('long shot')) return false
         return true
       })
       .slice(0, 12)
@@ -38,6 +40,7 @@ export async function GET() {
         id: a.avatar_id,
         name: a.avatar_name,
         preview: a.preview_image_url,
+        gender: a.gender ?? 'unknown',
       }))
 
     return NextResponse.json(clean)
