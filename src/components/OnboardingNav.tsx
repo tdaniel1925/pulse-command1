@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Zap } from "lucide-react";
 
 type Step = "sign-up" | "schedule" | "welcome" | "brand-assets" | "choose-avatar" | "choose-voice" | "interview" | "complete";
@@ -14,6 +17,13 @@ const steps: { key: Step; label: string; href: string }[] = [
 
 export default function OnboardingNav({ current }: { current: Step }) {
   const currentIndex = steps.findIndex((s) => s.key === current);
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then(r => { setLoggedIn(r.ok); })
+      .catch(() => setLoggedIn(false));
+  }, []);
 
   return (
     <header className="bg-white border-b border-neutral-200">
@@ -46,13 +56,24 @@ export default function OnboardingNav({ current }: { current: Step }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-sm text-neutral-500">Already have an account?</span>
-            <Link
-              href="/login"
-              className="px-4 py-2 text-primary-600 font-medium border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors text-sm"
-            >
-              Sign In
-            </Link>
+            {loggedIn === null ? null : loggedIn ? (
+              <Link
+                href="/dashboard"
+                className="px-4 py-2 text-primary-600 font-medium border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors text-sm"
+              >
+                Dashboard →
+              </Link>
+            ) : (
+              <>
+                <span className="text-sm text-neutral-500">Already have an account?</span>
+                <Link
+                  href="/login"
+                  className="px-4 py-2 text-primary-600 font-medium border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors text-sm"
+                >
+                  Sign In
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </div>
