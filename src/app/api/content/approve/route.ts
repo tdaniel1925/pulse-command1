@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient()
 
-    // Verify this content belongs to the current user's client
     const { data: client } = await admin
       .from('clients')
       .select('id')
@@ -39,12 +38,23 @@ export async function POST(request: NextRequest) {
       await admin.from('activities').insert({
         client_id: client.id,
         type: 'post',
-        title: action === 'approve' ? 'Post approved for scheduling' : 'Post rejected',
+        title: action === 'approve' ? 'Post approved — sending to Ayrshare' : 'Post rejected',
         description: action === 'approve'
-          ? 'Social post approved and queued for publishing.'
+          ? 'Social post approved and being submitted for publishing.'
           : 'Social post rejected and removed from queue.',
         created_by: user.id,
       })
+
+      // Auto-publish to Ayrshare on approval (fire and forget)
+      if (action === 'approve') {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pulse-command1.vercel.app'
+        fetch(`${baseUrl}/api/pipeline/publish-posts`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ postIds: [id], clientId: client.id }),
+        }).catch(err => console.error('publish-posts trigger failed:', err))
+      }
+
     } else if (type === 'video') {
       const newStatus = action === 'approve' ? 'approved' : 'rejected'
       const { error } = await admin
