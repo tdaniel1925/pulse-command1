@@ -19,10 +19,15 @@ export async function POST(request: NextRequest) {
     const cleanUrl = url.startsWith('http') ? url : `https://${url}`
     const origin = new URL(cleanUrl).origin
 
-    // Use Jina AI to scrape
-    const jinaRes = await fetch(`https://r.jina.ai/${cleanUrl}`, {
-      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'markdown' },
-    })
+    // Fetch page text via Jina and screenshot in parallel
+    const [jinaRes, screenshotRes] = await Promise.all([
+      fetch(`https://r.jina.ai/${cleanUrl}`, {
+        headers: { 'Accept': 'text/plain', 'X-Return-Format': 'markdown' },
+      }),
+      fetch(`https://r.jina.ai/${cleanUrl}`, {
+        headers: { 'Accept': 'image/png', 'X-Return-Format': 'screenshot' },
+      }).catch(() => null),
+    ])
 
     if (!jinaRes.ok) {
       console.error('Jina fetch failed:', jinaRes.status, jinaRes.statusText)
@@ -31,7 +36,14 @@ export async function POST(request: NextRequest) {
 
     const pageContent = await jinaRes.text()
 
-    // Extract logo + color from raw HTML with multiple fallbacks
+    // Get screenshot as base64 if available
+    let screenshotBase64: string | null = null
+    if (screenshotRes?.ok) {
+      const buf = await screenshotRes.arrayBuffer()
+      screenshotBase64 = Buffer.from(buf).toString('base64')
+    }
+
+    // Extract logo URL from HTML with fallbacks
     let logoUrl = ''
     let primaryColor = ''
 
@@ -45,31 +57,25 @@ export async function POST(request: NextRequest) {
       // 1. og:image
       const ogImage = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
         ?? html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i)
-      if (ogImage?.[1]) {
-        logoUrl = resolveUrl(ogImage[1], cleanUrl)
-      }
+      if (ogImage?.[1]) logoUrl = resolveUrl(ogImage[1], cleanUrl)
 
-      // 2. twitter:image fallback
+      // 2. twitter:image
       if (!logoUrl) {
-        const twitterImage = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i)
+        const tw = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i)
           ?? html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i)
-        if (twitterImage?.[1]) logoUrl = resolveUrl(twitterImage[1], cleanUrl)
+        if (tw?.[1]) logoUrl = resolveUrl(tw[1], cleanUrl)
       }
 
-      // 3. apple-touch-icon fallback
+      // 3. apple-touch-icon
       if (!logoUrl) {
-        const appleIcon = html.match(/<link[^>]*rel=["']apple-touch-icon["'][^>]*href=["']([^"']+)["']/i)
-        if (appleIcon?.[1]) logoUrl = resolveUrl(appleIcon[1], cleanUrl)
+        const apple = html.match(/<link[^>]*rel=["']apple-touch-icon["'][^>]*href=["']([^"']+)["']/i)
+        if (apple?.[1]) logoUrl = resolveUrl(apple[1], cleanUrl)
       }
 
-      // 4. favicon.ico fallback
+      // 4. favicon tag or default /favicon.ico
       if (!logoUrl) {
-        const faviconTag = html.match(/<link[^>]*rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["']/i)
-        if (faviconTag?.[1]) {
-          logoUrl = resolveUrl(faviconTag[1], cleanUrl)
-        } else {
-          logoUrl = `${origin}/favicon.ico`
-        }
+        const fav = html.match(/<link[^>]*rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["']/i)
+        logoUrl = fav?.[1] ? resolveUrl(fav[1], cleanUrl) : `${origin}/favicon.ico`
       }
 
       // theme-color
@@ -77,18 +83,33 @@ export async function POST(request: NextRequest) {
       if (themeColor?.[1]) primaryColor = themeColor[1]
 
     } catch {
-      // Silent fail — favicon.ico fallback
       logoUrl = `${origin}/favicon.ico`
     }
 
-    // Use Claude Haiku to extract structured brand info
-    const message = await getAnthropic().messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 512,
-      messages: [
-        {
-          role: 'user',
-          content: `Extract brand information from this website content. Return ONLY valid JSON with these fields:
+    // Build Claude message — include screenshot if available for visual brand extraction
+    const userContent: Anthropic.MessageParam['content'] = screenshotBase64
+      ? [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: 'image/png', data: screenshotBase64 },
+          },
+          {
+            type: 'text',
+            text: `This is a screenshot of the website ${cleanUrl}. Also here is the page text content:\n\n${pageContent.slice(0, 4000)}\n\nExtract brand information. Return ONLY valid JSON:
+{
+  "businessName": "string",
+  "tagline": "string",
+  "description": "string (1-2 sentences about what they do)",
+  "industry": "string",
+  "primaryColor": "string (dominant brand hex color you can see in the screenshot, e.g. #2563eb)",
+  "toneOfVoice": "string (professional/casual/bold/warm/friendly/authoritative)"
+}`,
+          },
+        ]
+      : [
+          {
+            type: 'text',
+            text: `Extract brand information from this website content. Return ONLY valid JSON:
 {
   "businessName": "string",
   "tagline": "string",
@@ -100,8 +121,13 @@ export async function POST(request: NextRequest) {
 
 Website content:
 ${pageContent.slice(0, 8000)}`,
-        },
-      ],
+          },
+        ]
+
+    const message = await getAnthropic().messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 512,
+      messages: [{ role: 'user', content: userContent }],
     })
 
     const raw = message.content[0].type === 'text' ? message.content[0].text : '{}'
@@ -114,6 +140,7 @@ ${pageContent.slice(0, 8000)}`,
         ...extracted,
         logoUrl,
         primaryColor: primaryColor || extracted.primaryColor || '',
+        usedScreenshot: !!screenshotBase64,
       },
     })
   } catch (err) {
