@@ -12,24 +12,24 @@ const stats = [
 
 const timeline = [
   {
-    year: "2012",
-    title: "Where It Started",
-    desc: "Trent and Stella met while working at a regional digital marketing agency. He ran paid media. She led content strategy. Together they were unstoppable — and knew it.",
+    year: "The Beginning",
+    title: "Broadcast Roots & Brand Expertise",
+    desc: "Trent spent years as a motion picture executive, radio host, and television and film producer — developing online and broadcast content for CBS, Clear Channel Media, Fox News, CNN, and more. Sella built her career as a marketing manager for major online brands and a sales executive at Greystar, one of the world's largest real estate firms. Two different industries. One shared obsession: how great content moves people.",
   },
   {
-    year: "2016",
-    title: "Going Independent",
-    desc: "They launched their own boutique agency, hand-crafting content for local service businesses. The results were real — but the process didn't scale. Every new client meant more hours, more overhead.",
+    year: "The Problem",
+    title: "Great Agencies Were Out of Reach",
+    desc: "Together, Trent and Sella watched thousands of small and mid-sized businesses get left behind — not because they lacked great products, but because real agency-quality content was priced for Fortune 500 budgets. DIY tools existed, but the strategy, consistency, and production value weren't there. There was nothing in between.",
   },
   {
-    year: "2021",
-    title: "The AI Breakthrough",
-    desc: "When AI content tools hit mainstream, Trent and Stella didn't just adopt them — they obsessed over them. After 18 months of testing, failing, and refining, they cracked a repeatable system that could produce agency-quality output at machine speed.",
+    year: "The System",
+    title: "AI Changes Everything",
+    desc: "When AI content tools matured, Trent and Sella saw a once-in-a-generation opportunity. They combined Trent's broadcast production expertise with Sella's brand and sales strategy — and spent 18 months building a repeatable AI content system that delivers agency-grade output at a fraction of the cost.",
   },
   {
-    year: "2024",
+    year: "Today",
     title: "BundledContent is Born",
-    desc: "They packaged the system into a subscription service. One monthly fee. Every channel covered. Fully automated. The response was immediate — within 90 days they had 50 clients and a waitlist.",
+    desc: "The result is BundledContent — a complete, all-in-one social media and online content development firm built specifically for companies who want full-service agency results at DIY-friendly pricing. One monthly subscription. Every channel covered. Real strategy behind every post.",
   },
 ];
 
@@ -56,7 +56,7 @@ const values = [
     icon: <Users className="w-5 h-5 text-purple-600" />,
     bg: "bg-purple-50",
     title: "Real Humans Behind Every Campaign",
-    desc: "AI does the heavy lifting — but Trent and Stella review every client's onboarding and strategy. You're not just a subscription. You're a brand we care about.",
+    desc: "AI does the heavy lifting — but Trent and Sella review every client's onboarding and strategy. You're not just a subscription. You're a brand we care about.",
   },
 ];
 
@@ -82,16 +82,16 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary-50 border border-primary-200 text-primary-700 text-sm font-medium mb-6">
-              <Heart className="w-4 h-4 fill-primary-300 text-primary-500" /> Husband & Wife · Marketing Experts · AI Pioneers
+              <Heart className="w-4 h-4 fill-primary-300 text-primary-500" /> Husband & Wife · Broadcast & Brand Veterans · AI Pioneers
             </div>
             <h1 className="text-5xl md:text-6xl font-bold text-neutral-900 tracking-tight mb-6">
-              We Didn&apos;t Just Adopt AI.<br />
+              Agency Quality.<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-accent-400">
-                We Perfected It.
+                Without the Agency Price.
               </span>
             </h1>
-            <p className="text-xl text-neutral-600 max-w-2xl mx-auto leading-relaxed">
-              BundledContent was built by two marketing veterans who spent years figuring out how to make AI content creation actually work — at scale, on brand, and without the chaos.
+            <p className="text-xl text-neutral-600 max-w-3xl mx-auto leading-relaxed">
+              BundledContent is a complete, all-in-one social media and online content development firm — built for companies who want full-service agency results at DIY-friendly pricing. Behind it is a husband and wife team with decades of broadcast, brand, and marketing experience who figured out how to make AI content creation work at real scale.
             </p>
           </div>
 
@@ -118,10 +118,10 @@ export default function AboutPage() {
               </div>
               <div className="p-6">
                 <p className="text-neutral-600 text-sm leading-relaxed">
-                  Trent has spent 12+ years in performance marketing — from managing $2M/month in ad spend for enterprise brands to building AI-driven content pipelines that deliver 150 pieces of content per client monthly. He built the engine that powers BundledContent.
+                  A former motion picture executive, radio host, and television and film producer, Trent has developed online and broadcast content for <span className="font-semibold text-neutral-800">CBS, Clear Channel Media, Fox News, CNN,</span> and more. He brings decades of storytelling craft and production expertise to the AI systems that power BundledContent.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-4">
-                  {["Paid Media", "AI Systems", "Content Ops", "Analytics"].map(tag => (
+                  {["Motion Picture", "Broadcast Media", "AI Systems", "Content Production"].map(tag => (
                     <span key={tag} className="text-xs font-semibold px-2.5 py-1 bg-primary-50 text-primary-700 rounded-full border border-primary-100">{tag}</span>
                   ))}
                 </div>
@@ -134,7 +134,7 @@ export default function AboutPage() {
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/stella.png"
-                  alt="Stella Daniel"
+                  alt="Sella Daniel"
                   className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/70 via-transparent to-transparent" />
@@ -142,16 +142,16 @@ export default function AboutPage() {
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-accent-400 text-white text-xs font-bold rounded-full mb-2">
                     Co-Founder
                   </div>
-                  <h2 className="text-2xl font-bold text-white">Stella Daniel</h2>
+                  <h2 className="text-2xl font-bold text-white">Sella Daniel</h2>
                   <p className="text-white/80 text-sm">Brand Strategy · Content · Voice & Narrative</p>
                 </div>
               </div>
               <div className="p-6">
                 <p className="text-neutral-600 text-sm leading-relaxed">
-                  Stella is the creative force behind BundledContent&apos;s quality standard. With a background in brand storytelling and content strategy across 200+ businesses, she trained the AI models, built the editorial guidelines, and ensures every piece of content actually sounds human.
+                  A former marketing manager for several major online brands and a sales executive at <span className="font-semibold text-neutral-800">Greystar</span> — one of the world's largest real estate companies — Sella brings elite-level brand strategy and sales intelligence to every BundledContent campaign. She ensures the content doesn't just look good. It converts.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-4">
-                  {["Brand Voice", "Content Strategy", "Copywriting", "Social Media"].map(tag => (
+                  {["Brand Strategy", "Sales Leadership", "Online Marketing", "Client Growth"].map(tag => (
                     <span key={tag} className="text-xs font-semibold px-2.5 py-1 bg-accent-50 text-accent-700 rounded-full border border-accent-100">{tag}</span>
                   ))}
                 </div>
@@ -180,7 +180,7 @@ export default function AboutPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-neutral-900 mb-4">The Story Behind the System</h2>
-            <p className="text-neutral-500 text-lg max-w-xl mx-auto">It took 12 years, two careers, and one big bet on AI to build something this powerful.</p>
+            <p className="text-neutral-500 text-lg max-w-2xl mx-auto">From broadcast networks to boardrooms to AI labs — how two industry veterans built the content machine that levels the playing field for every business.</p>
           </div>
 
           <div className="relative">
@@ -218,7 +218,7 @@ export default function AboutPage() {
             <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-primary-500 rounded-full blur-3xl opacity-20" />
             <div className="relative">
               <p className="text-white text-2xl md:text-3xl font-semibold leading-relaxed mb-8">
-                &ldquo;We built BundledContent because we were tired of watching great small businesses get outspent and outpublished by bigger competitors. AI levels the playing field — if you know how to use it right.&rdquo;
+                &ldquo;We&apos;ve worked inside the biggest media companies in the world and inside lean startups. The gap between what big brands spend on content and what small businesses can afford is massive. BundledContent closes that gap — permanently.&rdquo;
               </p>
               <div className="flex items-center gap-4">
                 <div className="flex -space-x-3">
@@ -227,10 +227,10 @@ export default function AboutPage() {
                     alt="Trent" className="w-12 h-12 rounded-full border-2 border-neutral-700 object-cover object-top" />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="/stella.png"
-                    alt="Stella" className="w-12 h-12 rounded-full border-2 border-neutral-700 object-cover object-top" />
+                    alt="Sella" className="w-12 h-12 rounded-full border-2 border-neutral-700 object-cover object-top" />
                 </div>
                 <div>
-                  <p className="text-white font-bold">Trent & Stella Daniel</p>
+                  <p className="text-white font-bold">Trent & Sella Daniel</p>
                   <p className="text-neutral-400 text-sm">Co-Founders, BundledContent</p>
                 </div>
               </div>
@@ -269,7 +269,7 @@ export default function AboutPage() {
             ))}
           </div>
           <p className="text-2xl font-semibold text-neutral-800 italic max-w-2xl mx-auto mb-6">
-            &ldquo;Working with Trent and Stella feels like having a full marketing team in your corner — at a fraction of the cost. They actually care about your brand.&rdquo;
+            &ldquo;Working with Trent and Sella feels like having a full marketing team in your corner — at a fraction of the cost. They actually care about your brand.&rdquo;
           </p>
           <p className="text-neutral-500 font-medium">— James T., Business Owner · Full Plan client since 2024</p>
         </div>
