@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url)
     const page = parseInt(searchParams.get('page') ?? '0')
-    const pageSize = 24
+    const pageSize = Math.min(parseInt(searchParams.get('pageSize') ?? '96'), 200)
 
     const key = process.env.HEYGEN_API_KEY
     if (!key) return NextResponse.json({ error: 'HeyGen not configured' }, { status: 500 })

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import OnboardingNav from "@/components/OnboardingNav";
 import { CheckCircle, ChevronRight, Loader2 } from "lucide-react";
@@ -11,8 +11,6 @@ type Avatar = {
   preview: string;
   gender: string;
 };
-
-const INITIAL_BATCHES = 4; // pages 0-3
 
 export default function ChooseAvatarPage() {
   const router = useRouter();
@@ -25,23 +23,7 @@ export default function ChooseAvatarPage() {
   const [selected, setSelected] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [firstName, setFirstName] = useState("there");
-  const [loadProgress, setLoadProgress] = useState(0); // 0-100
 
-  const fetchPage = useCallback(async (pageNum: number, append: boolean) => {
-    try {
-      const res = await fetch(`/api/heygen/avatars?page=${pageNum}`)
-      const data = await res.json()
-      if (data.avatars) {
-        setAvatars(prev => append ? [...prev, ...data.avatars] : data.avatars)
-        setHasMore(data.hasMore)
-        setTotal(data.total)
-      }
-    } catch {
-      // ignore
-    }
-  }, [])
-
-  // Stream first 4 batches sequentially, advancing progress bar each time
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
@@ -51,24 +33,33 @@ export default function ChooseAvatarPage() {
       })
       .catch(() => {});
 
-    async function streamInitial() {
-      for (let p = 0; p < INITIAL_BATCHES; p++) {
-        if (p > 0) await new Promise(r => setTimeout(r, 120))
-        await fetchPage(p, p > 0)
-        setLoadProgress(Math.round(((p + 1) / INITIAL_BATCHES) * 100))
-        if (p === 0) setLoading(false)
-      }
-      setPage(INITIAL_BATCHES - 1)
-    }
-
-    streamInitial()
-  }, [fetchPage]);
+    // Fetch all first-page avatars in one shot — browser paints each image as it arrives
+    fetch("/api/heygen/avatars?page=0&pageSize=96")
+      .then(r => r.json())
+      .then(data => {
+        if (data.avatars) {
+          setAvatars(data.avatars)
+          setHasMore(data.hasMore)
+          setTotal(data.total)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, []);
 
   async function loadMore() {
     const next = page + 1
     setPage(next)
     setLoadingMore(true)
-    await fetchPage(next, true)
+    try {
+      const res = await fetch(`/api/heygen/avatars?page=${next}&pageSize=96`)
+      const data = await res.json()
+      if (data.avatars) {
+        setAvatars(prev => [...prev, ...data.avatars])
+        setHasMore(data.hasMore)
+        setTotal(data.total)
+      }
+    } catch { /* ignore */ }
     setLoadingMore(false)
   }
 
@@ -106,40 +97,20 @@ export default function ChooseAvatarPage() {
         </div>
 
         {loading ? (
-          <div className="py-24 max-w-sm mx-auto text-center space-y-4">
-            <p className="text-sm font-medium text-neutral-600">Loading avatars…</p>
-            <div className="h-2 bg-neutral-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary-600 rounded-full transition-all duration-500 ease-out"
-                style={{ width: `${loadProgress === 0 ? 8 : loadProgress}%` }}
-              />
-            </div>
-            <p className="text-xs text-neutral-400">{loadProgress === 0 ? "Connecting…" : `${loadProgress}%`}</p>
+          <div className="flex items-center justify-center py-24 gap-3 text-neutral-400">
+            <Loader2 className="w-5 h-5 animate-spin text-primary-600" />
+            <span className="text-sm">Fetching avatars…</span>
           </div>
         ) : avatars.length === 0 ? (
           <div className="text-center py-24 text-neutral-400">No avatars available.</div>
         ) : (
           <>
-            {/* Subtle progress strip while remaining batches stream in */}
-            {loadProgress < 100 && (
-              <div className="mb-4 space-y-1">
-                <div className="h-1.5 bg-neutral-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary-400 rounded-full transition-all duration-500 ease-out"
-                    style={{ width: `${loadProgress}%` }}
-                  />
-                </div>
-                <p className="text-xs text-neutral-400 text-right">{avatars.length} loaded…</p>
-              </div>
-            )}
-
             {/* Compact grid — small thumbnails, lots per row */}
             <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2 mb-6">
               {avatars.map((avatar) => (
                 <button
                   key={avatar.id}
                   onClick={() => setSelected(avatar.id)}
-                  style={{ animation: "fadeIn 0.3s ease both" }}
                   className={`relative rounded-xl overflow-hidden border-2 transition-all group ${
                     selected === avatar.id
                       ? "border-primary-600 ring-2 ring-primary-200 shadow-md"
