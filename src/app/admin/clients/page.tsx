@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Plus, Search } from "lucide-react";
+import { AddClientModal } from "@/components/admin/AddClientModal";
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   lead: { label: "Lead", className: "bg-neutral-100 text-neutral-600" },
@@ -32,8 +33,10 @@ export default function ClientsPage() {
   const [activeTab, setActiveTab] = useState("All");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
+  function loadClients() {
+    setLoading(true);
     fetch("/api/clients")
       .then((r) => r.json())
       .then((data) => {
@@ -41,7 +44,9 @@ export default function ClientsPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  }
+
+  useEffect(() => { loadClients(); }, []);
 
   const filtered = clients.filter((c) => {
     const matchesTab = activeTab === "All" || c.status === activeTab.toLowerCase();
@@ -60,6 +65,12 @@ export default function ClientsPage() {
 
   return (
     <div className="space-y-6">
+      {showModal && (
+        <AddClientModal
+          onClose={() => { setShowModal(false); loadClients(); }}
+        />
+      )}
+
       {/* Top bar */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-neutral-900">Clients</h1>
@@ -74,7 +85,10 @@ export default function ClientsPage() {
               className="pl-9 pr-4 py-2 text-sm border border-neutral-200 rounded-xl bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-600 w-60"
             />
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-xl hover:bg-primary-700 transition-colors">
+          <button
+            onClick={() => setShowModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-xl hover:bg-primary-700 transition-colors"
+          >
             <Plus className="w-4 h-4" />
             Add Client
           </button>
@@ -91,9 +105,7 @@ export default function ClientsPage() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                isActive
-                  ? "bg-primary-600 text-white"
-                  : "text-neutral-600 hover:bg-neutral-100"
+                isActive ? "bg-primary-600 text-white" : "text-neutral-600 hover:bg-neutral-100"
               }`}
             >
               {tab}
@@ -129,7 +141,7 @@ export default function ClientsPage() {
             ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-6 py-12 text-center text-sm text-neutral-400">
-                  {search ? `No clients matching "${search}"` : "No clients yet."}
+                  {search ? `No clients matching "${search}"` : "No clients yet. Click Add Client to get started."}
                 </td>
               </tr>
             ) : (
@@ -149,7 +161,7 @@ export default function ClientsPage() {
                         {status.label}
                       </span>
                     </td>
-                    <td className="px-4 py-4 text-neutral-500 text-xs">{client.onboarding_step ?? "—"}</td>
+                    <td className="px-4 py-4 text-neutral-500 text-xs">{(client.onboarding_step ?? "—").replace(/_/g, " ")}</td>
                     <td className="px-4 py-4">
                       {!subStatus ? (
                         <span className="text-neutral-400">—</span>

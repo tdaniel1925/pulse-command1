@@ -1,60 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Check, Zap, Star, ArrowRight, Share2, Mic, Video, BarChart3 } from "lucide-react";
+import { Check, Zap, Star, ArrowRight, Share2, Mic, Video, BarChart3, Loader2, Phone } from "lucide-react";
 import OnboardingNav from "@/components/OnboardingNav";
-
-const steps = [
-  {
-    num: 1,
-    title: "Create Your Account",
-    desc: "Account created and plan activated successfully.",
-    done: true,
-    href: null,
-    cta: null,
-  },
-  {
-    num: 2,
-    title: "Set Up Your Brand Assets",
-    desc: "Scan your website, upload your logo, set brand colors and tone of voice.",
-    done: false,
-    href: "/onboarding/brand-assets",
-    cta: "Set Up Brand",
-    active: true,
-  },
-  {
-    num: 3,
-    title: "Choose Your AI Avatar",
-    desc: "Pick a professional AI presenter from our library for your monthly brand videos.",
-    done: false,
-    href: null,
-    cta: null,
-  },
-  {
-    num: 4,
-    title: "Choose Your AI Voice",
-    desc: "Select a voice from our ElevenLabs library for your bi-weekly podcast episodes.",
-    done: false,
-    href: null,
-    cta: null,
-  },
-  {
-    num: 5,
-    title: "Complete Your Brand Interview",
-    desc: "A 15-minute AI phone call captures your brand story. This unlocks content generation.",
-    done: false,
-    href: null,
-    cta: null,
-  },
-  {
-    num: 6,
-    title: "Your Content Goes Live",
-    desc: "We build your full content pipeline — 150 posts, videos, podcast episodes, and reports.",
-    done: false,
-    href: null,
-    cta: null,
-  },
-];
 
 const included = [
   { icon: <Share2 className="w-4 h-4 text-primary-600" />, text: "150 social posts/month across 5 channels" },
@@ -63,7 +12,139 @@ const included = [
   { icon: <BarChart3 className="w-4 h-4 text-teal-600" />, text: "Monthly performance report & review" },
 ];
 
+const STEP_ORDER = ["signed_up", "brand_assets_saved", "avatar_selected", "voice_selected", "call_done", "active"];
+
+function stepComplete(currentStep: string, targetStep: string) {
+  const ci = STEP_ORDER.indexOf(currentStep);
+  const ti = STEP_ORDER.indexOf(targetStep);
+  return ci >= ti && ci >= 0 && ti >= 0;
+}
+
 export default function WelcomePage() {
+  const [onboardingStep, setOnboardingStep] = useState<string>("");
+  const [phone, setPhone] = useState("");
+  const [phoneInput, setPhoneInput] = useState("");
+  const [savingPhone, setSavingPhone] = useState(false);
+  const [phoneSaved, setPhoneSaved] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then(r => r.json())
+      .then(d => {
+        setOnboardingStep(d.onboarding_step ?? "signed_up");
+        setPhone(d.phone ?? "");
+        setPhoneInput(d.phone ?? "");
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  async function savePhone() {
+    if (!phoneInput.trim()) { setPhoneError("Please enter your phone number"); return; }
+    setSavingPhone(true);
+    setPhoneError("");
+    try {
+      const res = await fetch("/api/onboarding/pin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: phoneInput.trim() }),
+      });
+      if (!res.ok) throw new Error("Failed to save");
+      setPhone(phoneInput.trim());
+      setPhoneSaved(true);
+    } catch {
+      setPhoneError("Failed to save phone number. Please try again.");
+    } finally {
+      setSavingPhone(false);
+    }
+  }
+
+  const hasBrandAssets = stepComplete(onboardingStep, "brand_assets_saved");
+  const hasAvatar = stepComplete(onboardingStep, "avatar_selected");
+  const hasVoice = stepComplete(onboardingStep, "voice_selected");
+  const hasPhone = !!phone;
+  const hasCall = stepComplete(onboardingStep, "call_done");
+
+  // Next unlocked step
+  const nextHref = !hasBrandAssets
+    ? "/onboarding/brand-assets"
+    : !hasAvatar
+    ? "/onboarding/choose-avatar"
+    : !hasVoice
+    ? "/onboarding/choose-voice"
+    : !hasCall
+    ? "/onboarding/interview"
+    : "/dashboard";
+
+  const nextLabel = !hasBrandAssets
+    ? "Start Step 2: Brand Assets →"
+    : !hasAvatar
+    ? "Continue: Choose Avatar →"
+    : !hasVoice
+    ? "Continue: Choose Voice →"
+    : !hasCall
+    ? "Continue: Brand Interview →"
+    : "Go to Dashboard →";
+
+  const steps = [
+    {
+      num: 1,
+      title: "Create Your Account",
+      desc: "Account created and plan activated successfully.",
+      done: true,
+      href: null as string | null,
+      cta: null as string | null,
+      locked: false,
+    },
+    {
+      num: 2,
+      title: "Set Up Your Brand Assets",
+      desc: "Scan your website, upload your logo, set brand colors and tone of voice.",
+      done: hasBrandAssets,
+      href: "/onboarding/brand-assets",
+      cta: hasBrandAssets ? null : "Set Up Brand",
+      locked: false,
+    },
+    {
+      num: 3,
+      title: "Choose Your AI Avatar",
+      desc: "Pick a professional AI presenter from our library for your monthly brand videos.",
+      done: hasAvatar,
+      href: hasBrandAssets ? "/onboarding/choose-avatar" : null,
+      cta: hasAvatar ? null : hasBrandAssets ? "Choose Avatar" : null,
+      locked: !hasBrandAssets && !hasAvatar,
+    },
+    {
+      num: 4,
+      title: "Choose Your AI Voice",
+      desc: "Select a voice from our ElevenLabs library for your bi-weekly podcast episodes.",
+      done: hasVoice,
+      href: hasAvatar ? "/onboarding/choose-voice" : null,
+      cta: hasVoice ? null : hasAvatar ? "Choose Voice" : null,
+      locked: !hasAvatar && !hasVoice,
+    },
+    {
+      num: 5,
+      title: "Complete Your Brand Interview",
+      desc: "A 15-minute AI phone call captures your brand story. This unlocks all content generation.",
+      done: hasCall,
+      href: hasVoice ? "/onboarding/interview" : null,
+      cta: hasCall ? null : hasVoice ? "Start Interview" : null,
+      locked: !hasVoice && !hasCall,
+    },
+    {
+      num: 6,
+      title: "Your Content Goes Live",
+      desc: "We build your full content pipeline — 150 posts, videos, podcast episodes, and reports.",
+      done: hasCall,
+      href: hasCall ? "/dashboard" : null,
+      cta: hasCall ? "Go to Dashboard" : null,
+      locked: !hasCall,
+    },
+  ];
+
   return (
     <>
       <OnboardingNav current="welcome" />
@@ -92,62 +173,112 @@ export default function WelcomePage() {
             {/* Left: Steps */}
             <div className="lg:col-span-2 space-y-4">
               <h2 className="text-xl font-bold text-neutral-900">Your Setup Checklist</h2>
-              <p className="text-sm text-neutral-500 mb-2">Complete all steps to activate your content pipeline. Steps 3–6 unlock after brand setup.</p>
+              <p className="text-sm text-neutral-500 mb-2">Complete all steps to activate your content pipeline.</p>
 
-              {steps.map((step) => {
-                const isDone = step.done;
-                const isActive = (step as { active?: boolean }).active;
-                const isLocked = !isDone && !isActive;
-
-                return (
-                  <div
-                    key={step.num}
-                    className={`flex items-start gap-4 p-4 rounded-2xl border transition-all ${
-                      isDone
-                        ? "bg-green-50 border-green-200"
-                        : isActive
-                        ? "bg-primary-50 border-2 border-primary-300 relative overflow-hidden"
-                        : "bg-white border-neutral-200 opacity-50"
-                    }`}
-                  >
-                    {isActive && (
-                      <div className="absolute top-0 right-0 bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                        START HERE
-                      </div>
-                    )}
-
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                      isDone ? "bg-green-500" : isActive ? "bg-primary-600" : "bg-neutral-200"
-                    }`}>
-                      {isDone
-                        ? <Check className="w-5 h-5 text-white" />
-                        : <span className={`font-bold text-sm ${isActive ? "text-white" : "text-neutral-500"}`}>{step.num}</span>
-                      }
+              {/* Phone number collection — shown if not yet saved */}
+              {!loading && !hasPhone && (
+                <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 space-y-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Phone className="w-4 h-4 text-white" />
                     </div>
-
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-1">
-                        <p className={`text-sm font-semibold ${isDone ? "text-green-900" : isActive ? "text-primary-900" : "text-neutral-700"}`}>
-                          {step.title}
-                        </p>
-                        {isDone && <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Done ✓</span>}
-                        {isLocked && <span className="text-xs text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-full">Locked</span>}
-                      </div>
-                      <p className={`text-xs mb-3 ${isDone ? "text-green-700" : isActive ? "text-primary-700" : "text-neutral-500"}`}>
-                        {step.desc}
-                      </p>
-                      {step.href && step.cta && (
-                        <Link
-                          href={step.href}
-                          className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-lg hover:bg-primary-700 transition-colors"
-                        >
-                          {step.cta} <ArrowRight className="w-3.5 h-3.5" />
-                        </Link>
-                      )}
+                    <div>
+                      <p className="text-sm font-bold text-amber-900">Add Your Phone Number</p>
+                      <p className="text-xs text-amber-700">Required for your brand interview call and SMS reminders.</p>
                     </div>
                   </div>
-                );
-              })}
+                  <div className="flex gap-2">
+                    <input
+                      type="tel"
+                      value={phoneInput}
+                      onChange={e => setPhoneInput(e.target.value)}
+                      placeholder="+1 (555) 000-0000"
+                      className="flex-1 px-3 py-2 border border-amber-300 rounded-xl text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+                    />
+                    <button
+                      onClick={savePhone}
+                      disabled={savingPhone}
+                      className="px-4 py-2 bg-amber-500 text-white text-sm font-bold rounded-xl hover:bg-amber-600 disabled:opacity-60 transition-colors flex items-center gap-1.5"
+                    >
+                      {savingPhone ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                      Save
+                    </button>
+                  </div>
+                  {phoneError && <p className="text-xs text-red-600">{phoneError}</p>}
+                </div>
+              )}
+
+              {!loading && hasPhone && !phoneSaved && (
+                <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-2 text-sm text-green-700">
+                  <Check className="w-4 h-4 flex-shrink-0" />
+                  Phone saved: <span className="font-mono font-medium">{phone}</span>
+                </div>
+              )}
+
+              {phoneSaved && (
+                <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-3 flex items-center gap-2 text-sm text-green-700">
+                  <Check className="w-4 h-4 flex-shrink-0" />
+                  Phone number saved!
+                </div>
+              )}
+
+              {loading ? (
+                <div className="flex items-center justify-center py-12 text-neutral-400">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" /> Loading…
+                </div>
+              ) : (
+                steps.map((step) => {
+                  const isActive = !step.done && !step.locked && !!step.href;
+                  return (
+                    <div
+                      key={step.num}
+                      className={`flex items-start gap-4 p-4 rounded-2xl border transition-all ${
+                        step.done
+                          ? "bg-green-50 border-green-200"
+                          : isActive
+                          ? "bg-primary-50 border-2 border-primary-300 relative overflow-hidden"
+                          : "bg-white border-neutral-200 opacity-50"
+                      }`}
+                    >
+                      {isActive && (
+                        <div className="absolute top-0 right-0 bg-primary-600 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                          NEXT STEP
+                        </div>
+                      )}
+
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        step.done ? "bg-green-500" : isActive ? "bg-primary-600" : "bg-neutral-200"
+                      }`}>
+                        {step.done
+                          ? <Check className="w-5 h-5 text-white" />
+                          : <span className={`font-bold text-sm ${isActive ? "text-white" : "text-neutral-500"}`}>{step.num}</span>
+                        }
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className={`text-sm font-semibold ${step.done ? "text-green-900" : isActive ? "text-primary-900" : "text-neutral-700"}`}>
+                            {step.title}
+                          </p>
+                          {step.done && <span className="text-xs text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Done ✓</span>}
+                          {step.locked && <span className="text-xs text-neutral-400 bg-neutral-100 px-2 py-0.5 rounded-full">Locked</span>}
+                        </div>
+                        <p className={`text-xs mb-3 ${step.done ? "text-green-700" : isActive ? "text-primary-700" : "text-neutral-500"}`}>
+                          {step.desc}
+                        </p>
+                        {step.href && step.cta && (
+                          <Link
+                            href={step.href}
+                            className="inline-flex items-center gap-1.5 px-4 py-2 bg-primary-600 text-white text-xs font-bold rounded-lg hover:bg-primary-700 transition-colors"
+                          >
+                            {step.cta} <ArrowRight className="w-3.5 h-3.5" />
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
 
             {/* Right: Sidebar */}
@@ -201,12 +332,14 @@ export default function WelcomePage() {
               </div>
 
               {/* Next step CTA */}
-              <Link
-                href="/onboarding/brand-assets"
-                className="block w-full py-3 bg-primary-600 text-white text-sm font-bold rounded-xl text-center hover:bg-primary-700 transition-colors shadow-md"
-              >
-                Start Step 2: Brand Assets →
-              </Link>
+              {!loading && (
+                <Link
+                  href={nextHref}
+                  className="block w-full py-3 bg-primary-600 text-white text-sm font-bold rounded-xl text-center hover:bg-primary-700 transition-colors shadow-md"
+                >
+                  {nextLabel}
+                </Link>
+              )}
             </div>
           </div>
         </div>

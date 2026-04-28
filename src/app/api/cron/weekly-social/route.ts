@@ -31,6 +31,9 @@ async function generatePredisPost(params: {
   logoUrl: string;
   handle: string;
   mediaType: "single_image" | "carousel";
+  businessDescription?: string;
+  toneOfVoice?: string;
+  targetAudience?: string;
 }): Promise<string | null> {
   const brandDetails = JSON.stringify({
     color_1: params.primaryColor?.replace("#", "") || "1AABCF",
@@ -40,7 +43,12 @@ async function generatePredisPost(params: {
     logo_url: params.logoUrl || "",
   });
 
-  const text = `${params.topic} — ${params.businessName}`;
+  // Richer prompt = better Predis output
+  const contextParts = [params.topic, params.businessName];
+  if (params.businessDescription) contextParts.push(params.businessDescription.slice(0, 120));
+  if (params.toneOfVoice) contextParts.push(`Tone: ${params.toneOfVoice}`);
+  if (params.targetAudience) contextParts.push(`Audience: ${params.targetAudience.slice(0, 80)}`);
+  const text = contextParts.join(" | ");
 
   const formData = new FormData();
   formData.append("brand_id", PREDIS_BRAND_ID);
@@ -86,7 +94,8 @@ export async function GET(req: NextRequest) {
     .select(`
       id, business_name, website,
       brand_profiles (
-        primary_color, secondary_color, logo_url, priority_channels
+        primary_color, secondary_color, logo_url, priority_channels,
+        business_description, tagline, tone_of_voice, target_audience
       )
     `)
     .eq("status", "active");
@@ -121,6 +130,9 @@ export async function GET(req: NextRequest) {
         logoUrl: bp?.logo_url ?? "",
         handle,
         mediaType: "single_image",
+        businessDescription: bp?.business_description ?? undefined,
+        toneOfVoice: bp?.tone_of_voice ?? undefined,
+        targetAudience: bp?.target_audience ?? undefined,
       });
 
       if (!postId) {

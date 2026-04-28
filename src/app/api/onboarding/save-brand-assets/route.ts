@@ -21,31 +21,33 @@ export async function POST(request: NextRequest) {
       primaryColor, secondaryColor, logoUrl,
       businessDescription, tagline, industry, website,
       toneOfVoice, targetAudience, uniqueValueProp,
-      contentPillars, keywords,
+      contentPillars, keywords, priorityChannels,
     } = body
 
     const admin = createAdminClient()
 
-    // Update brand profile with all fields
+    // Update brand profile with all fields Predis needs + brand context
     if (client.brand_profile_id) {
       await admin.from('brand_profiles').update({
-        primary_color: primaryColor,
-        secondary_color: secondaryColor,
-        logo_url: logoUrl,
-        business_description: businessDescription,
-        tone_of_voice: toneOfVoice,
-        target_audience: targetAudience,
-        unique_value_prop: uniqueValueProp,
+        primary_color: primaryColor ?? null,
+        secondary_color: secondaryColor ?? null,
+        logo_url: logoUrl ?? null,
+        business_description: businessDescription ?? null,
+        tagline: tagline ?? null,
+        tone_of_voice: toneOfVoice ?? null,
+        target_audience: targetAudience ?? null,
+        unique_value_prop: uniqueValueProp ?? null,
         content_pillars: contentPillars ?? [],
         keywords: keywords ?? [],
+        priority_channels: priorityChannels ?? ['instagram', 'facebook', 'linkedin'],
       }).eq('id', client.brand_profile_id)
     }
 
     // Update client
     await admin.from('clients').update({
-      website,
-      industry,
-      onboarding_step: 'assets_recorded',
+      website: website ?? null,
+      industry: industry ?? null,
+      onboarding_step: 'brand_assets_saved',
     }).eq('id', client.id)
 
     await admin.from('activities').insert({

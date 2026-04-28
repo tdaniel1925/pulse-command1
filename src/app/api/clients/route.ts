@@ -32,21 +32,30 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { firstName, lastName, email, businessName, phone } = body
+    // Accept both camelCase (legacy) and snake_case (modal)
+    const first_name = body.first_name ?? body.firstName ?? ''
+    const last_name = body.last_name ?? body.lastName ?? ''
+    const email = body.email ?? ''
+    const business_name = body.business_name ?? body.businessName ?? null
+    const phone = body.phone ?? null
+    const website = body.website ?? null
+    const industry = body.industry ?? null
+    const status = body.status ?? 'lead'
+    const assigned_to = body.assigned_to ?? null
 
-    if (!firstName || !lastName || !email) {
+    if (!first_name || !email) {
       return NextResponse.json(
-        { error: 'Missing required fields: firstName, lastName, email' },
+        { error: 'Missing required fields: first_name, email' },
         { status: 400 }
       )
     }
 
-    const supabase = await createClient()
+    const admin = createAdminClient()
 
     // Create brand profile first
-    const { data: brandProfile, error: brandProfileError } = await supabase
+    const { data: brandProfile, error: brandProfileError } = await admin
       .from('brand_profiles')
-      .insert({ business_name: businessName ?? null })
+      .insert({ business_name: business_name ?? null })
       .select('id')
       .single()
 
@@ -55,18 +64,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create brand profile' }, { status: 500 })
     }
 
-    // Insert client record linked to brand profile
-    const { data: client, error: clientError } = await supabase
+    // Insert client record
+    const { data: client, error: clientError } = await admin
       .from('clients')
       .insert({
-        first_name: firstName,
-        last_name: lastName,
+        first_name,
+        last_name: last_name || null,
         email,
-        business_name: businessName ?? null,
-        phone: phone ?? null,
+        business_name,
+        phone,
+        website,
+        industry,
+        status,
+        assigned_to,
         brand_profile_id: brandProfile.id,
         subscription_status: 'pending',
-        onboarding_step: 'not_started',
+        onboarding_step: 'signed_up',
       })
       .select('*')
       .single()
@@ -75,10 +88,6 @@ export async function POST(request: NextRequest) {
       console.error('Error creating client:', clientError)
       return NextResponse.json({ error: 'Failed to create client' }, { status: 500 })
     }
-
-    // TODO: send welcome email via Resend
-    // await resend.emails.send({ to: email, subject: 'Welcome to BundledContent', ... })
-    console.log('TODO: Send welcome email via Resend to:', email)
 
     return NextResponse.json(client, { status: 201 })
   } catch (error) {

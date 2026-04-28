@@ -11,6 +11,7 @@ import ManualContentCreator from "@/components/admin/ManualContentCreator";
 import { formatPhone } from "@/lib/formatPhone";
 import HeygenVideoLinker from "@/components/admin/HeygenVideoLinker";
 import { ClientAddonsManager } from "@/components/admin/ClientAddonsManager";
+import { ClientStatusEditor } from "@/components/admin/ClientStatusEditor";
 
 const onboardingStepOrder = [
   { key: "signed_up", label: "Signed Up" },
@@ -421,11 +422,42 @@ export default async function ClientDetailPage({
             ))}
           </div>
 
+          {/* Status Editor */}
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
+            <h2 className="text-sm font-semibold text-neutral-900 mb-3">Edit Status</h2>
+            <ClientStatusEditor
+              clientId={client?.id ?? ""}
+              currentStatus={clientStatus}
+              currentStep={currentStep}
+            />
+          </div>
+
           {/* Quick Actions */}
           <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
             <h2 className="text-sm font-semibold text-neutral-900 mb-3">Quick Actions</h2>
             <ClientActions clientId={client?.id ?? ""} clientPhone={client?.phone} />
           </div>
+
+          {/* Activity Feed */}
+          {activities && activities.length > 0 && (
+            <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
+              <h2 className="text-sm font-semibold text-neutral-900 mb-3">Recent Activity</h2>
+              <ul className="space-y-3">
+                {activities.map((act) => (
+                  <li key={act.id} className="flex items-start gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary-400 flex-shrink-0 mt-1.5" />
+                    <div>
+                      <p className="text-xs font-medium text-neutral-800">{act.title}</p>
+                      {act.description && <p className="text-xs text-neutral-500 mt-0.5">{act.description}</p>}
+                      <p className="text-xs text-neutral-400 mt-0.5">
+                        {act.created_at ? new Date(act.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) : ""}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>
