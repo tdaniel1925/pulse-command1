@@ -12,6 +12,7 @@ import {
   Settings,
   CreditCard,
   Upload,
+  Sparkles,
 } from "lucide-react";
 
 const navItems = [
@@ -22,6 +23,7 @@ const navItems = [
   { label: "Reports", href: "/dashboard/report", icon: BarChart2 },
   { label: "Workflow", href: "/dashboard/workflow", icon: GitBranch },
   { label: "Upload Content", href: "/dashboard/upload", icon: Upload },
+  { label: "Add-ons", href: "/dashboard/addons", icon: Sparkles },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
   { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
 ];

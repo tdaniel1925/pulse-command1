@@ -10,6 +10,7 @@ import { ClientActions } from "@/components/admin/ClientActions";
 import ManualContentCreator from "@/components/admin/ManualContentCreator";
 import { formatPhone } from "@/lib/formatPhone";
 import HeygenVideoLinker from "@/components/admin/HeygenVideoLinker";
+import { ClientAddonsManager } from "@/components/admin/ClientAddonsManager";
 
 const onboardingStepOrder = [
   { key: "signed_up", label: "Signed Up" },
@@ -278,6 +279,9 @@ export default async function ClientDetailPage({
 
           {/* HeyGen Video Linker */}
           <HeygenVideoLinker clientId={id} />
+
+          {/* Add-ons Manager */}
+          <ClientAddonsManager clientId={id} />
 
           {/* Content Requests from Client */}
           {contentRequests && contentRequests.length > 0 && (

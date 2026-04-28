@@ -3,6 +3,10 @@
     {
       "path": "/api/cron/demo-followup",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/monthly-delivery",
+      "schedule": "0 9 * * *"
     }
   ]
 }
