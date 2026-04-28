@@ -11,7 +11,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Logo */}
         <div className="px-4 py-5 border-b border-neutral-800">
           <Link href="/admin">
-            <Image src="/logo.png" alt="PulseFlow" width={130} height={44} className="h-8 w-auto brightness-0 invert" />
+            <Image src="/logo-white.png" alt="PulseFlow" width={130} height={44} className="h-8 w-auto" />
           </Link>
         </div>
 
