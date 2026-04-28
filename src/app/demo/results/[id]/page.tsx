@@ -297,17 +297,20 @@ export default function DemoResultsPage() {
           {([
             { key: "posts", label: "Social Posts", icon: Share2 },
             { key: "audio", label: "Podcast",      icon: Mic },
-            { key: "video", label: "AI Video",     icon: Video, locked: !isVerified },
-          ] as const).map(t => (
-            <button key={t.key} onClick={() => setActiveTab(t.key)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === t.key ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-700"
-              }`}>
-              {t.locked ? <Lock className="w-4 h-4" /> : <t.icon className="w-4 h-4" />}
-              {t.label}
-              {t.locked && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold">Verify</span>}
-            </button>
-          ))}
+            { key: "video", label: "AI Video",     icon: Video },
+          ] as const).map(t => {
+            const locked = t.key === "video" && !isVerified;
+            return (
+              <button key={t.key} onClick={() => setActiveTab(t.key)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === t.key ? "bg-white text-neutral-900 shadow-sm" : "text-neutral-500 hover:text-neutral-700"
+                }`}>
+                {locked ? <Lock className="w-4 h-4" /> : <t.icon className="w-4 h-4" />}
+                {t.label}
+                {locked && <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-semibold">Verify</span>}
+              </button>
+            );
+          })}
         </div>
 
         {/* Social Posts */}
