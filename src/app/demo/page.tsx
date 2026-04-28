@@ -82,7 +82,7 @@ export default function DemoPage() {
       <nav className="relative z-10 px-4 py-5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <Image src="/logo.png" alt="PulseFlow" width={140} height={47} className="h-9 w-auto" />
+            <Image src="/logo-white.png" alt="PulseFlow" width={140} height={47} className="h-9 w-auto" />
           </Link>
           <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors">
             Already a member? Sign in →
