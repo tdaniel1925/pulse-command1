@@ -44,7 +44,7 @@ export default function OnboardingCompletePage() {
         />
       ))}
 
-      <OnboardingNav current="interview" />
+      <OnboardingNav current="complete" />
 
       <main className="max-w-xl mx-auto px-4 py-16 flex flex-col items-center text-center">
         {/* Success icon */}

@@ -12,8 +12,10 @@ import {
   FileText,
   PlayCircle,
   Phone,
+  Bell,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import { BillingPortalButton } from "@/components/dashboard/BillingPortalButton";
 
 const PlatformBadge = ({ platform }: { platform: string }) => {
   const styles: Record<string, string> = {
@@ -93,6 +95,10 @@ export default async function DashboardPage() {
     .from("videos").select("*", { count: "exact", head: true })
     .eq("client_id", client?.id ?? "").eq("status", "ready");
 
+  const { count: pendingApproval } = await supabase
+    .from("social_posts").select("*", { count: "exact", head: true })
+    .eq("client_id", client?.id ?? "").eq("status", "pending_approval");
+
   const { count: audioReady } = await supabase
     .from("audio_episodes").select("*", { count: "exact", head: true })
     .eq("client_id", client?.id ?? "").eq("status", "ready");
@@ -147,16 +153,39 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* Trial status card */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-6 py-4 flex items-center justify-between">
-        <div>
-          <p className="font-semibold text-yellow-800 text-sm">You have 18 days left in your free trial</p>
-          <p className="text-yellow-600 text-xs mt-0.5">Upgrade to keep your content flowing after May 15.</p>
+      {/* Pending approval banner */}
+      {(pendingApproval ?? 0) > 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl px-6 py-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-amber-100 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Bell className="w-4 h-4 text-amber-600" />
+            </div>
+            <div>
+              <p className="font-semibold text-amber-900 text-sm">
+                {pendingApproval} post{(pendingApproval ?? 0) > 1 ? "s" : ""} waiting for your approval
+              </p>
+              <p className="text-amber-700 text-xs mt-0.5">Review and approve your AI-generated content before it goes live.</p>
+            </div>
+          </div>
+          <Link
+            href="/dashboard/social"
+            className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap"
+          >
+            Review Now →
+          </Link>
         </div>
-        <button className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap">
-          Upgrade Now
-        </button>
-      </div>
+      )}
+
+      {/* Trial status card */}
+      {client?.subscription_status === "trialing" || !client?.subscription_status ? (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-6 py-4 flex items-center justify-between">
+          <div>
+            <p className="font-semibold text-yellow-800 text-sm">You&apos;re on a free trial</p>
+            <p className="text-yellow-600 text-xs mt-0.5">Upgrade to keep your content flowing after your trial ends.</p>
+          </div>
+          <BillingPortalButton />
+        </div>
+      ) : null}
 
       {/* Stats row */}
       <div className="grid grid-cols-3 gap-4">

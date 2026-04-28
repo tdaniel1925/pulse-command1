@@ -9,13 +9,12 @@ import { ClientActions } from "@/components/admin/ClientActions";
 
 const onboardingStepOrder = [
   { key: "signed_up", label: "Signed Up" },
-  { key: "payment_confirmed", label: "Payment Confirmed" },
-  { key: "interview_scheduled", label: "Interview Scheduled" },
-  { key: "profile_built", label: "Profile Built" },
-  { key: "content_approved", label: "Content Approved" },
-  { key: "channels_connected", label: "Channels Connected" },
-  { key: "first_publish", label: "First Publish" },
-  { key: "handoff_complete", label: "Handoff Complete" },
+  { key: "brand_assets_saved", label: "Brand Assets Set Up" },
+  { key: "avatar_selected", label: "Avatar Selected" },
+  { key: "voice_selected", label: "Voice Selected" },
+  { key: "call_done", label: "Brand Interview Completed" },
+  { key: "content_generating", label: "Content Generation Started" },
+  { key: "active", label: "Active" },
 ];
 
 const statusBadge: Record<string, string> = {
@@ -190,6 +189,17 @@ export default async function ClientDetailPage({
                     </div>
                   </div>
                 )}
+
+                <div className="grid grid-cols-2 gap-4 pt-2 border-t border-neutral-100">
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">HeyGen Avatar</p>
+                    <p className="text-sm text-neutral-700 font-mono">{brandProfile?.heygen_avatar_id ?? <span className="text-neutral-400 font-sans">Not selected</span>}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">ElevenLabs Voice</p>
+                    <p className="text-sm text-neutral-700 font-mono">{brandProfile?.elevenlabs_voice_id ?? <span className="text-neutral-400 font-sans">Not selected</span>}</p>
+                  </div>
+                </div>
               </>
             ) : (
               <p className="text-sm text-neutral-400">No brand profile yet.</p>

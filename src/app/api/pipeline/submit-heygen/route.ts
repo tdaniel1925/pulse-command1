@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   try {
     const { videoId, clientId } = await request.json()
+    const admin = createAdminClient()
 
-    const supabase = await createClient()
-
-    // Fetch video record
-    const { data: video } = await supabase
+    const { data: video } = await admin
       .from('videos')
       .select('*')
       .eq('id', videoId)
@@ -19,15 +17,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Video not found' }, { status: 404 })
     }
 
-    // Fetch client brand profile for avatar/voice config
-    const { data: brandProfile } = await supabase
+    const { data: brandProfile } = await admin
       .from('brand_profiles')
-      .select('*')
+      .select('heygen_avatar_id, elevenlabs_voice_id')
       .eq('client_id', clientId)
       .single()
 
-    // HeyGen video generation API
-    // Docs: https://docs.heygen.com/reference/create-an-avatar-video-v2
+    const avatarId = brandProfile?.heygen_avatar_id ?? process.env.HEYGEN_DEFAULT_AVATAR_ID ?? ''
+    const voiceId = brandProfile?.elevenlabs_voice_id ?? process.env.HEYGEN_DEFAULT_VOICE_ID ?? ''
+
+    if (!avatarId) {
+      console.error('No HeyGen avatar ID for client:', clientId)
+      await admin.from('videos').update({ status: 'failed' }).eq('id', videoId)
+      return NextResponse.json({ error: 'No avatar ID configured' }, { status: 400 })
+    }
+
     const heygenRes = await fetch('https://api.heygen.com/v2/video/generate', {
       method: 'POST',
       headers: {
@@ -38,14 +42,13 @@ export async function POST(request: NextRequest) {
         video_inputs: [{
           character: {
             type: 'avatar',
-            // avatar_id must be set per-client after HeyGen verification
-            avatar_id: brandProfile?.metadata?.heygen_avatar_id ?? process.env.HEYGEN_DEFAULT_AVATAR_ID ?? '',
+            avatar_id: avatarId,
             avatar_style: 'normal',
           },
           voice: {
             type: 'text',
             input_text: video.script ?? '',
-            voice_id: brandProfile?.metadata?.heygen_voice_id ?? process.env.HEYGEN_DEFAULT_VOICE_ID ?? '',
+            voice_id: voiceId,
           },
         }],
         dimension: { width: 1280, height: 720 },
@@ -57,25 +60,23 @@ export async function POST(request: NextRequest) {
     if (!heygenRes.ok) {
       const errText = await heygenRes.text()
       console.error('HeyGen API error:', errText)
-      await supabase.from('videos').update({ status: 'failed' }).eq('id', videoId)
+      await admin.from('videos').update({ status: 'failed' }).eq('id', videoId)
       return NextResponse.json({ error: 'HeyGen API error', detail: errText }, { status: 502 })
     }
 
     const heygenData = await heygenRes.json()
     const heygenVideoId = heygenData.data?.video_id ?? heygenData.video_id
 
-    // Update video record with HeyGen video ID, status → rendering
-    await supabase.from('videos').update({
+    await admin.from('videos').update({
       heygen_video_id: heygenVideoId,
       status: 'rendering',
     }).eq('id', videoId)
 
-    // Log activity
-    await supabase.from('activities').insert({
+    await admin.from('activities').insert({
       client_id: clientId,
-      type: 'content_published',
-      title: 'Video submitted to HeyGen for rendering',
-      description: `HeyGen video ID: ${heygenVideoId}. Webhook will update status when complete.`,
+      type: 'video',
+      title: 'Video submitted to HeyGen',
+      description: `Rendering started. HeyGen ID: ${heygenVideoId}. Will update when complete.`,
       created_by: 'system',
     })
 

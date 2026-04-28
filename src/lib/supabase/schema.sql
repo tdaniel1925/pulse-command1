@@ -39,8 +39,8 @@ create table clients (
   onboarding_pin char(6) not null default lpad(floor(random()*1000000)::text, 6, '0'),
   onboarding_step text not null default 'signup'
     check (onboarding_step in (
-      'signup','call_scheduled','call_done','profile_built',
-      'assets_recorded','avatar_pending','avatar_done','active'
+      'signup','brand_assets_saved','avatar_selected','voice_selected',
+      'call_scheduled','call_done','content_generating','active'
     )),
   vapi_call_id text,
   call_scheduled_at timestamptz,
@@ -153,7 +153,7 @@ create table social_posts (
   scheduled_at timestamptz,
   published_at timestamptz,
   status text not null default 'draft'
-    check (status in ('draft','scheduled','published','failed')),
+    check (status in ('draft','pending_approval','scheduled','published','failed','rejected')),
   ayrshare_post_id text,
   performance jsonb default '{}',
   month_batch text -- e.g. "2024-05"

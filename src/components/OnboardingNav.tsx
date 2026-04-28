@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Zap } from "lucide-react";
 
-type Step = "sign-up" | "schedule" | "welcome" | "brand-assets" | "record-video" | "record-audio" | "interview" | "complete";
+type Step = "sign-up" | "schedule" | "welcome" | "brand-assets" | "choose-avatar" | "choose-voice" | "interview" | "complete";
 
 const steps: { key: Step; label: string; href: string }[] = [
   { key: "welcome", label: "Welcome", href: "/onboarding/welcome" },
   { key: "brand-assets", label: "Brand Assets", href: "/onboarding/brand-assets" },
-  { key: "record-video", label: "Avatar Video", href: "/onboarding/record-video" },
-  { key: "record-audio", label: "Voice Sample", href: "/onboarding/record-audio" },
+  { key: "choose-avatar", label: "Your Avatar", href: "/onboarding/choose-avatar" },
+  { key: "choose-voice", label: "Your Voice", href: "/onboarding/choose-voice" },
   { key: "interview", label: "Brand Interview", href: "/onboarding/interview" },
   { key: "complete", label: "Complete", href: "/onboarding/complete" },
 ];

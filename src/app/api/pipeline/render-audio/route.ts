@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   try {
     const { episodeId, clientId } = await request.json()
+    const admin = createAdminClient()
 
-    const supabase = await createClient()
-
-    const { data: episode } = await supabase
+    const { data: episode } = await admin
       .from('audio_episodes')
       .select('*')
       .eq('id', episodeId)
@@ -18,16 +17,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Episode not found' }, { status: 404 })
     }
 
-    // Get voice ID from brand profile
-    const { data: brandProfile } = await supabase
+    const { data: brandProfile } = await admin
       .from('brand_profiles')
-      .select('*')
+      .select('elevenlabs_voice_id')
       .eq('client_id', clientId)
       .single()
 
-    const voiceId = (brandProfile as any)?.metadata?.elevenlabs_voice_id ?? process.env.ELEVENLABS_DEFAULT_VOICE_ID ?? ''
+    const voiceId = brandProfile?.elevenlabs_voice_id ?? process.env.ELEVENLABS_DEFAULT_VOICE_ID ?? ''
 
-    // ElevenLabs TTS API
+    if (!voiceId) {
+      console.error('No ElevenLabs voice ID for client:', clientId)
+      await admin.from('audio_episodes').update({ status: 'failed' }).eq('id', episodeId)
+      return NextResponse.json({ error: 'No voice ID configured' }, { status: 400 })
+    }
+
     const elevenRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
       method: 'POST',
       headers: {
@@ -48,15 +51,14 @@ export async function POST(request: NextRequest) {
     if (!elevenRes.ok) {
       const errText = await elevenRes.text()
       console.error('ElevenLabs error:', errText)
-      await supabase.from('audio_episodes').update({ status: 'failed' }).eq('id', episodeId)
+      await admin.from('audio_episodes').update({ status: 'failed' }).eq('id', episodeId)
       return NextResponse.json({ error: 'ElevenLabs API error', detail: errText }, { status: 502 })
     }
 
-    // Upload audio to Supabase Storage
     const audioBuffer = await elevenRes.arrayBuffer()
     const fileName = `audio/${clientId}/${episodeId}.mp3`
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await admin.storage
       .from('content')
       .upload(fileName, audioBuffer, { contentType: 'audio/mpeg', upsert: true })
 
@@ -65,26 +67,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Storage upload failed' }, { status: 500 })
     }
 
-    const { data: { publicUrl } } = supabase.storage.from('content').getPublicUrl(fileName)
+    const { data: { publicUrl } } = admin.storage.from('content').getPublicUrl(fileName)
 
-    // Update episode
-    await supabase.from('audio_episodes').update({
+    await admin.from('audio_episodes').update({
       status: 'ready',
       url: publicUrl,
-      elevenlabs_audio_id: episodeId,
     }).eq('id', episodeId)
 
-    // Log activity
-    await supabase.from('activities').insert({
+    await admin.from('activities').insert({
       client_id: clientId,
-      type: 'content_published',
-      title: `Audio episode rendered: ${episode.title}`,
-      description: 'ElevenLabs TTS complete. Ready for audiogram creation.',
+      type: 'audio',
+      title: `Audio episode ready: ${episode.title}`,
+      description: 'ElevenLabs TTS complete. Available to listen in your dashboard.',
       created_by: 'system',
     })
-
-    // TODO: Trigger Headliner audiogram creation next
-    // POST to /api/pipeline/create-audiogram with { episodeId, clientId, audioUrl: publicUrl }
 
     return NextResponse.json({ success: true, audioUrl: publicUrl })
   } catch (err) {

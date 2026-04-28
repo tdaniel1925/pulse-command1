@@ -138,7 +138,7 @@ export async function POST(request: NextRequest) {
 
           const { data: inserted } = await admin.from('social_posts').insert({
             client_id: clientId,
-            status: 'draft',
+            status: 'pending_approval',
             content,
             image_url: imageUrl,
             platforms: [platform],
@@ -178,21 +178,31 @@ Write naturally as if speaking — no stage directions, no headers. Just the spo
           script = 'Script generation failed — will retry'
         }
 
-        // TODO: trigger ElevenLabs TTS once voice clone is ready
-        await admin.from('audio_episodes').insert({
+        // Insert episode record then immediately trigger ElevenLabs render
+        const { data: episode } = await admin.from('audio_episodes').insert({
           client_id: clientId,
           status,
           title: `Audio episode — ${month}`,
           script,
-        })
+        }).select('id').single()
 
         await admin.from('activities').insert({
           client_id: clientId,
-          type: 'content_published',
+          type: 'audio',
           title: 'Audio episode script generated',
-          description: status === 'script_ready' ? 'Script written by Claude Opus, pending ElevenLabs render' : 'Script generation failed',
+          description: status === 'script_ready' ? 'Script written by Claude Opus, submitting to ElevenLabs…' : 'Script generation failed',
           created_by: 'system',
         })
+
+        // Fire ElevenLabs render (fire and forget)
+        if (episode && status === 'script_ready') {
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pulse-command1.vercel.app'
+          fetch(`${baseUrl}/api/pipeline/render-audio`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ episodeId: episode.id, clientId }),
+          }).catch(err => console.error('render-audio trigger failed:', err))
+        }
         break
       }
 
@@ -217,21 +227,31 @@ Write naturally as if speaking to camera.`
           script = 'Script generation failed — will retry'
         }
 
-        // TODO: submit script to HeyGen for avatar video rendering
-        await admin.from('videos').insert({
+        // Insert video record then immediately submit to HeyGen
+        const { data: videoRecord } = await admin.from('videos').insert({
           client_id: clientId,
           status,
           title: `Video — ${month}`,
           script,
-        })
+        }).select('id').single()
 
         await admin.from('activities').insert({
           client_id: clientId,
-          type: 'content_published',
+          type: 'video',
           title: 'Video script generated',
-          description: status === 'script_ready' ? 'Script written by Claude Opus, pending HeyGen render' : 'Script generation failed',
+          description: status === 'script_ready' ? 'Script written by Claude Opus, submitting to HeyGen…' : 'Script generation failed',
           created_by: 'system',
         })
+
+        // Fire HeyGen render (fire and forget)
+        if (videoRecord && status === 'script_ready') {
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pulse-command1.vercel.app'
+          fetch(`${baseUrl}/api/pipeline/submit-heygen`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ videoId: videoRecord.id, clientId }),
+          }).catch(err => console.error('submit-heygen trigger failed:', err))
+        }
         break
       }
     }

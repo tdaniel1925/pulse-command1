@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface HeyGenEventData {
   video_id: string
   video_url: string
   status: string
+  thumbnail_url?: string
 }
 
 interface HeyGenWebhookPayload {
@@ -17,54 +18,42 @@ export async function POST(request: NextRequest) {
     const payload: HeyGenWebhookPayload = await request.json()
     const { event_type, event_data } = payload
 
-    if (event_type !== 'avatar_video.success') {
-      console.log('Ignoring HeyGen event type:', event_type)
+    console.log('HeyGen webhook:', event_type, event_data?.video_id)
+
+    if (event_type !== 'avatar_video.success' && event_type !== 'video.complete') {
       return NextResponse.json({ received: true })
     }
 
-    const { video_id, video_url, status } = event_data
-    console.log('HeyGen video completed:', video_id, status)
+    const { video_id, video_url, thumbnail_url } = event_data
+    const admin = createAdminClient()
 
-    const supabase = await createClient()
-
-    // Find asset by external_id
-    const { data: asset, error: assetError } = await supabase
-      .from('assets')
-      .select('id, client_id')
-      .eq('external_id', video_id)
+    // Update video record by heygen_video_id
+    const { data: video, error: videoErr } = await admin
+      .from('videos')
+      .update({
+        status: 'ready',
+        url: video_url,
+        ...(thumbnail_url ? { thumbnail_url } : {}),
+      })
+      .eq('heygen_video_id', video_id)
+      .select('id, client_id, title')
       .single()
 
-    if (assetError || !asset) {
-      console.log('No asset found for HeyGen video_id:', video_id)
+    if (videoErr || !video) {
+      console.log('No video found for heygen_video_id:', video_id, videoErr?.message)
       return NextResponse.json({ received: true })
     }
 
-    // Update asset status
-    const { error: assetUpdateError } = await supabase
-      .from('assets')
-      .update({ status: 'ready', url: video_url })
-      .eq('id', asset.id)
+    // Log activity
+    await admin.from('activities').insert({
+      client_id: video.client_id,
+      type: 'video',
+      title: 'AI video ready',
+      description: `"${video.title ?? 'Video'}" has finished rendering and is ready to view.`,
+      created_by: 'system',
+    })
 
-    if (assetUpdateError) console.error('Error updating asset:', assetUpdateError)
-
-    // Update videos table record
-    const { error: videoUpdateError } = await supabase
-      .from('videos')
-      .update({ status: 'ready', url: video_url })
-      .eq('heygen_video_id', video_id)
-
-    if (videoUpdateError) console.error('Error updating video record:', videoUpdateError)
-
-    // Log activity for the client
-    if (asset.client_id) {
-      await supabase.from('activities').insert({
-        client_id: asset.client_id,
-        type: 'video',
-        title: 'HeyGen video ready',
-        description: `Video ${video_id} has been rendered and is ready`,
-      })
-    }
-
+    console.log('HeyGen video marked ready:', video_id, 'client:', video.client_id)
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error('HeyGen webhook error:', error)
