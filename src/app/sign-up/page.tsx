@@ -15,7 +15,7 @@ const plans = {
     priceNum: 99,
     tagline: "Perfect to get started",
     items: [
-      { icon: <Share2 className="w-4 h-4 text-indigo-500" />, text: "30 social posts/month" },
+      { icon: <Share2 className="w-4 h-4 text-primary-500" />, text: "30 social posts/month" },
       { icon: <Mic className="w-4 h-4 text-purple-500" />, text: "1 podcast episode/month" },
       { icon: <Video className="w-4 h-4 text-rose-500" />, text: "1 AI presenter video/month" },
       { icon: <Check className="w-4 h-4 text-green-500" />, text: "3 platforms" },
@@ -27,7 +27,7 @@ const plans = {
     priceNum: 745,
     tagline: "Complete AI marketing machine",
     items: [
-      { icon: <Share2 className="w-4 h-4 text-indigo-400" />, text: "150 social posts/month · 5 channels" },
+      { icon: <Share2 className="w-4 h-4 text-primary-400" />, text: "150 social posts/month · 5 channels" },
       { icon: <Mic className="w-4 h-4 text-purple-400" />, text: "Bi-weekly podcast · 26 eps/year" },
       { icon: <Video className="w-4 h-4 text-rose-400" />, text: "4 AI presenter videos/month" },
       { icon: <BarChart3 className="w-4 h-4 text-teal-400" />, text: "Monthly performance report" },

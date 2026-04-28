@@ -261,7 +261,7 @@ export default function DemoResultsPage() {
 
       {/* Discount banner */}
       {discount && discount.percent > 0 && (
-        <div className="bg-gradient-to-r from-primary-600 to-indigo-600 text-white px-4 py-4">
+        <div className="bg-gradient-to-r from-primary-600 to-primary-700 text-white px-4 py-4">
           <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
             <div>
               <p className="font-bold text-lg">{discount.label}</p>
@@ -327,7 +327,7 @@ export default function DemoResultsPage() {
 
             {/* Volume upsell — appears after 8s */}
             {showPostsUpsell && (
-              <div className="bg-gradient-to-r from-indigo-50 to-primary-50 border border-primary-200 rounded-2xl p-5 flex gap-4 items-start">
+              <div className="bg-gradient-to-r from-primary-50 to-primary-100 border border-primary-200 rounded-2xl p-5 flex gap-4 items-start">
                 <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center flex-shrink-0">
                   <TrendingUp className="w-5 h-5 text-primary-600" />
                 </div>
@@ -425,7 +425,7 @@ export default function DemoResultsPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {[
-                      { icon: <Share2 className="w-4 h-4 text-indigo-500" />, label: "150 social posts", sub: "across 5 platforms" },
+                      { icon: <Share2 className="w-4 h-4 text-primary-500" />, label: "150 social posts", sub: "across 5 platforms" },
                       { icon: <Mic className="w-4 h-4 text-purple-500" />,   label: "2 podcast episodes", sub: "bi-weekly, fully produced" },
                       { icon: <Video className="w-4 h-4 text-rose-500" />,   label: "4 AI videos", sub: "HeyGen presenter quality" },
                       { icon: <TrendingUp className="w-4 h-4 text-teal-500" />, label: "Monthly report", sub: "performance + strategy" },

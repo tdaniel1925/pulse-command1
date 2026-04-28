@@ -186,7 +186,7 @@ export default function SchedulePage() {
                       </div>
                       <Link
                         href="/onboarding/welcome"
-                        className="px-6 py-3 bg-gradient-to-r from-primary-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-primary-700 hover:to-indigo-700 transition-all shadow-sm text-sm flex items-center gap-2"
+                        className="px-6 py-3 bg-gradient-to-r from-primary-600 to-primary-700 text-white font-semibold rounded-lg hover:from-primary-700 hover:to-primary-800 transition-all shadow-sm text-sm flex items-center gap-2"
                       >
                         <CalendarCheck className="w-4 h-4" /> Confirm Booking
                       </Link>
@@ -236,7 +236,7 @@ export default function SchedulePage() {
                 </div>
               </div>
 
-              <div className="bg-gradient-to-br from-primary-600 to-indigo-600 rounded-2xl p-6 text-white">
+              <div className="bg-gradient-to-br from-primary-600 to-primary-800 rounded-2xl p-6 text-white">
                 <p className="text-sm font-bold mb-2">What to expect</p>
                 <ul className="space-y-2 text-xs text-primary-100">
                   {["Platform walkthrough", "Brand setup assistance", "Content strategy session", "Q&A with your specialist"].map(item => (

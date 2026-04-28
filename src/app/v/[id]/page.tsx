@@ -70,7 +70,7 @@ export default async function VideoSharePage({
           <p className="text-neutral-400">This video link may have expired or been removed.</p>
           <Link
             href="https://bundledcontent.com/demo"
-            className="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-medium transition-colors"
+            className="inline-flex items-center gap-2 mt-4 px-6 py-3 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-medium transition-colors"
           >
             Get AI content for your business
             <ExternalLink className="w-4 h-4" />
@@ -92,7 +92,7 @@ export default async function VideoSharePage({
       {/* Top bar */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-800">
         <Link href="/" className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-primary-600 flex items-center justify-center">
             <span className="text-white text-xs font-bold">BC</span>
           </div>
           <span className="text-white font-semibold text-sm">BundledContent</span>
@@ -123,7 +123,7 @@ export default async function VideoSharePage({
             ) : heygenVideoId ? (
               <div className="absolute inset-0 w-full h-full rounded-2xl bg-neutral-900 flex items-center justify-center">
                 <div className="text-center space-y-3 px-8">
-                  <div className="w-12 h-12 rounded-full border-4 border-indigo-500 border-t-transparent animate-spin mx-auto" />
+                  <div className="w-12 h-12 rounded-full border-4 border-primary-500 border-t-transparent animate-spin mx-auto" />
                   <p className="text-neutral-300 text-sm font-medium">Video is being processed</p>
                   <p className="text-neutral-500 text-xs">Check back in a few minutes</p>
                 </div>
@@ -169,7 +169,7 @@ export default async function VideoSharePage({
             href={`${process.env.NEXT_PUBLIC_APP_URL ?? 'https://bundledcontent.com'}/demo`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-semibold text-sm transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 hover:bg-primary-500 text-white rounded-xl font-semibold text-sm transition-colors"
           >
             Get AI content for your business
             <ExternalLink className="w-4 h-4" />

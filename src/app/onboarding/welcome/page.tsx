@@ -57,7 +57,7 @@ const steps = [
 ];
 
 const included = [
-  { icon: <Share2 className="w-4 h-4 text-indigo-600" />, text: "150 social posts/month across 5 channels" },
+  { icon: <Share2 className="w-4 h-4 text-primary-600" />, text: "150 social posts/month across 5 channels" },
   { icon: <Mic className="w-4 h-4 text-purple-600" />, text: "Bi-weekly AI voice podcast (26 eps/year)" },
   { icon: <Video className="w-4 h-4 text-rose-600" />, text: "4 HeyGen AI presenter videos per month" },
   { icon: <BarChart3 className="w-4 h-4 text-teal-600" />, text: "Monthly performance report & review" },
@@ -70,7 +70,7 @@ export default function WelcomePage() {
 
       <main className="min-h-screen bg-neutral-50">
         {/* Hero */}
-        <div className="bg-gradient-to-r from-primary-700 via-primary-600 to-indigo-600 py-14 px-4 text-center">
+        <div className="bg-gradient-to-r from-primary-700 via-primary-600 to-primary-500 py-14 px-4 text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 border border-white/25 text-white text-sm font-medium mb-5">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />

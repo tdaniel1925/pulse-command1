@@ -9,7 +9,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="mb-4">
-              <Image src="/logo-white.png" alt="BundledContent" width={160} height={54} className="h-10 w-auto" />
+              <Image src="/logo.png" alt="BundledContent" width={160} height={54} className="h-10 w-auto" />
             </div>
             <p className="text-neutral-400 text-sm leading-relaxed">
               A complete done-for-you AI marketing service. Social content, podcast, videos, and monthly reporting — all for $745/mo.

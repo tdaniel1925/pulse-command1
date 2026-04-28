@@ -184,7 +184,7 @@ export default function BrandAssetsPage() {
       <OnboardingNav current="brand-assets" />
 
       <main className="min-h-screen bg-neutral-50">
-        <div className="bg-gradient-to-r from-primary-700 via-primary-600 to-indigo-600 py-12 px-4 text-center">
+        <div className="bg-gradient-to-r from-primary-700 via-primary-600 to-primary-500 py-12 px-4 text-center">
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Set Up Your Brand</h1>
           <p className="text-primary-100 text-base max-w-xl mx-auto">
             We scan your website with AI to extract your brand identity automatically — then you refine it.
@@ -292,7 +292,7 @@ export default function BrandAssetsPage() {
 
                 {scanData.targetAudience && (
                   <div className="bg-white rounded-lg p-3 border border-green-100 flex gap-2">
-                    <Users className="w-3.5 h-3.5 text-indigo-500 flex-shrink-0 mt-0.5" />
+                    <Users className="w-3.5 h-3.5 text-primary-500 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-xs text-neutral-500 mb-0.5">Target Audience</p>
                       <p className="text-xs text-neutral-700">{scanData.targetAudience}</p>

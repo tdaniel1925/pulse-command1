@@ -15,7 +15,7 @@ type Integration = {
 
 const integrations: Integration[] = [
   { name: "Supabase", initial: "S", color: "bg-emerald-500", connected: true },
-  { name: "Stripe", initial: "S", color: "bg-indigo-500", connected: true },
+  { name: "Stripe", initial: "S", color: "bg-primary-600", connected: true },
   { name: "VAPI", initial: "V", color: "bg-violet-500", connected: true },
   { name: "Twilio", initial: "T", color: "bg-red-500", connected: true },
   { name: "OpenAI", initial: "O", color: "bg-neutral-800", connected: true },

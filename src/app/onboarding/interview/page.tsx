@@ -101,7 +101,7 @@ export default function InterviewPage() {
       <OnboardingNav current="interview" />
 
       {/* Hero */}
-      <div className="bg-gradient-to-r from-primary-700 via-primary-600 to-indigo-600 py-10 px-4">
+      <div className="bg-gradient-to-r from-primary-700 via-primary-600 to-primary-500 py-10 px-4">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 border border-white/25 text-white text-sm font-medium mb-4">
             <span className="relative flex h-2 w-2">
@@ -142,7 +142,7 @@ export default function InterviewPage() {
             <>
               {/* Main call card */}
               <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
-                <div className="bg-gradient-to-r from-primary-600 to-indigo-600 px-8 py-6 text-white text-center">
+                <div className="bg-gradient-to-r from-primary-600 to-primary-700 px-8 py-6 text-white text-center">
                   <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Phone className="w-8 h-8 text-white" />
                   </div>
@@ -306,7 +306,7 @@ export default function InterviewPage() {
               </div>
 
               {/* What happens after */}
-              <div className="bg-gradient-to-br from-indigo-50 to-primary-50 border border-primary-200 rounded-2xl p-6">
+              <div className="bg-gradient-to-br from-primary-50 to-primary-100 border border-primary-200 rounded-2xl p-6">
                 <div className="flex items-center gap-2 mb-4">
                   <Sparkles className="w-5 h-5 text-primary-600" />
                   <h3 className="text-sm font-bold text-primary-900">What happens after your call</h3>
@@ -334,7 +334,7 @@ export default function InterviewPage() {
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
                   { icon: <Clock className="w-4 h-4 text-primary-600" />, label: "~15 minutes", sub: "At your own pace" },
-                  { icon: <Zap className="w-4 h-4 text-indigo-600" />, label: "Auto-generates content", sub: "No manual steps after call" },
+                  { icon: <Zap className="w-4 h-4 text-primary-600" />, label: "Auto-generates content", sub: "No manual steps after call" },
                   { icon: <Shield className="w-4 h-4 text-green-600" />, label: "Private & secure", sub: "Encrypted, never shared" },
                 ].map(({ icon, label, sub }) => (
                   <div key={label} className="bg-white rounded-xl border border-neutral-200 p-4 flex items-center gap-3">
