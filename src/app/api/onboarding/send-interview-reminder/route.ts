@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       body: message,
       from: process.env.TWILIO_PHONE_NUMBER!,
       to: phone,
-      ...(scheduledFor ? { scheduleType: 'fixed', sendAt: new Date(scheduledFor).toISOString() } : {}),
+      ...(scheduledFor ? { scheduleType: 'fixed', sendAt: new Date(scheduledFor) } : {}),
     })
 
     return NextResponse.json({ success: true })
