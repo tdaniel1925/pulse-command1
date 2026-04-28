@@ -53,6 +53,12 @@ export default function Navbar() {
             >
               See Samples
             </Link>
+            <Link
+              href="/about"
+              className="text-neutral-600 hover:text-primary-600 font-medium transition-colors"
+            >
+              About Us
+            </Link>
             <span className="text-neutral-400 text-sm font-medium">Plans from $99/mo</span>
             <Link
               href="/login"
@@ -102,6 +108,13 @@ export default function Navbar() {
             onClick={() => setOpen(false)}
           >
             See Samples
+          </Link>
+          <Link
+            href="/about"
+            className="block text-neutral-700 font-medium py-2"
+            onClick={() => setOpen(false)}
+          >
+            About Us
           </Link>
           <Link
             href="/login"
