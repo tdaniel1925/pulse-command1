@@ -11,7 +11,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Logo */}
         <div className="px-4 py-5 border-b border-neutral-800">
           <Link href="/admin">
-            <Image src="/logo-white.png" alt="PulseFlow" width={130} height={44} className="h-8 w-auto" />
+            <Image src="/logo-white.png" alt="BundledContent" width={130} height={44} className="h-8 w-auto" />
           </Link>
         </div>
 
@@ -36,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-neutral-200 px-8 py-4 flex items-center flex-shrink-0">
-          <h1 className="text-base font-semibold text-neutral-900">PulseFlow Admin</h1>
+          <h1 className="text-base font-semibold text-neutral-900">BundledContent Admin</h1>
         </header>
         <main className="flex-1 overflow-y-auto p-8">{children}</main>
       </div>

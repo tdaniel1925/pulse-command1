@@ -47,8 +47,8 @@ const defaultNotifs: NotifSetting[] = [
 // ─── Team ─────────────────────────────────────────────────────────────────────
 const teamMembers = [
   { name: "Trent Daniel", email: "trenttdaniel@gmail.com", role: "Super Admin", initials: "TD" },
-  { name: "Sarah Mitchell", email: "sarah@pulsecommand.com", role: "Admin", initials: "SM" },
-  { name: "James Reeves", email: "james@pulsecommand.com", role: "Support", initials: "JR" },
+  { name: "Sarah Mitchell", email: "sarah@bundledcontent.com", role: "Admin", initials: "SM" },
+  { name: "James Reeves", email: "james@bundledcontent.com", role: "Support", initials: "JR" },
 ];
 
 const roleColors: Record<string, string> = {
@@ -120,7 +120,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Settings</h1>
-        <p className="text-sm text-neutral-500 mt-1">Configure your PulseFlow instance.</p>
+        <p className="text-sm text-neutral-500 mt-1">Configure your BundledContent instance.</p>
       </div>
 
       {/* Tabs */}
@@ -146,8 +146,8 @@ export default function SettingsPage() {
           <h2 className="font-semibold text-neutral-900">General Settings</h2>
 
           {[
-            { label: "App Name", value: "PulseFlow", readOnly: false },
-            { label: "Support Email", value: "support@pulsecommand.com", readOnly: false },
+            { label: "App Name", value: "BundledContent", readOnly: false },
+            { label: "Support Email", value: "support@bundledcontent.com", readOnly: false },
             { label: "VAPI Phone Number", value: "+1 (555) 800-1234", readOnly: true },
             { label: "Twilio Number", value: "+1 (555) 900-5678", readOnly: true },
           ].map((field) => (

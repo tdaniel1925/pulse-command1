@@ -51,7 +51,7 @@ export default function GeneratingPage() {
     <div className="min-h-screen bg-neutral-50 flex flex-col">
       <nav className="bg-white border-b border-neutral-200 px-4 py-4">
         <div className="max-w-7xl mx-auto flex items-center gap-2">
-          <Image src="/logo-white.png" alt="PulseFlow" width={140} height={47} className="h-9 w-auto" />
+          <Image src="/logo.png" alt="BundledContent" width={140} height={47} className="h-9 w-auto" />
         </div>
       </nav>
 

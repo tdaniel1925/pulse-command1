@@ -58,7 +58,7 @@ const deliverables = [
     unit: "Performance Report",
     label: "every month — your marketing scorecard",
     headline: "Know Exactly What's Working",
-    desc: "A clear, plain-English monthly report on what performed, what didn't, and where we're heading. PulseFlow is a service, not a vending machine — you'll always know your ROI.",
+    desc: "A clear, plain-English monthly report on what performed, what didn't, and where we're heading. BundledContent is a service, not a vending machine — you'll always know your ROI.",
     accent: "border-teal-200",
     tag: "Monthly",
     tagColor: "bg-teal-50 text-teal-700",
@@ -67,7 +67,7 @@ const deliverables = [
 
 const testimonials = [
   {
-    quote: "PulseFlow replaced an entire in-house marketing team. The monthly report alone changed how we make decisions.",
+    quote: "BundledContent replaced an entire in-house marketing team. The monthly report alone changed how we make decisions.",
     name: "Sarah M.",
     role: "Marketing Director",
     rating: 5,
@@ -126,7 +126,7 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="text-xl text-neutral-600 mb-6 max-w-2xl mx-auto leading-relaxed">
-              Social content. Podcast. Videos. Monthly reporting. PulseFlow delivers a complete done-for-you marketing operation — powered by AI, built for your business.
+              Social content. Podcast. Videos. Monthly reporting. BundledContent delivers a complete done-for-you marketing operation — powered by AI, built for your business.
             </p>
 
             {/* Quick deliverables strip */}
@@ -162,7 +162,7 @@ export default function HomePage() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2426&q=80"
-                alt="PulseFlow Dashboard"
+                alt="BundledContent Dashboard"
                 className="w-full h-auto"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/10 to-transparent pointer-events-none" />
@@ -236,7 +236,7 @@ export default function HomePage() {
                   <Zap className="w-5 h-5 text-neutral-600" />
                 </div>
                 <div>
-                  <p className="font-bold text-lg text-neutral-900">PulseFlow Lite</p>
+                  <p className="font-bold text-lg text-neutral-900">BundledContent Lite</p>
                   <p className="text-neutral-500 text-xs">Perfect to get started</p>
                 </div>
               </div>
@@ -276,7 +276,7 @@ export default function HomePage() {
                     <Zap className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-lg">PulseFlow Full</p>
+                    <p className="font-bold text-lg">BundledContent Full</p>
                     <p className="text-neutral-400 text-xs">Complete AI marketing machine</p>
                   </div>
                 </div>
@@ -329,7 +329,7 @@ export default function HomePage() {
             </div>
             <div className="mt-6 text-center">
               <p className="text-neutral-500 text-sm">vs.</p>
-              <p className="text-3xl font-bold text-primary-600 mt-1">$745/mo with PulseFlow Full</p>
+              <p className="text-3xl font-bold text-primary-600 mt-1">$745/mo with BundledContent Full</p>
             </div>
           </div>
         </div>

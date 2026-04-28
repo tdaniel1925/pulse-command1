@@ -14,7 +14,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <Image src="/logo.png" alt="PulseFlow" width={180} height={60} className="h-12 w-auto" priority />
+            <Image src="/logo.png" alt="BundledContent" width={180} height={60} className="h-12 w-auto" priority />
           </Link>
 
           {/* Desktop Nav */}
@@ -31,7 +31,7 @@ export default function Navbar() {
             >
               Pricing
             </Link>
-            <span className="text-neutral-400 text-sm font-medium">$745/mo</span>
+            <span className="text-neutral-400 text-sm font-medium">Plans from $99/mo</span>
             <Link
               href="/login"
               className="text-neutral-600 hover:text-primary-600 font-medium transition-colors"
@@ -98,7 +98,7 @@ export default function Navbar() {
             className="block w-full text-center px-5 py-2.5 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-colors"
             onClick={() => setOpen(false)}
           >
-            Get Started — $745/mo
+            Get Started
           </Link>
         </div>
       )}

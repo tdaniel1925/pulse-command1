@@ -26,7 +26,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         {/* Logo */}
         <div className="px-4 py-5 border-b border-neutral-100">
           <Link href="/dashboard">
-            <Image src="/logo.png" alt="PulseFlow" width={130} height={44} className="h-8 w-auto" />
+            <Image src="/logo.png" alt="BundledContent" width={130} height={44} className="h-8 w-auto" />
           </Link>
         </div>
 

@@ -79,7 +79,7 @@ export default function WelcomePage() {
             Account Active — 14-Day Free Trial Started
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-white mb-3">
-            Welcome to PulseFlow!
+            Welcome to BundledContent!
           </h1>
           <p className="text-primary-100 text-base max-w-xl mx-auto">
             Your AI marketing engine is ready. Complete the steps below to launch your full content pipeline.
@@ -159,7 +159,7 @@ export default function WelcomePage() {
                     <Zap className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-sm">PulseFlow</p>
+                    <p className="font-bold text-sm">BundledContent</p>
                     <p className="text-neutral-400 text-xs">Complete AI Marketing Service</p>
                   </div>
                 </div>

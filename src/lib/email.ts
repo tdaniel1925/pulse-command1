@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
 
-const FROM = process.env.RESEND_FROM_EMAIL ?? 'hello@pulsecommand.com'
+const FROM = process.env.RESEND_FROM_EMAIL ?? 'hello@bundledcontent.com'
 
 function getResend() {
   if (!process.env.RESEND_API_KEY) throw new Error('RESEND_API_KEY not set')
@@ -21,7 +21,7 @@ export async function sendWelcomeEmail({
   return getResend().emails.send({
     from: FROM,
     to,
-    subject: `Welcome to PulseFlow, ${firstName}!`,
+    subject: `Welcome to BundledContent, ${firstName}!`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -29,7 +29,7 @@ export async function sendWelcomeEmail({
 <body style="font-family: Inter, sans-serif; background: #f9fafb; margin: 0; padding: 40px 20px;">
   <div style="max-width: 560px; margin: 0 auto; background: white; border-radius: 16px; border: 1px solid #e5e7eb; overflow: hidden;">
     <div style="background: #2563eb; padding: 32px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 24px;">⚡ PulseFlow</h1>
+      <h1 style="color: white; margin: 0; font-size: 24px;">⚡ BundledContent</h1>
     </div>
     <div style="padding: 32px;">
       <h2 style="color: #111827; margin-top: 0;">Welcome, ${firstName}!</h2>
@@ -57,7 +57,7 @@ export async function sendWelcomeEmail({
       </div>
     </div>
     <div style="padding: 20px 32px; border-top: 1px solid #f3f4f6; text-align: center;">
-      <p style="color: #9ca3af; font-size: 12px; margin: 0;">© ${new Date().getFullYear()} PulseFlow. All rights reserved.</p>
+      <p style="color: #9ca3af; font-size: 12px; margin: 0;">© ${new Date().getFullYear()} BundledContent. All rights reserved.</p>
     </div>
   </div>
 </body>
@@ -88,7 +88,7 @@ export async function sendReportEmail({
 <body style="font-family: Inter, sans-serif; background: #f9fafb; margin: 0; padding: 40px 20px;">
   <div style="max-width: 560px; margin: 0 auto; background: white; border-radius: 16px; border: 1px solid #e5e7eb; overflow: hidden;">
     <div style="background: #2563eb; padding: 32px; text-align: center;">
-      <h1 style="color: white; margin: 0; font-size: 24px;">⚡ PulseFlow</h1>
+      <h1 style="color: white; margin: 0; font-size: 24px;">⚡ BundledContent</h1>
     </div>
     <div style="padding: 32px;">
       <h2 style="color: #111827; margin-top: 0;">Hi ${firstName}, your ${month} report is ready!</h2>

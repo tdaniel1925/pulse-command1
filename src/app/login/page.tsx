@@ -39,7 +39,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <Image src="/logo.png" alt="PulseFlow" width={140} height={47} className="h-9 w-auto" />
+            <Image src="/logo.png" alt="BundledContent" width={140} height={47} className="h-9 w-auto" />
           </Link>
           <h1 className="text-2xl font-bold text-neutral-900">Welcome back</h1>
           <p className="text-neutral-500 text-sm mt-1">Sign in to your account</p>
@@ -119,7 +119,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-neutral-400 mt-6">
-          © {new Date().getFullYear()} PulseFlow. All rights reserved.
+          © {new Date().getFullYear()} BundledContent. All rights reserved.
         </p>
       </div>
     </div>

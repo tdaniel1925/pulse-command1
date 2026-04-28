@@ -9,7 +9,7 @@ import OnboardingNav from "@/components/OnboardingNav";
 
 const plans = {
   lite: {
-    name: "PulseFlow Lite",
+    name: "BundledContent Lite",
     price: 745,
     displayPrice: "$99",
     priceNum: 99,
@@ -22,7 +22,7 @@ const plans = {
     ],
   },
   full: {
-    name: "PulseFlow Full",
+    name: "BundledContent Full",
     displayPrice: "$745",
     priceNum: 745,
     tagline: "Complete AI marketing machine",
@@ -199,9 +199,9 @@ function SignUpForm() {
 
                 <p className="text-center text-xs text-neutral-500">
                   By creating an account you agree to our{" "}
-                  <a href="mailto:support@pulsecommand.com" className="text-primary-600 hover:underline">Terms of Service</a>{" "}
+                  <a href="mailto:support@bundledcontent.com" className="text-primary-600 hover:underline">Terms of Service</a>{" "}
                   and{" "}
-                  <a href="mailto:support@pulsecommand.com" className="text-primary-600 hover:underline">Privacy Policy</a>.
+                  <a href="mailto:support@bundledcontent.com" className="text-primary-600 hover:underline">Privacy Policy</a>.
                   Setup begins within 24 hours.
                 </p>
               </div>

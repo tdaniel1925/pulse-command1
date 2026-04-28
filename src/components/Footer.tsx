@@ -9,7 +9,7 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="mb-4">
-              <Image src="/logo-white.png" alt="PulseFlow" width={160} height={54} className="h-10 w-auto" />
+              <Image src="/logo-white.png" alt="BundledContent" width={160} height={54} className="h-10 w-auto" />
             </div>
             <p className="text-neutral-400 text-sm leading-relaxed">
               A complete done-for-you AI marketing service. Social content, podcast, videos, and monthly reporting — all for $745/mo.
@@ -34,7 +34,7 @@ export default function Footer() {
               <li><Link href="/#what-you-get" className="hover:text-primary-400 transition-colors">About</Link></li>
               <li><Link href="/#pricing" className="hover:text-primary-400 transition-colors">Pricing</Link></li>
               <li><Link href="/sign-up" className="hover:text-primary-400 transition-colors">Get Started</Link></li>
-              <li><a href="mailto:support@pulseflow.com" className="hover:text-primary-400 transition-colors">Contact</a></li>
+              <li><a href="mailto:support@bundledcontent.com" className="hover:text-primary-400 transition-colors">Contact</a></li>
             </ul>
           </div>
 
@@ -42,7 +42,7 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-white mb-6">Stay Updated</h4>
             <p className="text-sm text-neutral-400 mb-4">
-              AI marketing tips and PulseFlow updates, straight to your inbox.
+              AI marketing tips and BundledContent updates, straight to your inbox.
             </p>
             <div className="flex gap-2">
               <input
@@ -59,12 +59,12 @@ export default function Footer() {
 
         <div className="border-t border-neutral-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-neutral-500">
-            © {new Date().getFullYear()} PulseFlow. All rights reserved.
+            © {new Date().getFullYear()} BundledContent. All rights reserved.
           </p>
           <div className="flex gap-5 text-sm text-neutral-500">
-            <a href="mailto:support@pulseflow.com" className="hover:text-neutral-300 transition-colors">Privacy Policy</a>
-            <a href="mailto:support@pulseflow.com" className="hover:text-neutral-300 transition-colors">Terms of Service</a>
-            <a href="mailto:support@pulseflow.com" className="hover:text-neutral-300 transition-colors">Support</a>
+            <a href="mailto:support@bundledcontent.com" className="hover:text-neutral-300 transition-colors">Privacy Policy</a>
+            <a href="mailto:support@bundledcontent.com" className="hover:text-neutral-300 transition-colors">Terms of Service</a>
+            <a href="mailto:support@bundledcontent.com" className="hover:text-neutral-300 transition-colors">Support</a>
           </div>
         </div>
       </div>

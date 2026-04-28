@@ -30,7 +30,7 @@ export default function OnboardingNav({ current }: { current: Step }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <Link href="/" className="flex items-center">
-            <Image src="/logo.png" alt="PulseFlow" width={160} height={54} className="h-11 w-auto" priority />
+            <Image src="/logo.png" alt="BundledContent" width={160} height={54} className="h-11 w-auto" priority />
           </Link>
 
           <div className="hidden md:flex items-center gap-6">
