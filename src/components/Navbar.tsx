@@ -4,9 +4,28 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+const NAV_LINKS = [
+  { label: "What's Included", anchor: "what-you-get" },
+  { label: "Add-Ons", anchor: "addons" },
+  { label: "Pricing", anchor: "pricing" },
+];
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  function handleAnchor(anchor: string) {
+    setOpen(false);
+    const el = document.getElementById(anchor);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    } else {
+      // Navigate to home first, then scroll after load
+      router.push(`/#${anchor}`);
+    }
+  }
 
   return (
     <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-md border-b border-neutral-200">
@@ -19,18 +38,15 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link
-              href="/#what-you-get"
-              className="text-neutral-600 hover:text-primary-600 font-medium transition-colors"
-            >
-              What&apos;s Included
-            </Link>
-            <Link
-              href="/#pricing"
-              className="text-neutral-600 hover:text-primary-600 font-medium transition-colors"
-            >
-              Pricing
-            </Link>
+            {NAV_LINKS.map((l) => (
+              <button
+                key={l.anchor}
+                onClick={() => handleAnchor(l.anchor)}
+                className="text-neutral-600 hover:text-primary-600 font-medium transition-colors"
+              >
+                {l.label}
+              </button>
+            ))}
             <span className="text-neutral-400 text-sm font-medium">Plans from $99/mo</span>
             <Link
               href="/login"
@@ -65,20 +81,15 @@ export default function Navbar() {
       {/* Mobile menu */}
       {open && (
         <div className="md:hidden bg-white border-t border-neutral-200 px-4 py-4 space-y-3">
-          <Link
-            href="/#what-you-get"
-            className="block text-neutral-700 font-medium py-2"
-            onClick={() => setOpen(false)}
-          >
-            What&apos;s Included
-          </Link>
-          <Link
-            href="/#pricing"
-            className="block text-neutral-700 font-medium py-2"
-            onClick={() => setOpen(false)}
-          >
-            Pricing
-          </Link>
+          {NAV_LINKS.map((l) => (
+            <button
+              key={l.anchor}
+              onClick={() => handleAnchor(l.anchor)}
+              className="block w-full text-left text-neutral-700 font-medium py-2"
+            >
+              {l.label}
+            </button>
+          ))}
           <Link
             href="/login"
             className="block text-neutral-700 font-medium py-2"
