@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Check, User, Mail, Building2, Shield, Zap, Share2, Mic, Video, BarChart3, AlertCircle, Phone } from "lucide-react";
@@ -37,7 +37,7 @@ const plans = {
 const inputClass = "w-full px-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm";
 const inputWithIconClass = "w-full pl-11 pr-4 py-3 bg-neutral-50 border border-neutral-200 rounded-lg text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all text-sm";
 
-export default function SignUpPage() {
+function SignUpForm() {
   const searchParams = useSearchParams();
   const planKey = (searchParams.get("plan") === "lite" ? "lite" : "full") as "lite" | "full";
   const plan = plans[planKey];
@@ -273,5 +273,13 @@ export default function SignUpPage() {
         </div>
       </main>
     </>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" /></div>}>
+      <SignUpForm />
+    </Suspense>
   );
 }
