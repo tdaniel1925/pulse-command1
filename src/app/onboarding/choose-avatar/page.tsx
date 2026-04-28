@@ -38,6 +38,7 @@ export default function ChooseAvatarPage() {
     }
   }, [])
 
+  // Stream first 4 batches (pages 0-3) sequentially so avatars trickle in
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
@@ -47,7 +48,19 @@ export default function ChooseAvatarPage() {
       })
       .catch(() => {});
 
-    fetchPage(0, false).finally(() => setLoading(false))
+    async function streamInitial() {
+      // Fetch page 0 first — removes the spinner immediately
+      await fetchPage(0, false)
+      setLoading(false)
+      // Then stream pages 1-3 sequentially with a small delay each
+      for (let p = 1; p <= 3; p++) {
+        await new Promise(r => setTimeout(r, 120))
+        await fetchPage(p, true)
+      }
+      setPage(3)
+    }
+
+    streamInitial()
   }, [fetchPage]);
 
   async function loadMore() {
@@ -106,6 +119,7 @@ export default function ChooseAvatarPage() {
                 <button
                   key={avatar.id}
                   onClick={() => setSelected(avatar.id)}
+                  style={{ animation: "fadeIn 0.3s ease both" }}
                   className={`relative rounded-xl overflow-hidden border-2 transition-all group ${
                     selected === avatar.id
                       ? "border-primary-600 ring-2 ring-primary-200 shadow-md"
