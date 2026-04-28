@@ -16,7 +16,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         .single()
     : { data: null };
 
-  const displayName = client?.business_name ?? `${client?.first_name ?? ""} ${client?.last_name ?? ""}`.trim() || "My Account";
+  const displayName = client?.business_name ?? (`${client?.first_name ?? ""} ${client?.last_name ?? ""}`.trim() || "My Account");
   const initials = (client?.first_name?.[0] ?? client?.business_name?.[0] ?? "?").toUpperCase();
 
   return (
