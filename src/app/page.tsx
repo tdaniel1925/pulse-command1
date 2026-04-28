@@ -210,17 +210,18 @@ export default function HomePage() {
             <p className="text-sm text-neutral-400 mt-4">No lock-in contracts. Cancel anytime. Setup in 24 hours.</p>
           </div>
 
-          {/* Dashboard preview */}
+          {/* Hero video */}
           <div className="mt-20 relative mx-auto max-w-5xl">
             <div className="absolute -inset-1 bg-gradient-to-r from-primary-400 to-accent-400 rounded-2xl blur opacity-20" />
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-neutral-200 bg-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=2426&q=80"
-                alt="BundledContent Dashboard"
-                className="w-full h-auto"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/10 to-transparent pointer-events-none" />
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-neutral-200 bg-black">
+              <div style={{ padding: "56.25% 0 0 0", position: "relative" }}>
+                <iframe
+                  src="https://player.vimeo.com/video/1187463641?badge=0&autopause=0&player_id=0&app_id=58479&title=0&byline=0&portrait=0&dnt=1"
+                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                  style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}
+                  title="BundledContent"
+                />
+              </div>
             </div>
           </div>
         </div>
