@@ -179,10 +179,10 @@ export default function HomePage() {
               Agency-Quality Content. DIY Pricing. Zero Overhead.
             </div>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-neutral-900 tracking-tight mb-8">
-              The Marketing Agency{" "}
+              Agency Service.{" "}
               <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-accent-400">
-                You Could Never Afford.
+                DIY Prices.
               </span>
             </h1>
             <p className="text-xl text-neutral-600 mb-3 max-w-3xl mx-auto leading-relaxed">
