@@ -13,6 +13,9 @@ import {
   CreditCard,
   Upload,
   Sparkles,
+  FileText,
+  Mail,
+  Globe,
 } from "lucide-react";
 
 const navItems = [
@@ -20,8 +23,10 @@ const navItems = [
   { label: "Social Posts", href: "/dashboard/social", icon: Share2 },
   { label: "Videos", href: "/dashboard/videos", icon: Video },
   { label: "Audio", href: "/dashboard/audio", icon: Mic },
+  { label: "Newsletter", href: "/dashboard/newsletter", icon: Mail },
+  { label: "Lead Magnet", href: "/dashboard/lead-magnet", icon: FileText },
+  { label: "Landing Pages", href: "/dashboard/pages", icon: Globe },
   { label: "Reports", href: "/dashboard/report", icon: BarChart2 },
-  { label: "Workflow", href: "/dashboard/workflow", icon: GitBranch },
   { label: "Upload Content", href: "/dashboard/upload", icon: Upload },
   { label: "Add-ons", href: "/dashboard/addons", icon: Sparkles },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },

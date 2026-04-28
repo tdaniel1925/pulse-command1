@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Stripe from 'stripe'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const getStripe = () => new Stripe(process.env.STRIPE_SECRET_KEY!)
 
@@ -14,7 +14,6 @@ export async function POST(request: NextRequest) {
     }
 
     let event: Stripe.Event
-
     try {
       event = getStripe().webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET!)
     } catch (err) {
@@ -22,73 +21,135 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
-    // TODO: use service role client for webhooks
-    // For now using anon client — replace with service role for production
-    const supabase = await createClient()
+    const admin = createAdminClient()
 
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session
-        console.log('checkout.session.completed:', session.id)
+        const clientId = session.metadata?.client_id
+        const addonKey = session.metadata?.addon_key
 
-        // TODO: implement — look up client by stripe_customer_id and update
-        const { error } = await supabase
-          .from('clients')
-          .update({ subscription_status: 'active' })
-          .eq('stripe_customer_id', session.customer)
+        if (addonKey && clientId) {
+          // Addon checkout — activate the addon
+          const { data: existing } = await admin
+            .from('client_addons')
+            .select('id')
+            .eq('client_id', clientId)
+            .eq('addon_key', addonKey)
+            .maybeSingle()
 
-        if (error) console.error('Error updating client subscription:', error)
+          if (existing) {
+            await admin
+              .from('client_addons')
+              .update({ status: 'active', cancelled_at: null })
+              .eq('id', existing.id)
+          } else {
+            await admin.from('client_addons').insert({
+              client_id: clientId,
+              addon_key: addonKey,
+              status: 'active',
+              stripe_subscription_id: typeof session.subscription === 'string' ? session.subscription : null,
+            } as never)
+          }
 
-        await supabase.from('activities').insert({
-          type: 'billing',
-          title: 'Subscription activated',
-          description: `Checkout session ${session.id} completed`,
-        })
+          await admin.from('activities').insert({
+            client_id: clientId,
+            type: 'billing',
+            title: `Add-on activated: ${addonKey.replace(/_/g, ' ')}`,
+            description: 'Stripe checkout completed and add-on is now active.',
+            created_by: 'system',
+          } as never)
+
+          console.log(`[stripe webhook] Addon ${addonKey} activated for client ${clientId}`)
+        } else if (session.customer) {
+          // Main subscription checkout
+          await admin
+            .from('clients')
+            .update({ subscription_status: 'active', stripe_customer_id: session.customer as string })
+            .eq('stripe_customer_id', session.customer as string)
+
+          console.log(`[stripe webhook] Main subscription activated for customer ${session.customer}`)
+        }
         break
       }
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription
-        console.log('customer.subscription.updated:', subscription.id)
+        const addonKey = subscription.metadata?.addon_key
+        const clientId = subscription.metadata?.client_id
 
-        // TODO: implement — update subscription record in DB
-        await supabase
-          .from('subscriptions')
-          .update({
-            status: subscription.status,
-            current_period_end: new Date((subscription as unknown as { current_period_end: number }).current_period_end * 1000).toISOString(),
-          })
-          .eq('stripe_subscription_id', subscription.id)
+        if (addonKey && clientId) {
+          // Addon subscription updated
+          const isActive = subscription.status === 'active' || subscription.status === 'trialing'
+          await admin
+            .from('client_addons')
+            .update({
+              status: isActive ? 'active' : 'cancelled',
+              cancelled_at: isActive ? null : new Date().toISOString(),
+            })
+            .eq('client_id', clientId)
+            .eq('addon_key', addonKey)
+        } else {
+          // Main subscription updated
+          await admin
+            .from('clients')
+            .update({ subscription_status: subscription.status })
+            .eq('stripe_customer_id', subscription.customer as string)
+        }
         break
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription
-        console.log('customer.subscription.deleted:', subscription.id)
+        const addonKey = subscription.metadata?.addon_key
+        const clientId = subscription.metadata?.client_id
 
-        // TODO: implement — find client by stripe_customer_id
-        await supabase
-          .from('clients')
-          .update({ subscription_status: 'cancelled' })
-          .eq('stripe_customer_id', subscription.customer)
+        if (addonKey && clientId) {
+          await admin
+            .from('client_addons')
+            .update({ status: 'cancelled', cancelled_at: new Date().toISOString() })
+            .eq('client_id', clientId)
+            .eq('addon_key', addonKey)
+
+          await admin.from('activities').insert({
+            client_id: clientId,
+            type: 'billing',
+            title: `Add-on cancelled: ${addonKey.replace(/_/g, ' ')}`,
+            description: 'Stripe subscription cancelled.',
+            created_by: 'system',
+          } as never)
+        } else {
+          await admin
+            .from('clients')
+            .update({ subscription_status: 'cancelled' })
+            .eq('stripe_customer_id', subscription.customer as string)
+        }
         break
       }
 
       case 'invoice.payment_failed': {
         const invoice = event.data.object as Stripe.Invoice
-        console.log('invoice.payment_failed:', invoice.id)
-
-        // TODO: implement — find client by stripe_customer_id
-        await supabase
+        await admin
           .from('clients')
           .update({ subscription_status: 'past_due' })
-          .eq('stripe_customer_id', invoice.customer)
+          .eq('stripe_customer_id', invoice.customer as string)
 
-        await supabase.from('activities').insert({
-          type: 'billing',
-          title: 'Payment failed',
-          description: `Invoice ${invoice.id} payment failed`,
-        })
+        // Find client for activity log
+        const { data: client } = await admin
+          .from('clients')
+          .select('id')
+          .eq('stripe_customer_id', invoice.customer as string)
+          .maybeSingle()
+
+        if (client) {
+          await admin.from('activities').insert({
+            client_id: client.id,
+            type: 'billing',
+            title: 'Payment failed',
+            description: `Invoice payment failed. Please update your payment method.`,
+            created_by: 'system',
+          } as never)
+        }
         break
       }
 

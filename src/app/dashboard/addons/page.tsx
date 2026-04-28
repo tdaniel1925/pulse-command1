@@ -18,7 +18,7 @@ export default async function AddonsPage() {
   // Fetch all active add-ons from catalog
   const { data: allAddons } = await adminClient
     .from('addons')
-    .select('*')
+    .select('id, key, name, description, price_cents, billing_type, stripe_price_id')
     .eq('active', true)
     .order('price_cents');
 
