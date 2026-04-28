@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,31 +17,42 @@ export async function POST(request: NextRequest) {
     if (!client) return NextResponse.json({ error: 'Client not found' }, { status: 404 })
 
     const body = await request.json()
-    const { primaryColor, secondaryColor, logoUrl, businessDescription, tagline, industry, website, toneOfVoice } = body
+    const {
+      primaryColor, secondaryColor, logoUrl,
+      businessDescription, tagline, industry, website,
+      toneOfVoice, targetAudience, uniqueValueProp,
+      contentPillars, keywords,
+    } = body
 
-    // Update brand profile
+    const admin = createAdminClient()
+
+    // Update brand profile with all fields
     if (client.brand_profile_id) {
-      await supabase.from('brand_profiles').update({
+      await admin.from('brand_profiles').update({
         primary_color: primaryColor,
         secondary_color: secondaryColor,
         logo_url: logoUrl,
         business_description: businessDescription,
         tone_of_voice: toneOfVoice,
+        target_audience: targetAudience,
+        unique_value_prop: uniqueValueProp,
+        content_pillars: contentPillars ?? [],
+        keywords: keywords ?? [],
       }).eq('id', client.brand_profile_id)
     }
 
-    // Update client website + industry
-    await supabase.from('clients').update({
+    // Update client
+    await admin.from('clients').update({
       website,
       industry,
       onboarding_step: 'assets_recorded',
     }).eq('id', client.id)
 
-    await supabase.from('activities').insert({
+    await admin.from('activities').insert({
       client_id: client.id,
       type: 'onboarding_step',
       title: 'Brand assets collected',
-      description: 'Logo, colors, and brand info saved.',
+      description: 'Logo, colors, brand voice, and AI-extracted brand data saved.',
       created_by: 'system',
     })
 

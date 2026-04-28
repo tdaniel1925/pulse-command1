@@ -4,11 +4,71 @@ import Anthropic from '@anthropic-ai/sdk'
 const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 function resolveUrl(src: string, base: string): string {
+  try { return new URL(src, base).href } catch { return src }
+}
+
+async function fetchJinaPage(url: string): Promise<string> {
   try {
-    return new URL(src, base).href
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      headers: { 'Accept': 'text/plain', 'X-Return-Format': 'markdown' },
+      signal: AbortSignal.timeout(15000),
+    })
+    if (!res.ok) return ''
+    const text = await res.text()
+    return text.slice(0, 6000)
   } catch {
-    return src
+    return ''
   }
+}
+
+async function fetchScreenshot(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(`https://r.jina.ai/${url}`, {
+      headers: { 'Accept': 'image/png', 'X-Return-Format': 'screenshot' },
+      signal: AbortSignal.timeout(20000),
+    })
+    if (!res.ok) return null
+    const buf = await res.arrayBuffer()
+    return Buffer.from(buf).toString('base64')
+  } catch {
+    return null
+  }
+}
+
+function extractLogoAndColors(html: string, cleanUrl: string, origin: string): { logoUrl: string; primaryColor: string } {
+  let logoUrl = ''
+  let primaryColor = ''
+
+  const ogImage = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
+    ?? html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i)
+  if (ogImage?.[1]) logoUrl = resolveUrl(ogImage[1], cleanUrl)
+
+  if (!logoUrl) {
+    const tw = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i)
+      ?? html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i)
+    if (tw?.[1]) logoUrl = resolveUrl(tw[1], cleanUrl)
+  }
+
+  if (!logoUrl) {
+    const apple = html.match(/<link[^>]*rel=["']apple-touch-icon[^"']*["'][^>]*href=["']([^"']+)["']/i)
+    if (apple?.[1]) logoUrl = resolveUrl(apple[1], cleanUrl)
+  }
+
+  if (!logoUrl) {
+    const fav = html.match(/<link[^>]*rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["']/i)
+    logoUrl = fav?.[1] ? resolveUrl(fav[1], cleanUrl) : `${origin}/favicon.ico`
+  }
+
+  const themeColor = html.match(/<meta[^>]*name=["']theme-color["'][^>]*content=["']([^"']+)["']/i)
+  if (themeColor?.[1]) primaryColor = themeColor[1]
+
+  // Also try to find inline CSS color variables or background colors
+  if (!primaryColor) {
+    const cssColor = html.match(/--(?:primary|brand|main|accent)(?:-color)?:\s*(#[0-9a-f]{3,6})/i)
+    if (cssColor?.[1]) primaryColor = cssColor[1]
+  }
+
+  return { logoUrl, primaryColor }
 }
 
 export async function POST(request: NextRequest) {
@@ -19,74 +79,64 @@ export async function POST(request: NextRequest) {
     const cleanUrl = url.startsWith('http') ? url : `https://${url}`
     const origin = new URL(cleanUrl).origin
 
-    // Fetch page text via Jina and screenshot in parallel
-    const [jinaRes, screenshotRes] = await Promise.all([
-      fetch(`https://r.jina.ai/${cleanUrl}`, {
-        headers: { 'Accept': 'text/plain', 'X-Return-Format': 'markdown' },
-      }),
-      fetch(`https://r.jina.ai/${cleanUrl}`, {
-        headers: { 'Accept': 'image/png', 'X-Return-Format': 'screenshot' },
-      }).catch(() => null),
+    // Identify additional pages to scan
+    const pagesToScan = [
+      cleanUrl,
+      `${origin}/about`,
+      `${origin}/services`,
+      `${origin}/about-us`,
+      `${origin}/what-we-do`,
+    ]
+
+    // Fetch homepage text + screenshot + additional pages in parallel
+    const [homeText, screenshotBase64, ...extraTexts] = await Promise.all([
+      fetchJinaPage(cleanUrl),
+      fetchScreenshot(cleanUrl),
+      ...pagesToScan.slice(1).map(p => fetchJinaPage(p)),
     ])
 
-    if (!jinaRes.ok) {
-      console.error('Jina fetch failed:', jinaRes.status, jinaRes.statusText)
-      return NextResponse.json({ error: `Could not scan website (Jina ${jinaRes.status})` }, { status: 400 })
-    }
+    // Combine all page content, filtering empty results
+    const allPageContent = [homeText, ...extraTexts].filter(Boolean).join('\n\n---\n\n')
 
-    const pageContent = await jinaRes.text()
-
-    // Get screenshot as base64 if available
-    let screenshotBase64: string | null = null
-    if (screenshotRes?.ok) {
-      const buf = await screenshotRes.arrayBuffer()
-      screenshotBase64 = Buffer.from(buf).toString('base64')
-    }
-
-    // Extract logo URL from HTML with fallbacks
-    let logoUrl = ''
+    // Extract logo + colors from raw HTML
+    let logoUrl = `${origin}/favicon.ico`
     let primaryColor = ''
-
     try {
       const htmlRes = await fetch(cleanUrl, {
         headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PulseCommandBot/1.0)' },
         signal: AbortSignal.timeout(6000),
       })
       const html = await htmlRes.text()
+      const extracted = extractLogoAndColors(html, cleanUrl, origin)
+      logoUrl = extracted.logoUrl || logoUrl
+      primaryColor = extracted.primaryColor
+    } catch { /* silent */ }
 
-      // 1. og:image
-      const ogImage = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
-        ?? html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i)
-      if (ogImage?.[1]) logoUrl = resolveUrl(ogImage[1], cleanUrl)
+    // Build vision-enhanced Claude message
+    const textPrompt = `You are an expert brand strategist and marketing analyst. Analyze this website content from multiple pages and extract comprehensive brand information.
 
-      // 2. twitter:image
-      if (!logoUrl) {
-        const tw = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i)
-          ?? html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i)
-        if (tw?.[1]) logoUrl = resolveUrl(tw[1], cleanUrl)
-      }
+Website: ${cleanUrl}
+Pages scanned: home, about, services
 
-      // 3. apple-touch-icon
-      if (!logoUrl) {
-        const apple = html.match(/<link[^>]*rel=["']apple-touch-icon["'][^>]*href=["']([^"']+)["']/i)
-        if (apple?.[1]) logoUrl = resolveUrl(apple[1], cleanUrl)
-      }
+Content from all pages:
+${allPageContent}
 
-      // 4. favicon tag or default /favicon.ico
-      if (!logoUrl) {
-        const fav = html.match(/<link[^>]*rel=["'][^"']*icon[^"']*["'][^>]*href=["']([^"']+)["']/i)
-        logoUrl = fav?.[1] ? resolveUrl(fav[1], cleanUrl) : `${origin}/favicon.ico`
-      }
+Return ONLY valid JSON with ALL of these fields (be specific and detailed — avoid generic answers):
+{
+  "businessName": "exact business name",
+  "tagline": "their actual tagline or slogan if visible, else craft one based on their content",
+  "description": "2-3 sentences describing exactly what they do and who they serve",
+  "industry": "specific industry (e.g. 'Residential Real Estate', not just 'Real Estate')",
+  "primaryColor": "dominant brand hex color (e.g. #2563eb) — look for buttons, headers, CTAs",
+  "secondaryColor": "secondary brand hex color if identifiable",
+  "toneOfVoice": "one of: professional/casual/bold/warm/friendly/authoritative/inspirational/technical",
+  "targetAudience": "specific description of their ideal customer",
+  "uniqueValueProp": "what makes them different from competitors",
+  "contentPillars": ["topic 1", "topic 2", "topic 3", "topic 4", "topic 5"],
+  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"],
+  "services": ["service 1", "service 2", "service 3"]
+}`
 
-      // theme-color
-      const themeColor = html.match(/<meta[^>]*name=["']theme-color["'][^>]*content=["']([^"']+)["']/i)
-      if (themeColor?.[1]) primaryColor = themeColor[1]
-
-    } catch {
-      logoUrl = `${origin}/favicon.ico`
-    }
-
-    // Build Claude message — include screenshot if available for visual brand extraction
     const userContent: Anthropic.MessageParam['content'] = screenshotBase64
       ? [
           {
@@ -95,38 +145,14 @@ export async function POST(request: NextRequest) {
           },
           {
             type: 'text',
-            text: `This is a screenshot of the website ${cleanUrl}. Also here is the page text content:\n\n${pageContent.slice(0, 4000)}\n\nExtract brand information. Return ONLY valid JSON:
-{
-  "businessName": "string",
-  "tagline": "string",
-  "description": "string (1-2 sentences about what they do)",
-  "industry": "string",
-  "primaryColor": "string (dominant brand hex color you can see in the screenshot, e.g. #2563eb)",
-  "toneOfVoice": "string (professional/casual/bold/warm/friendly/authoritative)"
-}`,
+            text: `This is a screenshot of the website homepage. Use it to identify the exact brand colors (look at buttons, headers, navigation), logo style, and overall visual identity.\n\n${textPrompt}`,
           },
         ]
-      : [
-          {
-            type: 'text',
-            text: `Extract brand information from this website content. Return ONLY valid JSON:
-{
-  "businessName": "string",
-  "tagline": "string",
-  "description": "string (1-2 sentences about what they do)",
-  "industry": "string",
-  "primaryColor": "string (hex color if you can infer it, else empty string)",
-  "toneOfVoice": "string (professional/casual/bold/warm/friendly/authoritative)"
-}
-
-Website content:
-${pageContent.slice(0, 8000)}`,
-          },
-        ]
+      : [{ type: 'text', text: textPrompt }]
 
     const message = await getAnthropic().messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 512,
+      model: 'claude-sonnet-4-6',
+      max_tokens: 1024,
       messages: [{ role: 'user', content: userContent }],
     })
 
@@ -140,7 +166,9 @@ ${pageContent.slice(0, 8000)}`,
         ...extracted,
         logoUrl,
         primaryColor: primaryColor || extracted.primaryColor || '',
+        secondaryColor: extracted.secondaryColor || '',
         usedScreenshot: !!screenshotBase64,
+        pagesScanned: pagesToScan.length,
       },
     })
   } catch (err) {
