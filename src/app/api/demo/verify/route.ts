@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'PulseCommand <hello@pulsecommand.com>',
+        from: 'PulseFlow <hello@pulsecommand.com>',
         to: demo.email,
         subject: `${demo.name}, verify your email to unlock your custom AI video`,
         html: `
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
                 Verify Email & Unlock My Video →
               </a>
               <p style="color:#9ca3af;font-size:13px;">Or paste this link in your browser:<br/><span style="color:#4f46e5;">${verifyUrl}</span></p>
-              <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:24px;">PulseCommand · AI Marketing on Autopilot</p>
+              <p style="color:#9ca3af;font-size:12px;text-align:center;margin-top:24px;">PulseFlow · AI Marketing on Autopilot</p>
             </div>
           </div>
         `,

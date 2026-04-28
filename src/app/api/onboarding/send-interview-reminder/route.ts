@@ -33,8 +33,8 @@ export async function POST(request: NextRequest) {
     }
 
     const message = scheduledFor
-      ? `Hi ${name}! ⏰ Reminder: Your PulseCommand brand interview is scheduled for ${timeText}.\n\nCall ${vapiPhone} and enter PIN: ${pin}\n\nTakes ~15 min. This call generates all your content!`
-      : `Hi ${name}! Your PulseCommand brand interview is ready.\n\nCall ${vapiPhone} and enter PIN: ${pin}\n\nTakes ~15 min. This unlocks your full content pipeline!`
+      ? `Hi ${name}! ⏰ Reminder: Your PulseFlow brand interview is scheduled for ${timeText}.\n\nCall ${vapiPhone} and enter PIN: ${pin}\n\nTakes ~15 min. This call generates all your content!`
+      : `Hi ${name}! Your PulseFlow brand interview is ready.\n\nCall ${vapiPhone} and enter PIN: ${pin}\n\nTakes ~15 min. This unlocks your full content pipeline!`
 
     await getTwilio().messages.create({
       body: message,

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Zap } from "lucide-react";
+import Image from "next/image";
 
 type Step = "sign-up" | "schedule" | "welcome" | "brand-assets" | "choose-avatar" | "choose-voice" | "interview" | "complete";
 
@@ -29,13 +29,8 @@ export default function OnboardingNav({ current }: { current: Step }) {
     <header className="bg-white border-b border-neutral-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center text-white">
-              <Zap className="w-6 h-6" />
-            </div>
-            <span className="font-bold text-2xl text-neutral-900 tracking-tight">
-              PulseCommand
-            </span>
+          <Link href="/" className="flex items-center">
+            <Image src="/logo.png" alt="PulseFlow" width={160} height={54} className="h-11 w-auto" priority />
           </Link>
 
           <div className="hidden md:flex items-center gap-6">

@@ -68,7 +68,7 @@ export default function SchedulePage() {
               Step 2 of 3
             </div>
             <h1 className="text-3xl font-bold text-neutral-900 mb-2">Schedule Your Onboarding Session</h1>
-            <p className="text-neutral-500 text-sm">Book a 1-on-1 session with your dedicated PulseCommand onboarding specialist.</p>
+            <p className="text-neutral-500 text-sm">Book a 1-on-1 session with your dedicated PulseFlow onboarding specialist.</p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

@@ -66,7 +66,7 @@ export default async function BillingPage() {
     .limit(1)
     .single();
 
-  const planName = subscription?.plan_name ?? "PulseCommand";
+  const planName = subscription?.plan_name ?? "PulseFlow";
   const planAmount = subscription?.amount ?? 745;
   const planInterval = subscription?.interval ?? "month";
   const subStatus = subscription?.status ?? null;

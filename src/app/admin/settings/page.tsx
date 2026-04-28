@@ -120,7 +120,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-neutral-900">Settings</h1>
-        <p className="text-sm text-neutral-500 mt-1">Configure your PulseCommand instance.</p>
+        <p className="text-sm text-neutral-500 mt-1">Configure your PulseFlow instance.</p>
       </div>
 
       {/* Tabs */}
@@ -146,7 +146,7 @@ export default function SettingsPage() {
           <h2 className="font-semibold text-neutral-900">General Settings</h2>
 
           {[
-            { label: "App Name", value: "PulseCommand", readOnly: false },
+            { label: "App Name", value: "PulseFlow", readOnly: false },
             { label: "Support Email", value: "support@pulsecommand.com", readOnly: false },
             { label: "VAPI Phone Number", value: "+1 (555) 800-1234", readOnly: true },
             { label: "Twilio Number", value: "+1 (555) 900-5678", readOnly: true },

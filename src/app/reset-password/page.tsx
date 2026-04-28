@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Zap, Lock, Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -44,10 +45,7 @@ export default function ResetPasswordPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 bg-primary-600 rounded-xl flex items-center justify-center">
-              <Zap className="w-6 h-6 text-white" />
-            </div>
-            <span className="font-bold text-2xl text-neutral-900">PulseCommand</span>
+            <Image src="/logo.png" alt="PulseFlow" width={140} height={47} className="h-9 w-auto" />
           </Link>
           <h1 className="text-2xl font-bold text-neutral-900">Set new password</h1>
           <p className="text-neutral-500 text-sm mt-1">Choose a strong password for your account</p>
@@ -152,7 +150,7 @@ export default function ResetPasswordPage() {
         </div>
 
         <p className="text-center text-xs text-neutral-400 mt-6">
-          © {new Date().getFullYear()} PulseCommand. All rights reserved.
+          © {new Date().getFullYear()} PulseFlow. All rights reserved.
         </p>
       </div>
     </div>

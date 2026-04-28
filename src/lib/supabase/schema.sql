@@ -1,4 +1,4 @@
--- PulseCommand Full Database Schema
+-- PulseFlow Full Database Schema
 -- Run this in Supabase SQL Editor
 
 -- Enable required extensions

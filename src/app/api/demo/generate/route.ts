@@ -188,7 +188,7 @@ export async function sendDemoNotification(
             <a href="${signupUrl}" style="display: block; background: #f9fafb; color: #4f46e5; padding: 14px; border-radius: 12px; text-decoration: none; font-weight: bold; text-align: center; font-size: 14px; border: 1px solid #e5e7eb;">
               Claim 50% Off — Sign Up Now
             </a>
-            <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 24px;">PulseCommand · AI Marketing on Autopilot · <a href="${baseUrl}" style="color: #9ca3af;">pulsecommand.com</a></p>
+            <p style="color: #9ca3af; font-size: 12px; text-align: center; margin-top: 24px;">PulseFlow · AI Marketing on Autopilot · <a href="${baseUrl}" style="color: #9ca3af;">pulsecommand.com</a></p>
           </div>
         </div>
       `,
@@ -201,12 +201,12 @@ export async function sendDemoNotification(
             <h1 style="color: white; margin: 0; font-size: 24px;">⏰ 1 hour left on your 50% discount</h1>
           </div>
           <div style="padding: 32px; background: white; border-radius: 0 0 16px 16px; border: 1px solid #e5e7eb;">
-            <p style="color: #374151;">Hi ${name}, your 50% discount on PulseCommand is about to expire.</p>
+            <p style="color: #374151;">Hi ${name}, your 50% discount on PulseFlow is about to expire.</p>
             <p style="color: #6b7280;">After this hour, the discount drops to 40%. Don't miss the best price.</p>
             <a href="${signupUrl}&coupon=DEMO50" style="display: block; background: #ef4444; color: white; padding: 16px; border-radius: 12px; text-decoration: none; font-weight: bold; text-align: center; font-size: 16px; margin: 24px 0;">
               Claim 50% Off Before It Expires →
             </a>
-            <p style="color: #9ca3af; font-size: 12px; text-align: center;">PulseCommand · <a href="${resultsUrl}" style="color: #9ca3af;">View your sample content</a></p>
+            <p style="color: #9ca3af; font-size: 12px; text-align: center;">PulseFlow · <a href="${resultsUrl}" style="color: #9ca3af;">View your sample content</a></p>
           </div>
         </div>
       `,
@@ -222,13 +222,13 @@ export async function sendDemoNotification(
             <a href="${resultsUrl}" style="display: block; background: #4f46e5; color: white; padding: 14px; border-radius: 12px; text-decoration: none; font-weight: bold; text-align: center; margin: 24px 0;">
               View My Sample Content →
             </a>
-            <p style="color: #9ca3af; font-size: 12px; text-align: center;">PulseCommand · AI Marketing on Autopilot</p>
+            <p style="color: #9ca3af; font-size: 12px; text-align: center;">PulseFlow · AI Marketing on Autopilot</p>
           </div>
         </div>
       `,
     },
     followup_47h: {
-      subject: `Last chance — your PulseCommand discount expires tomorrow, ${name}`,
+      subject: `Last chance — your PulseFlow discount expires tomorrow, ${name}`,
       html: `
         <div style="font-family: -apple-system, sans-serif; max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; border: 1px solid #e5e7eb; overflow: hidden;">
           <div style="background: #111827; padding: 32px; text-align: center;">
@@ -241,7 +241,7 @@ export async function sendDemoNotification(
             <a href="${signupUrl}" style="display: block; background: #4f46e5; color: white; padding: 16px; border-radius: 12px; text-decoration: none; font-weight: bold; text-align: center; font-size: 16px; margin: 24px 0;">
               Sign Up Before Discount Expires →
             </a>
-            <p style="color: #9ca3af; font-size: 12px; text-align: center;">PulseCommand · <a href="${resultsUrl}" style="color: #9ca3af;">View sample content</a></p>
+            <p style="color: #9ca3af; font-size: 12px; text-align: center;">PulseFlow · <a href="${resultsUrl}" style="color: #9ca3af;">View sample content</a></p>
           </div>
         </div>
       `,
@@ -249,10 +249,10 @@ export async function sendDemoNotification(
   }
 
   const smsTemplates = {
-    ready: `Hi ${name}! 🎉 Your PulseCommand sample content is ready — social posts, podcast + AI video built for your brand. View it + claim 50% off (1hr only): ${resultsUrl}`,
-    followup_1h: `⏰ ${name} — your 50% PulseCommand discount expires in 1 hour! After this it drops to 40%. Claim it now: ${signupUrl}&coupon=DEMO50`,
-    followup_24h: `Hey ${name}, your PulseCommand demo content is still waiting! You still have 20% off today. View it: ${resultsUrl}`,
-    followup_47h: `Last chance ${name} — your PulseCommand discount expires in 1 hour. Sign up now: ${signupUrl}`,
+    ready: `Hi ${name}! 🎉 Your PulseFlow sample content is ready — social posts, podcast + AI video built for your brand. View it + claim 50% off (1hr only): ${resultsUrl}`,
+    followup_1h: `⏰ ${name} — your 50% PulseFlow discount expires in 1 hour! After this it drops to 40%. Claim it now: ${signupUrl}&coupon=DEMO50`,
+    followup_24h: `Hey ${name}, your PulseFlow demo content is still waiting! You still have 20% off today. View it: ${resultsUrl}`,
+    followup_47h: `Last chance ${name} — your PulseFlow discount expires in 1 hour. Sign up now: ${signupUrl}`,
   }
 
   const template = emailTemplates[type]
@@ -263,7 +263,7 @@ export async function sendDemoNotification(
       method: 'POST',
       headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: 'PulseCommand <hello@pulsecommand.com>',
+        from: 'PulseFlow <hello@pulsecommand.com>',
         to: email,
         subject: template.subject,
         html: template.html,

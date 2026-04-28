@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import Image from "next/image";
 import AdminNav from "@/components/admin/AdminNav";
 import { LogoutButton } from "@/components/dashboard/LogoutButton";
 
@@ -10,11 +10,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="w-64 flex-shrink-0 bg-neutral-900 flex flex-col h-full">
         {/* Logo */}
         <div className="px-4 py-5 border-b border-neutral-800">
-          <Link href="/admin" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-base text-neutral-100">PulseCommand</span>
+          <Link href="/admin">
+            <Image src="/logo.png" alt="PulseFlow" width={130} height={44} className="h-8 w-auto brightness-0 invert" />
           </Link>
         </div>
 
@@ -39,7 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white border-b border-neutral-200 px-8 py-4 flex items-center flex-shrink-0">
-          <h1 className="text-base font-semibold text-neutral-900">PulseCommand Admin</h1>
+          <h1 className="text-base font-semibold text-neutral-900">PulseFlow Admin</h1>
         </header>
         <main className="flex-1 overflow-y-auto p-8">{children}</main>
       </div>

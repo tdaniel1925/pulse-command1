@@ -5,9 +5,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PulseCommand — AI Marketing for Every Business",
+  title: "PulseFlow — AI Marketing for Every Business",
   description:
-    "From automated social posts to AI-powered campaigns. PulseCommand gives you a Fortune 500 marketing operation without the overhead.",
+    "From automated social posts to AI-powered campaigns. PulseFlow gives you a Fortune 500 marketing operation without the overhead.",
 };
 
 export default function RootLayout({

@@ -3,12 +3,13 @@
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Check, User, Mail, Building2, Shield, Zap, Share2, Mic, Video, BarChart3, AlertCircle, Phone } from "lucide-react";
 import OnboardingNav from "@/components/OnboardingNav";
 
 const plans = {
   lite: {
-    name: "PulseCommand Lite",
+    name: "PulseFlow Lite",
     price: 745,
     displayPrice: "$99",
     priceNum: 99,
@@ -21,7 +22,7 @@ const plans = {
     ],
   },
   full: {
-    name: "PulseCommand Full",
+    name: "PulseFlow Full",
     displayPrice: "$745",
     priceNum: 745,
     tagline: "Complete AI marketing machine",

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Zap, CheckCircle, Loader2 } from "lucide-react";
 
 const STEPS = [
@@ -50,10 +51,7 @@ export default function GeneratingPage() {
     <div className="min-h-screen bg-neutral-50 flex flex-col">
       <nav className="bg-white border-b border-neutral-200 px-4 py-4">
         <div className="max-w-7xl mx-auto flex items-center gap-2">
-          <div className="w-9 h-9 bg-primary-600 rounded-lg flex items-center justify-center text-white">
-            <Zap className="w-5 h-5" />
-          </div>
-          <span className="font-bold text-xl text-neutral-900">PulseCommand</span>
+          <Image src="/logo.png" alt="PulseFlow" width={140} height={47} className="h-9 w-auto" />
         </div>
       </nav>
 

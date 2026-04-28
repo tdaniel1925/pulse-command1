@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Zap, Globe, Loader2, Sparkles, Check, ArrowRight,
   Users, Target, Trophy, Mic, Video, Share2
@@ -81,10 +82,7 @@ export default function DemoPage() {
       <nav className="relative z-10 px-4 py-5">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-9 h-9 bg-primary-500 rounded-lg flex items-center justify-center text-white">
-              <Zap className="w-5 h-5" />
-            </div>
-            <span className="font-bold text-xl text-white">PulseCommand</span>
+            <Image src="/logo.png" alt="PulseFlow" width={140} height={47} className="h-9 w-auto" />
           </Link>
           <Link href="/login" className="text-sm text-white/60 hover:text-white transition-colors">
             Already a member? Sign in →

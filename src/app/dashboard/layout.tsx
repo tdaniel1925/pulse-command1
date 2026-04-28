@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import Image from "next/image";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import { LogoutButton } from "@/components/dashboard/LogoutButton";
 import { createClient } from "@/lib/supabase/server";
@@ -25,11 +25,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <aside className="w-64 flex-shrink-0 bg-white border-r border-neutral-200 flex flex-col h-full">
         {/* Logo */}
         <div className="px-4 py-5 border-b border-neutral-100">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
-            </div>
-            <span className="font-bold text-base text-neutral-900">PulseCommand</span>
+          <Link href="/dashboard">
+            <Image src="/logo.png" alt="PulseFlow" width={130} height={44} className="h-8 w-auto" />
           </Link>
         </div>
 

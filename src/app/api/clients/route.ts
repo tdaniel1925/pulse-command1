@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
     }
 
     // TODO: send welcome email via Resend
-    // await resend.emails.send({ to: email, subject: 'Welcome to PulseCommand', ... })
+    // await resend.emails.send({ to: email, subject: 'Welcome to PulseFlow', ... })
     console.log('TODO: Send welcome email via Resend to:', email)
 
     return NextResponse.json(client, { status: 201 })

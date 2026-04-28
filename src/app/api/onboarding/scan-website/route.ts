@@ -103,7 +103,7 @@ export async function POST(request: NextRequest) {
     let primaryColor = ''
     try {
       const htmlRes = await fetch(cleanUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PulseCommandBot/1.0)' },
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PulseFlowBot/1.0)' },
         signal: AbortSignal.timeout(6000),
       })
       const html = await htmlRes.text()

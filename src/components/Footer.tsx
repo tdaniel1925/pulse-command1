@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Zap } from "lucide-react";
+import Image from "next/image";
 
 export default function Footer() {
   return (
@@ -8,11 +8,8 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
           {/* Brand */}
           <div className="md:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 bg-primary-600 rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-white" />
-              </div>
-              <span className="font-bold text-xl">PulseCommand</span>
+            <div className="mb-4">
+              <Image src="/logo.png" alt="PulseFlow" width={160} height={54} className="h-10 w-auto brightness-0 invert" />
             </div>
             <p className="text-neutral-400 text-sm leading-relaxed">
               A complete done-for-you AI marketing service. Social content, podcast, videos, and monthly reporting — all for $745/mo.
@@ -37,7 +34,7 @@ export default function Footer() {
               <li><Link href="/#what-you-get" className="hover:text-primary-400 transition-colors">About</Link></li>
               <li><Link href="/#pricing" className="hover:text-primary-400 transition-colors">Pricing</Link></li>
               <li><Link href="/sign-up" className="hover:text-primary-400 transition-colors">Get Started</Link></li>
-              <li><a href="mailto:support@pulsecommand.com" className="hover:text-primary-400 transition-colors">Contact</a></li>
+              <li><a href="mailto:support@pulseflow.com" className="hover:text-primary-400 transition-colors">Contact</a></li>
             </ul>
           </div>
 
@@ -45,7 +42,7 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-white mb-6">Stay Updated</h4>
             <p className="text-sm text-neutral-400 mb-4">
-              AI marketing tips and PulseCommand updates, straight to your inbox.
+              AI marketing tips and PulseFlow updates, straight to your inbox.
             </p>
             <div className="flex gap-2">
               <input
@@ -62,12 +59,12 @@ export default function Footer() {
 
         <div className="border-t border-neutral-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-neutral-500">
-            © {new Date().getFullYear()} PulseCommand. All rights reserved.
+            © {new Date().getFullYear()} PulseFlow. All rights reserved.
           </p>
           <div className="flex gap-5 text-sm text-neutral-500">
-            <a href="mailto:support@pulsecommand.com" className="hover:text-neutral-300 transition-colors">Privacy Policy</a>
-            <a href="mailto:support@pulsecommand.com" className="hover:text-neutral-300 transition-colors">Terms of Service</a>
-            <a href="mailto:support@pulsecommand.com" className="hover:text-neutral-300 transition-colors">Support</a>
+            <a href="mailto:support@pulseflow.com" className="hover:text-neutral-300 transition-colors">Privacy Policy</a>
+            <a href="mailto:support@pulseflow.com" className="hover:text-neutral-300 transition-colors">Terms of Service</a>
+            <a href="mailto:support@pulseflow.com" className="hover:text-neutral-300 transition-colors">Support</a>
           </div>
         </div>
       </div>

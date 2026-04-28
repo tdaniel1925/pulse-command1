@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Zap, Menu, X } from "lucide-react";
+import { Menu, X } from "lucide-react";
+import Image from "next/image";
 import { useState } from "react";
 
 export default function Navbar() {
@@ -12,13 +13,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary-600 rounded-lg flex items-center justify-center text-white">
-              <Zap className="w-6 h-6" />
-            </div>
-            <span className="font-bold text-2xl text-neutral-900 tracking-tight">
-              PulseCommand
-            </span>
+          <Link href="/" className="flex items-center">
+            <Image src="/logo.png" alt="PulseFlow" width={180} height={60} className="h-12 w-auto" priority />
           </Link>
 
           {/* Desktop Nav */}
