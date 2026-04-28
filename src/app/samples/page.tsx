@@ -40,6 +40,8 @@ const socialPosts = [
     iconColor: "text-pink-500",
     gradient: "from-pink-500 via-rose-500 to-orange-400",
     time: "2h ago",
+    image: "https://images.unsplash.com/photo-1632159723950-e60fb1a2336f?auto=format&fit=crop&w=800&q=80",
+    imageAlt: "Residential roof being replaced",
     content: "Your roof is working harder than you think. Extreme heat, heavy rain, and UV exposure take a toll year-round. Our 48-hour inspection service gives you peace of mind — before small issues become expensive problems. 🏠✅",
     hashtags: "#roofing #homemaintenance #protectyourhome #commercialroofing #OakRidgeRoofing",
     likes: 142,
@@ -53,6 +55,8 @@ const socialPosts = [
     iconColor: "text-blue-600",
     gradient: "from-blue-600 to-blue-700",
     time: "1d ago",
+    image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80",
+    imageAlt: "Construction crew on a commercial roof",
     content: "We recently completed a 22,000 sq ft commercial re-roof for a regional distribution center in under 6 days — without interrupting operations. How? Pre-fabricated sections, night crews, and 20 years of commercial experience. If your facility needs a roof upgrade, let's talk.",
     hashtags: "#commercialroofing #facilitymanagement #constructionmanagement #B2B",
     likes: 87,
@@ -66,6 +70,8 @@ const socialPosts = [
     iconColor: "text-blue-500",
     gradient: "from-blue-500 to-blue-600",
     time: "3d ago",
+    image: "https://images.unsplash.com/photo-1570129477492-45c003dc71b8?auto=format&fit=crop&w=800&q=80",
+    imageAlt: "Beautiful home exterior",
     content: "Did you know most roof leaks start 6–12 months before they're visible inside your home? Our thermal imaging inspection finds moisture intrusion before water damage begins. Book a free inspection this week — spots are limited! 👇",
     hashtags: "#roofrepair #homeowners #freeInspection #roofingexperts",
     likes: 213,
@@ -81,6 +87,7 @@ const podcastEpisodes = [
     duration: "18:42",
     desc: "A deep dive into the three biggest local SEO mistakes we see small businesses make — and the exact playbook to recover fast.",
     progress: 35,
+    link: "https://www.buzzsprout.com/",
   },
   {
     episode: "Ep. 11",
@@ -88,6 +95,7 @@ const podcastEpisodes = [
     duration: "14:20",
     desc: "Most businesses post randomly and wonder why nothing happens. This episode breaks down the cadence, content mix, and platform priorities that move the needle.",
     progress: 0,
+    link: "https://www.buzzsprout.com/",
   },
   {
     episode: "Ep. 10",
@@ -95,6 +103,7 @@ const podcastEpisodes = [
     duration: "21:05",
     desc: "Content repurposing isn't just a buzzword — it's the most efficient marketing lever available to small businesses. Here's the exact framework.",
     progress: 100,
+    link: "https://www.buzzsprout.com/",
   },
 ];
 
@@ -102,34 +111,34 @@ const reels = [
   {
     label: "Brand Story",
     caption: "20 years. One family. Thousands of roofs. Here's why we do what we do. 🏠 #BrandStory #OakridgeRoofing",
-    aspect: "9:16",
     duration: "0:28",
     thumbnail: "from-primary-400 to-primary-700",
     views: "12.4K",
+    link: "https://www.youtube.com/shorts/wBnHqQXGBos",
   },
   {
     label: "Process Reel",
     caption: "Watch us transform this commercial roof in under 60 seconds ⚡ #TimeLapse #Roofing #CommercialConstruction",
-    aspect: "9:16",
     duration: "0:45",
     thumbnail: "from-accent-400 to-accent-600",
     views: "8.1K",
+    link: "https://www.youtube.com/shorts/wBnHqQXGBos",
   },
   {
     label: "Tip / Value",
     caption: "3 signs your roof needs attention RIGHT NOW 👆 Save this post! #RoofingTips #HomeOwner #DIY",
-    aspect: "9:16",
     duration: "0:31",
     thumbnail: "from-purple-400 to-purple-700",
     views: "21.7K",
+    link: "https://www.youtube.com/shorts/wBnHqQXGBos",
   },
   {
     label: "Testimonial",
     caption: "\"They were done in one day and cleaned up everything\" — Sarah M. ⭐⭐⭐⭐⭐ #CustomerLove #Roofing",
-    aspect: "9:16",
     duration: "0:22",
     thumbnail: "from-green-400 to-teal-600",
     views: "5.3K",
+    link: "https://www.youtube.com/shorts/wBnHqQXGBos",
   },
 ];
 
@@ -204,6 +213,9 @@ export default function SamplesPage() {
               <div key={post.platform} className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden flex flex-col">
                 {/* Platform bar */}
                 <div className={`h-1.5 bg-gradient-to-r ${post.gradient}`} />
+                {/* Post image */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={post.image} alt={post.imageAlt} className="w-full h-48 object-cover" />
                 <div className="p-5 flex-1 flex flex-col">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center">
@@ -245,32 +257,31 @@ export default function SamplesPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mt-12">
             {reels.map((reel) => (
               <div key={reel.label} className="flex flex-col gap-3">
-                {/* Phone frame */}
-                <div className="relative mx-auto w-full max-w-[180px]">
+                {/* Phone frame — clickable */}
+                <a href={reel.link} target="_blank" rel="noopener noreferrer" className="relative mx-auto w-full max-w-[180px] group">
                   <div className="rounded-3xl border-4 border-neutral-900 overflow-hidden shadow-2xl bg-neutral-900 aspect-[9/16] relative">
-                    {/* Gradient thumbnail */}
-                    <div className={`absolute inset-0 bg-gradient-to-b ${reel.thumbnail} opacity-90`} />
-                    {/* Play button */}
+                    <div className={`absolute inset-0 bg-gradient-to-b ${reel.thumbnail} opacity-90 group-hover:opacity-75 transition-opacity`} />
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/40">
+                      <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/40 group-hover:scale-110 transition-transform">
                         <Play className="w-6 h-6 text-white fill-white ml-1" />
                       </div>
                     </div>
-                    {/* Duration badge */}
                     <div className="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full font-medium">
                       {reel.duration}
                     </div>
-                    {/* Views badge */}
                     <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full font-medium">
                       <Eye className="w-3 h-3" /> {reel.views}
                     </div>
-                    {/* Notch */}
                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-neutral-900 rounded-b-xl" />
                   </div>
-                </div>
+                </a>
                 <div className="text-center">
                   <span className="text-xs font-bold text-neutral-500 uppercase tracking-wide">{reel.label}</span>
                   <p className="text-xs text-neutral-600 mt-1 leading-relaxed line-clamp-3">{reel.caption}</p>
+                  <a href={reel.link} target="_blank" rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-primary-600 font-semibold mt-2 hover:underline">
+                    <ExternalLink className="w-3 h-3" /> Watch Sample
+                  </a>
                 </div>
               </div>
             ))}
@@ -331,9 +342,9 @@ export default function SamplesPage() {
                     )}
                     <span className="text-xs text-neutral-400 font-medium">{ep.episode}</span>
                   </div>
-                  <button className="p-2 text-neutral-400 hover:text-neutral-600 flex-shrink-0">
-                    <Download className="w-4 h-4" />
-                  </button>
+                  <a href={ep.link} target="_blank" rel="noopener noreferrer" className="p-2 text-neutral-400 hover:text-primary-600 flex-shrink-0 transition-colors">
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
                 </div>
               ))}
             </div>
@@ -452,8 +463,12 @@ export default function SamplesPage() {
                   <div className="inline-block px-6 py-2.5 bg-accent-400 text-white font-bold rounded-lg text-sm">Book My Free Inspection →</div>
                 </div>
               </div>
-              <div className="px-8 py-4 bg-neutral-50 border-t border-neutral-100 text-center text-xs text-neutral-400">
-                © 2026 Oakridge Roofing · Powered by BundledContent · <span className="underline cursor-pointer">Unsubscribe</span>
+              <div className="px-8 py-4 bg-neutral-50 border-t border-neutral-100 flex items-center justify-between">
+                <span className="text-xs text-neutral-400">© 2026 Oakridge Roofing · Powered by BundledContent · <span className="underline cursor-pointer">Unsubscribe</span></span>
+                <a href="https://0to1marketing.beehiiv.com/" target="_blank" rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-primary-600 font-semibold hover:underline flex-shrink-0 ml-4">
+                  <ExternalLink className="w-3 h-3" /> View live sample
+                </a>
               </div>
             </div>
           </div>
@@ -511,12 +526,16 @@ export default function SamplesPage() {
                     ))}
                   </div>
                   <div className="mt-6 flex gap-3">
-                    <button className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary-600 text-white font-bold rounded-xl text-sm hover:bg-primary-700 transition-colors">
-                      <Download className="w-4 h-4" /> Download PDF
-                    </button>
-                    <button className="flex items-center justify-center gap-2 px-4 py-2.5 border border-neutral-200 text-neutral-600 font-semibold rounded-xl text-sm hover:bg-neutral-50 transition-colors">
+                    <a href="https://f.hubspotusercontent00.net/hubfs/53/Learning%20Path%20Checklists_HubSpot%20Academy/DigitalMarketingStrategy_LearningPathChecklist_HubSpotAcademy.pdf"
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-primary-600 text-white font-bold rounded-xl text-sm hover:bg-primary-700 transition-colors">
+                      <Download className="w-4 h-4" /> Download Sample PDF
+                    </a>
+                    <a href="https://blog.beehiiv.com/p/2025-state-of-email-newsletters-by-beehiiv"
+                      target="_blank" rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 border border-neutral-200 text-neutral-600 font-semibold rounded-xl text-sm hover:bg-neutral-50 transition-colors">
                       <ExternalLink className="w-4 h-4" /> Preview
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>
