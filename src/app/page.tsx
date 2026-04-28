@@ -176,17 +176,20 @@ export default function HomePage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500" />
               </span>
-              Two plans. Starting at $99/mo. Add-ons available.
+              Agency-Quality Content. DIY Pricing. Zero Overhead.
             </div>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-neutral-900 tracking-tight mb-8">
-              Your Entire Marketing Team,{" "}
+              The Marketing Agency{" "}
               <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-accent-400">
-                On Autopilot
+                You Could Never Afford.
               </span>
             </h1>
-            <p className="text-xl text-neutral-600 mb-6 max-w-2xl mx-auto leading-relaxed">
-              Social posts. Short Reels. Podcast. Videos. Newsletter. Lead magnets. BundledContent delivers a complete done-for-you AI marketing operation — built for your brand, delivered every month.
+            <p className="text-xl text-neutral-600 mb-3 max-w-3xl mx-auto leading-relaxed">
+              BundledContent gives you a complete done-for-you content operation — social posts, short videos, podcast, newsletter, and more — built by broadcast and brand veterans, powered by AI, and priced for the businesses that need it most.
+            </p>
+            <p className="text-base text-primary-600 font-semibold mb-6 max-w-xl mx-auto">
+              Now you can. Starting at $99/mo.
             </p>
 
             <div className="flex flex-wrap justify-center gap-3 mb-10">
@@ -230,9 +233,9 @@ export default function HomePage() {
       <section id="what-you-get" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-neutral-900 mb-4">Everything Delivered Every Month</h2>
+            <h2 className="text-4xl font-bold text-neutral-900 mb-4">What an Agency Delivers. At a Fraction of the Cost.</h2>
             <p className="text-lg text-neutral-600 max-w-2xl mx-auto">
-              Four core deliverables included in every plan — plus 8 optional add-ons to build exactly what your business needs.
+              Four core deliverables included in every plan — the kind of output most agencies charge $10K+/mo for. Plus 8 optional add-ons to build exactly what your business needs.
             </p>
           </div>
 
@@ -390,7 +393,7 @@ export default function HomePage() {
 
           {/* Value comparison */}
           <div className="mt-10 bg-neutral-50 rounded-2xl border border-neutral-200 p-8">
-            <p className="text-center text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-6">What Full replaces</p>
+            <p className="text-center text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-6">What a real agency would charge you</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {[
                 { role: "Social Media Manager", cost: "$4,500/mo" },
@@ -418,8 +421,8 @@ export default function HomePage() {
       <section className="py-24 bg-neutral-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-neutral-900 mb-4">Trusted by Growing Businesses</h2>
-            <p className="text-lg text-neutral-600">See what our customers are saying.</p>
+            <h2 className="text-4xl font-bold text-neutral-900 mb-4">Real Businesses. Real Results.</h2>
+            <p className="text-lg text-neutral-600">These businesses stopped paying agency prices — and got better output.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((t) => (
@@ -443,11 +446,11 @@ export default function HomePage() {
       {/* CTA Banner */}
       <section className="py-20 bg-gradient-to-br from-primary-700 via-primary-600 to-primary-500">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-4xl font-bold text-white mb-4">Ready to Put Your Marketing on Autopilot?</h2>
+          <h2 className="text-4xl font-bold text-white mb-4">Stop Paying Agency Prices.<br />Start Getting Agency Results.</h2>
           <p className="text-primary-100 text-lg mb-3">
-            Start with Lite at $99/mo or go all-in with Full at $745/mo.
+            Built by broadcast and brand veterans. Powered by AI. Priced for the businesses that need it most.
           </p>
-          <p className="text-primary-200 text-sm mb-8">Same AI onboarding. Same quality. Add-ons available on any plan.</p>
+          <p className="text-primary-200 text-sm mb-8">Lite at $99/mo · Full at $745/mo · Add-ons available · No contracts.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/demo"
               className="inline-flex items-center gap-2 px-8 py-4 bg-accent-400 text-white font-bold rounded-lg hover:bg-accent-500 transition-colors shadow-lg text-lg">
