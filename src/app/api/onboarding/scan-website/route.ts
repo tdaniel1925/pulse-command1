@@ -18,7 +18,8 @@ export async function POST(request: NextRequest) {
     })
 
     if (!jinaRes.ok) {
-      return NextResponse.json({ error: 'Could not scan website' }, { status: 400 })
+      console.error('Jina fetch failed:', jinaRes.status, jinaRes.statusText)
+      return NextResponse.json({ error: `Could not scan website (Jina ${jinaRes.status})` }, { status: 400 })
     }
 
     const pageContent = await jinaRes.text()
@@ -79,7 +80,8 @@ export async function POST(request: NextRequest) {
       }
     })
   } catch (err) {
-    console.error('scan-website error:', err)
-    return NextResponse.json({ error: 'Scan failed' }, { status: 500 })
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('scan-website error:', message)
+    return NextResponse.json({ error: `Scan failed: ${message}` }, { status: 500 })
   }
 }
