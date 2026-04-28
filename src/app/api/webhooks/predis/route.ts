@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-// Predis sends a webhook when async content generation is complete
-// Payload: { post_id, brand_id, status, media_url, caption, hashtags }
+// Predis pushes this when a post finishes generating.
+// Payload: { post_id, brand_id, status, urls, caption, hashtags, media_type }
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -11,60 +11,64 @@ export async function POST(request: NextRequest) {
     const admin = createAdminClient()
 
     const postId = body.post_id ?? body.id
-    const brandId = body.brand_id
-    const status = body.status
-    const mediaUrl = body.media_url ?? body.image_url ?? null
-    const caption = body.caption ?? body.text ?? ''
+    const status  = body.status
+    // Predis returns urls[] array or single media_url
+    const imageUrl = body.urls?.[0] ?? body.media_url ?? body.image_url ?? null
+    const caption: string = body.caption ?? body.text ?? ''
     const hashtags: string[] = body.hashtags ?? []
 
-    if (!brandId) {
+    if (!postId) {
       return NextResponse.json({ received: true })
     }
 
-    if (status === 'failed') {
-      console.error('Predis generation failed for post:', postId)
+    // Find the placeholder row we inserted in the weekly-social cron
+    const { data: existingPost } = await admin
+      .from('social_posts')
+      .select('id, client_id, platforms')
+      .filter('metadata->>predis_post_id', 'eq', postId)
+      .maybeSingle()
+
+    if (status === 'failed' || !imageUrl) {
+      console.error('Predis generation failed for post_id:', postId)
+      if (existingPost) {
+        await admin
+          .from('social_posts')
+          .update({ status: 'failed' })
+          .eq('id', existingPost.id)
+      }
       return NextResponse.json({ received: true })
     }
 
-    // Find the client by predis_brand_id stored in brand_profiles metadata
-    const { data: profiles } = await admin
-      .from('brand_profiles')
-      .select('client_id, metadata')
-
-    const profile = profiles?.find(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (p) => (p.metadata as any)?.predis_brand_id === brandId
-    )
-
-    if (!profile) {
-      console.log('No client found for Predis brand_id:', brandId)
-      return NextResponse.json({ received: true })
-    }
-
-    const clientId = profile.client_id
-
-    // Build full content with hashtags
+    // Build caption with hashtags
     const fullContent = hashtags.length > 0
       ? `${caption}\n\n${hashtags.map((h: string) => h.startsWith('#') ? h : `#${h}`).join(' ')}`
       : caption
 
-    // Insert as pending_approval so client can review before scheduling
-    await admin.from('social_posts').insert({
-      client_id: clientId,
-      status: 'pending_approval',
-      content: fullContent,
-      image_url: mediaUrl,
-      platforms: ['instagram', 'facebook', 'linkedin'],
-    })
+    if (existingPost) {
+      // Update the placeholder with real content
+      await admin
+        .from('social_posts')
+        .update({
+          content: fullContent,
+          image_url: imageUrl,
+          status: 'pending_approval',
+        })
+        .eq('id', existingPost.id)
 
-    // Log activity
-    await admin.from('activities').insert({
-      client_id: clientId,
-      type: 'post',
-      title: 'Social post ready for approval',
-      description: 'AI-generated social post with image is ready for your review.',
-      created_by: 'system',
-    })
+      // Notify client via activity feed
+      await admin.from('activities').insert({
+        client_id: existingPost.client_id,
+        type: 'post',
+        title: 'Social post ready for approval',
+        description: 'A new AI-generated social post with image is ready for your review.',
+        created_by: 'system',
+      } as never)
+
+      console.log(`[predis webhook] Updated post ${existingPost.id} → pending_approval`)
+    } else {
+      // Fallback: no placeholder found — log for debugging
+      console.warn(`[predis webhook] No matching social_post found for predis_post_id: ${postId}`)
+    }
 
     return NextResponse.json({ received: true })
   } catch (err) {
