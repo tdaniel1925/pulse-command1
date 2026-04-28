@@ -21,7 +21,12 @@ export default function OnboardingNav({ current }: { current: Step }) {
 
   useEffect(() => {
     fetch("/api/auth/me")
-      .then(r => { setLoggedIn(r.ok); })
+      .then(async r => {
+        if (!r.ok) { setLoggedIn(false); return; }
+        const d = await r.json();
+        // Logged in if we got any user data back
+        setLoggedIn(!!(d?.id || d?.email || d?.first_name));
+      })
       .catch(() => setLoggedIn(false));
   }, []);
 
@@ -56,7 +61,7 @@ export default function OnboardingNav({ current }: { current: Step }) {
                 href="/dashboard"
                 className="px-4 py-2 text-primary-600 font-medium border border-primary-200 rounded-lg hover:bg-primary-50 transition-colors text-sm"
               >
-                Dashboard →
+                ← Back to Dashboard
               </Link>
             ) : (
               <>

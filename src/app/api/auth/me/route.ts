@@ -17,7 +17,8 @@ export async function GET() {
       .single()
 
     if (!client) {
-      return NextResponse.json({ error: 'Client not found' }, { status: 404 })
+      // Still authenticated — return basic user info so nav can detect logged-in state
+      return NextResponse.json({ id: user.id, email: user.email, no_client: true })
     }
 
     const bp = Array.isArray(client.brand_profiles) ? client.brand_profiles[0] : client.brand_profiles
