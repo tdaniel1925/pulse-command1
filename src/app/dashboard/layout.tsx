@@ -24,9 +24,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Sidebar */}
       <aside className="w-64 flex-shrink-0 bg-white border-r border-neutral-200 flex flex-col h-full">
         {/* Logo */}
-        <div className="px-4 py-5 border-b border-neutral-100">
+        <div className="px-4 py-6 border-b border-neutral-100 flex justify-center">
           <Link href="/dashboard">
-            <Image src="/logo.png" alt="BundledContent" width={130} height={44} className="h-8 w-auto" />
+            <Image src="/logo.png" alt="BundledContent" width={180} height={60} className="h-14 w-auto" />
           </Link>
         </div>
 
