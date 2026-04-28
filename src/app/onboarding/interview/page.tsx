@@ -7,6 +7,7 @@ import {
   MessageSquare, Bell, Calendar, Loader2, ArrowRight, Sparkles
 } from "lucide-react";
 import OnboardingNav from "@/components/OnboardingNav";
+import { formatPhone } from "@/lib/formatPhone";
 
 type ReminderOption = 'now' | '1h' | '3h' | 'tomorrow' | 'custom';
 
@@ -221,7 +222,7 @@ export default function InterviewPage() {
                   <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl mt-3">
                     <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-green-900">SMS sent to {phoneInput}</p>
+                      <p className="text-sm font-semibold text-green-900">SMS sent to {formatPhone(phoneInput)}</p>
                       <p className="text-xs text-green-700 mt-0.5">
                         {reminderOption === 'now'
                           ? "You'll receive it shortly with your PIN and call instructions."

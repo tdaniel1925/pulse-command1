@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ClientActions } from "@/components/admin/ClientActions";
 import ManualContentCreator from "@/components/admin/ManualContentCreator";
+import { formatPhone } from "@/lib/formatPhone";
 import HeygenVideoLinker from "@/components/admin/HeygenVideoLinker";
 
 const onboardingStepOrder = [
@@ -377,7 +378,7 @@ export default async function ClientDetailPage({
             <h2 className="text-sm font-semibold text-neutral-900">Client Info</h2>
             {[
               ["Email", client?.email ?? "—"],
-              ["Phone", client?.phone ?? "N/A"],
+              ["Phone", formatPhone(client?.phone)],
               ["Business", businessName],
               ["Website", client?.website ?? "—"],
               ["Industry", client?.industry ?? "—"],

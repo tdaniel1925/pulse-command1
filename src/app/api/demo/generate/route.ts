@@ -312,13 +312,10 @@ export async function POST(request: NextRequest) {
       generateScripts(brandContext),
     ])
 
-    // 4. Render audio + submit HeyGen video in parallel
-    const [audioUrl, heygenVideoId] = await Promise.all([
-      renderAudio(scripts.audioScript, demoId),
-      submitHeyGenVideo(scripts.videoScript),
-    ])
+    // 4. Render audio only — HeyGen video is triggered after email verification
+    const audioUrl = await renderAudio(scripts.audioScript, demoId)
 
-    // 5. Save everything
+    // 5. Save everything (no HeyGen yet — unlocked by email verify)
     await admin.from('demo_requests').update({
       status: 'done',
       brand_data: brandData,
@@ -326,7 +323,6 @@ export async function POST(request: NextRequest) {
       audio_script: scripts.audioScript,
       audio_url: audioUrl,
       video_script: scripts.videoScript,
-      heygen_video_id: heygenVideoId,
     }).eq('id', demoId)
 
     // 6. Send immediate notification
