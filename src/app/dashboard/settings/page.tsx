@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { User, Bell, Shield, Save, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import { BillingPortalButton } from "@/components/dashboard/BillingPortalButton";
 
 type Tab = "profile" | "notifications" | "security";
 
@@ -221,9 +222,7 @@ export default function SettingsPage() {
               <p className="text-sm text-neutral-500 mb-4">
                 Cancelling your subscription will stop all content generation at the end of your current billing period.
               </p>
-              <button className="px-4 py-2 text-sm font-medium text-red-600 border border-red-300 rounded-xl hover:bg-red-50 transition-colors">
-                Cancel Subscription
-              </button>
+              <BillingPortalButton label="Cancel Subscription" />
             </div>
           </div>
         )}

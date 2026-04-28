@@ -198,9 +198,9 @@ export default function SignUpPage() {
 
                 <p className="text-center text-xs text-neutral-500">
                   By creating an account you agree to our{" "}
-                  <Link href="#" className="text-primary-600 hover:underline">Terms of Service</Link>{" "}
+                  <a href="mailto:support@pulsecommand.com" className="text-primary-600 hover:underline">Terms of Service</a>{" "}
                   and{" "}
-                  <Link href="#" className="text-primary-600 hover:underline">Privacy Policy</Link>.
+                  <a href="mailto:support@pulsecommand.com" className="text-primary-600 hover:underline">Privacy Policy</a>.
                   Setup begins within 24 hours.
                 </p>
               </div>

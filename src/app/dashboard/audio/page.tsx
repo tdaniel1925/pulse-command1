@@ -106,9 +106,7 @@ export default async function AudioPage() {
                     </a>
                   )}
                   {status !== "processing" && !ep.url && (
-                    <button className="text-xs font-medium border border-neutral-200 text-neutral-700 hover:bg-neutral-50 px-3 py-1.5 rounded-lg transition-colors">
-                      Listen
-                    </button>
+                    <span className="text-xs text-neutral-400">Rendering…</span>
                   )}
                 </div>
               </div>

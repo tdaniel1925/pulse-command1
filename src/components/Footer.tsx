@@ -34,10 +34,10 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-white mb-6">Company</h4>
             <ul className="space-y-3 text-sm text-neutral-400">
-              <li><Link href="#" className="hover:text-primary-400 transition-colors">About</Link></li>
-              <li><Link href="#" className="hover:text-primary-400 transition-colors">Blog</Link></li>
-              <li><Link href="#" className="hover:text-primary-400 transition-colors">Careers</Link></li>
-              <li><Link href="#" className="hover:text-primary-400 transition-colors">Contact</Link></li>
+              <li><Link href="/#what-you-get" className="hover:text-primary-400 transition-colors">About</Link></li>
+              <li><Link href="/#pricing" className="hover:text-primary-400 transition-colors">Pricing</Link></li>
+              <li><Link href="/sign-up" className="hover:text-primary-400 transition-colors">Get Started</Link></li>
+              <li><a href="mailto:support@pulsecommand.com" className="hover:text-primary-400 transition-colors">Contact</a></li>
             </ul>
           </div>
 
@@ -65,9 +65,9 @@ export default function Footer() {
             © {new Date().getFullYear()} PulseCommand. All rights reserved.
           </p>
           <div className="flex gap-5 text-sm text-neutral-500">
-            <Link href="#" className="hover:text-neutral-300 transition-colors">Privacy Policy</Link>
-            <Link href="#" className="hover:text-neutral-300 transition-colors">Terms of Service</Link>
-            <Link href="#" className="hover:text-neutral-300 transition-colors">Support</Link>
+            <a href="mailto:support@pulsecommand.com" className="hover:text-neutral-300 transition-colors">Privacy Policy</a>
+            <a href="mailto:support@pulsecommand.com" className="hover:text-neutral-300 transition-colors">Terms of Service</a>
+            <a href="mailto:support@pulsecommand.com" className="hover:text-neutral-300 transition-colors">Support</a>
           </div>
         </div>
       </div>

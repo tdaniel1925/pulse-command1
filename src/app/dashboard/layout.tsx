@@ -54,14 +54,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="bg-white border-b border-neutral-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
+        <header className="bg-white border-b border-neutral-200 px-8 py-4 flex items-center flex-shrink-0">
           <h1 className="text-base font-semibold text-neutral-900">Client Dashboard</h1>
-          <Link
-            href="/onboarding/welcome"
-            className="text-xs text-neutral-400 hover:text-neutral-600 transition-colors"
-          >
-            Setup guide →
-          </Link>
         </header>
 
         {/* Page content */}

@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Zap, LogOut } from "lucide-react";
+import { Zap } from "lucide-react";
 import AdminNav from "@/components/admin/AdminNav";
+import { LogoutButton } from "@/components/dashboard/LogoutButton";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,7 +18,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
         </div>
 
-        {/* Nav — client component for active state */}
+        {/* Nav */}
         <AdminNav />
 
         {/* Bottom user area */}
@@ -30,24 +31,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <p className="text-sm font-semibold text-neutral-100 truncate">Admin</p>
               <p className="text-xs text-neutral-500 truncate">administrator</p>
             </div>
-            <button
-              className="text-neutral-500 hover:text-neutral-300 transition-colors"
-              title="Log out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <LogoutButton />
           </div>
         </div>
       </aside>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
         <header className="bg-white border-b border-neutral-200 px-8 py-4 flex items-center flex-shrink-0">
           <h1 className="text-base font-semibold text-neutral-900">PulseCommand Admin</h1>
         </header>
-
-        {/* Page content */}
         <main className="flex-1 overflow-y-auto p-8">{children}</main>
       </div>
     </div>

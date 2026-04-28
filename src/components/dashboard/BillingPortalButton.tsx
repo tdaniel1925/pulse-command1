@@ -1,7 +1,12 @@
 "use client"
 import { useState } from "react"
 
-export function BillingPortalButton() {
+interface Props {
+  label?: string
+  icon?: React.ReactNode
+}
+
+export function BillingPortalButton({ label = "Manage Subscription", icon }: Props) {
   const [loading, setLoading] = useState(false)
 
   async function openPortal() {
@@ -16,9 +21,10 @@ export function BillingPortalButton() {
     <button
       onClick={openPortal}
       disabled={loading}
-      className="text-sm font-medium bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
+      className="inline-flex items-center gap-1 text-sm font-medium bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg transition-colors disabled:opacity-60"
     >
-      {loading ? 'Loading...' : 'Manage Subscription'}
+      {icon}
+      {loading ? 'Loading...' : label}
     </button>
   )
 }

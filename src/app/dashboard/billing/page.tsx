@@ -147,12 +147,7 @@ export default async function BillingPage() {
               </p>
             </div>
           </div>
-          <a
-            href="#update-payment"
-            className="text-sm font-medium text-primary-600 hover:underline"
-          >
-            Update
-          </a>
+          <BillingPortalButton label="Update" />
         </div>
       </div>
 
@@ -179,13 +174,7 @@ export default async function BillingPage() {
                   </span>
                 </td>
                 <td className="py-3 text-right">
-                  <a
-                    href="#download"
-                    className="inline-flex items-center gap-1 text-primary-600 hover:underline text-xs font-medium"
-                  >
-                    <Download className="w-3 h-3" />
-                    Download
-                  </a>
+                  <BillingPortalButton label="Download" icon={<Download className="w-3 h-3" />} />
                 </td>
               </tr>
             ))}
