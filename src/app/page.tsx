@@ -8,28 +8,28 @@ import Footer from "@/components/Footer";
 
 const deliverables = [
   {
-    icon: <Share2 className="w-7 h-7 text-indigo-600" />,
-    iconBg: "bg-indigo-50",
+    icon: <Share2 className="w-7 h-7 text-primary-600" />,
+    iconBg: "bg-primary-50",
     number: "150",
     unit: "Social Posts",
     label: "per month · Lite gets 30",
     headline: "Always-On Social Presence",
     desc: "Branded, platform-specific posts every month across your highest-performing channels. Instagram, Facebook, LinkedIn, X, and Google Business — each post written for that platform's audience and algorithm.",
-    accent: "border-indigo-200",
+    accent: "border-primary-200",
     tag: "5 platforms",
-    tagColor: "bg-indigo-50 text-indigo-700",
+    tagColor: "bg-primary-50 text-primary-700",
   },
   {
-    icon: <Smartphone className="w-7 h-7 text-rose-600" />,
-    iconBg: "bg-rose-50",
+    icon: <Smartphone className="w-7 h-7 text-accent-500" />,
+    iconBg: "bg-accent-50",
     number: "4",
     unit: "Short Reels / TikToks",
     label: "per month · Lite gets 1 · vertical 9:16 format",
     headline: "Phone-First Video That Gets Watched",
     desc: "15–60 second vertical AI presenter videos built for Instagram Reels, TikTok, and YouTube Shorts. Each clip has a punchy CTA caption with your link — ready to copy-paste and post. No camera. No editing. No studio.",
-    accent: "border-rose-200",
+    accent: "border-accent-200",
     tag: "Reels · TikTok · Shorts",
-    tagColor: "bg-rose-50 text-rose-700",
+    tagColor: "bg-accent-50 text-accent-700",
   },
   {
     icon: <Mic className="w-7 h-7 text-purple-600" />,
@@ -44,46 +44,46 @@ const deliverables = [
     tagColor: "bg-purple-50 text-purple-700",
   },
   {
-    icon: <BarChart3 className="w-7 h-7 text-teal-600" />,
-    iconBg: "bg-teal-50",
+    icon: <BarChart3 className="w-7 h-7 text-primary-600" />,
+    iconBg: "bg-primary-50",
     number: "1",
     unit: "Performance Report",
     label: "every month — Full plan only",
     headline: "Know Exactly What's Working",
     desc: "A clear, plain-English monthly report on what performed, what didn't, and where we're heading. You'll always know your ROI — BundledContent is a service, not a vending machine.",
-    accent: "border-teal-200",
+    accent: "border-primary-200",
     tag: "Monthly · Full plan",
-    tagColor: "bg-teal-50 text-teal-700",
+    tagColor: "bg-primary-50 text-primary-700",
   },
 ];
 
 const addons = [
   {
-    icon: <Smartphone className="w-5 h-5 text-rose-500" />,
+    icon: <Smartphone className="w-5 h-5 text-accent-500" />,
     name: "Extra Short Video",
     desc: "One additional 15–60s vertical Reels/TikTok clip with CTA caption, beyond your plan.",
     price: "$49",
     billing: "one-time",
-    color: "border-rose-200 bg-rose-50",
-    iconBg: "bg-rose-100",
+    color: "border-accent-200 bg-accent-50",
+    iconBg: "bg-accent-100",
   },
   {
-    icon: <Share2 className="w-5 h-5 text-indigo-500" />,
+    icon: <Share2 className="w-5 h-5 text-primary-500" />,
     name: "Extra 10 Social Posts",
     desc: "10 additional branded posts for any platform, on top of your monthly allotment.",
     price: "$29",
     billing: "one-time",
-    color: "border-indigo-200 bg-indigo-50",
-    iconBg: "bg-indigo-100",
+    color: "border-primary-200 bg-primary-50",
+    iconBg: "bg-primary-100",
   },
   {
-    icon: <Mail className="w-5 h-5 text-blue-500" />,
+    icon: <Mail className="w-5 h-5 text-primary-500" />,
     name: "Monthly Email Newsletter",
     desc: "AI-written branded newsletter sent to your subscriber list via Resend every month.",
     price: "$149",
     billing: "per month",
-    color: "border-blue-200 bg-blue-50",
-    iconBg: "bg-blue-100",
+    color: "border-primary-200 bg-primary-50",
+    iconBg: "bg-primary-100",
   },
   {
     icon: <MapPin className="w-5 h-5 text-green-500" />,
@@ -181,7 +181,7 @@ export default function HomePage() {
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-neutral-900 tracking-tight mb-8">
               Your Entire Marketing Team,{" "}
               <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-600">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-accent-400">
                 On Autopilot
               </span>
             </h1>
@@ -199,7 +199,7 @@ export default function HomePage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/demo"
-                className="px-8 py-4 bg-primary-600 text-white font-bold rounded-lg hover:bg-primary-700 transition-all shadow-lg hover:shadow-xl text-lg">
+                className="px-8 py-4 bg-accent-400 text-white font-bold rounded-lg hover:bg-accent-500 transition-all shadow-lg hover:shadow-xl text-lg">
                 Try Free Demo →
               </Link>
               <Link href="#pricing"
@@ -212,7 +212,7 @@ export default function HomePage() {
 
           {/* Dashboard preview */}
           <div className="mt-20 relative mx-auto max-w-5xl">
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary-500 to-indigo-500 rounded-2xl blur opacity-20" />
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary-400 to-accent-400 rounded-2xl blur opacity-20" />
             <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-neutral-200 bg-white">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -329,8 +329,8 @@ export default function HomePage() {
               <p className="text-neutral-400 text-xs mb-6">14-day free trial · No credit card needed</p>
               <div className="space-y-3 mb-8">
                 {[
-                  { icon: <Share2 className="w-4 h-4 text-indigo-500" />,    text: "30 social posts/month" },
-                  { icon: <Smartphone className="w-4 h-4 text-rose-500" />,  text: "1 short Reel/TikTok per month" },
+                  { icon: <Share2 className="w-4 h-4 text-primary-500" />,    text: "30 social posts/month" },
+                  { icon: <Smartphone className="w-4 h-4 text-accent-400" />,  text: "1 short Reel/TikTok per month" },
                   { icon: <Mic className="w-4 h-4 text-purple-500" />,       text: "1 podcast episode/month" },
                   { icon: <Check className="w-4 h-4 text-green-500" />,      text: "3 platforms covered" },
                   { icon: <Check className="w-4 h-4 text-green-500" />,      text: "All 8 add-ons available" },
@@ -365,10 +365,10 @@ export default function HomePage() {
                 <p className="text-neutral-500 text-xs mb-6">14-day free trial · No credit card needed</p>
                 <div className="space-y-3 mb-8">
                   {[
-                    { icon: <Share2 className="w-4 h-4 text-indigo-400" />,    text: "150 social posts/month · 5 channels" },
-                    { icon: <Smartphone className="w-4 h-4 text-rose-400" />,  text: "4 short Reels/TikToks per month" },
+                    { icon: <Share2 className="w-4 h-4 text-primary-300" />,    text: "150 social posts/month · 5 channels" },
+                    { icon: <Smartphone className="w-4 h-4 text-accent-300" />,  text: "4 short Reels/TikToks per month" },
                     { icon: <Mic className="w-4 h-4 text-purple-400" />,       text: "Bi-weekly podcast · 26 eps/year" },
-                    { icon: <BarChart3 className="w-4 h-4 text-teal-400" />,   text: "Monthly performance report" },
+                    { icon: <BarChart3 className="w-4 h-4 text-primary-300" />,   text: "Monthly performance report" },
                     { icon: <Check className="w-4 h-4 text-green-400" />,      text: "All 5 platforms covered" },
                     { icon: <Check className="w-4 h-4 text-green-400" />,      text: "All 8 add-ons available" },
                     { icon: <Check className="w-4 h-4 text-green-400" />,      text: "Priority support" },
@@ -441,7 +441,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA Banner */}
-      <section className="py-20 bg-gradient-to-r from-primary-600 to-indigo-600">
+      <section className="py-20 bg-gradient-to-br from-primary-700 via-primary-600 to-primary-500">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-4">Ready to Put Your Marketing on Autopilot?</h2>
           <p className="text-primary-100 text-lg mb-3">
@@ -450,7 +450,7 @@ export default function HomePage() {
           <p className="text-primary-200 text-sm mb-8">Same AI onboarding. Same quality. Add-ons available on any plan.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/demo"
-              className="inline-flex items-center gap-2 px-8 py-4 bg-white text-primary-700 font-bold rounded-lg hover:bg-primary-50 transition-colors shadow-lg text-lg">
+              className="inline-flex items-center gap-2 px-8 py-4 bg-accent-400 text-white font-bold rounded-lg hover:bg-accent-500 transition-colors shadow-lg text-lg">
               Try Free Demo <ChevronRight className="w-5 h-5" />
             </Link>
             <Link href="#pricing"

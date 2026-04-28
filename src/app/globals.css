@@ -28,17 +28,29 @@
   --shadow-custom: var(--shadow-custom);
   --shadow-custom-hover: var(--shadow-custom-hover);
 
-  /* Primary blue palette */
-  --color-primary-50: #eff6ff;
-  --color-primary-100: #dbeafe;
-  --color-primary-200: #bfdbfe;
-  --color-primary-300: #93c5fd;
-  --color-primary-400: #60a5fa;
-  --color-primary-500: #3b82f6;
-  --color-primary-600: #2563eb;
-  --color-primary-700: #1d4ed8;
-  --color-primary-800: #1e40af;
-  --color-primary-900: #1e3a8a;
+  /* Primary teal palette — BundledContent brand */
+  --color-primary-50: #e8f9fc;
+  --color-primary-100: #c5eff7;
+  --color-primary-200: #8dddf0;
+  --color-primary-300: #4fcae6;
+  --color-primary-400: #1AABCF;
+  --color-primary-500: #1293b3;
+  --color-primary-600: #0e7a96;
+  --color-primary-700: #0b6178;
+  --color-primary-800: #084a5c;
+  --color-primary-900: #053340;
+
+  /* Accent orange palette — BundledContent hashtag */
+  --color-accent-50: #fff4ec;
+  --color-accent-100: #ffe4cc;
+  --color-accent-200: #ffc899;
+  --color-accent-300: #ffa666;
+  --color-accent-400: #F5873A;
+  --color-accent-500: #e86e1a;
+  --color-accent-600: #c95b12;
+  --color-accent-700: #a3480d;
+  --color-accent-800: #7d3609;
+  --color-accent-900: #572505;
 
   /* Neutral palette */
   --color-neutral-50: #f9fafb;
@@ -61,8 +73,8 @@ body {
 
 /* Animations */
 @keyframes cta-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(37, 99, 235, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(26, 171, 207, 0.4); }
+  50% { box-shadow: 0 0 0 8px rgba(26, 171, 207, 0); }
 }
 .cta-pulse {
   animation: cta-pulse 2s ease-in-out infinite;
