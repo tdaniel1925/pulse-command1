@@ -62,6 +62,12 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<Tab>("general");
   const [notifs, setNotifs] = useState<NotifSetting[]>(defaultNotifs);
   const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+
+  function handleSave() {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "general", label: "General" },
@@ -130,9 +136,12 @@ export default function SettingsPage() {
             </div>
           ))}
 
-          <button className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors">
-            Save Changes
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={handleSave} className="bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors">
+              Save Changes
+            </button>
+            {saved && <span className="text-sm text-green-600 font-medium">Saved!</span>}
+          </div>
         </div>
       )}
 

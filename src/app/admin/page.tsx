@@ -38,6 +38,11 @@ export default async function AdminDashboardPage() {
     .eq("status", "pending")
     .lte("due_at", new Date(Date.now() + 86400000).toISOString());
 
+  // MRR: count active subscriptions × $745
+  const { count: activeSubs } = await supabase
+    .from("subscriptions").select("*", { count: "exact", head: true })
+    .eq("status", "active");
+
   // Recent clients
   const { data: recentClients } = await supabase
     .from("clients")
@@ -74,8 +79,8 @@ export default async function AdminDashboardPage() {
     },
     {
       label: "Revenue MRR",
-      value: "$13,410", // TODO: fetch from subscriptions table
-      trend: "+$1,240 vs last month",
+      value: `$${((activeSubs ?? 0) * 745).toLocaleString()}`,
+      trend: `${activeSubs ?? 0} active subscription${(activeSubs ?? 0) !== 1 ? "s" : ""}`,
       trendUp: true,
       icon: DollarSign,
       iconBg: "bg-purple-50",
