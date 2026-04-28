@@ -115,13 +115,13 @@ export default function HomePage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75" />
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500" />
               </span>
-              One plan. Everything included. $745/mo.
+              Two plans. Starting at $99/mo.
             </div>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-neutral-900 tracking-tight mb-8">
               A Full Marketing Team,{" "}
               <br className="hidden md:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary-600 to-indigo-600">
-                For $745 a Month
+                Starting at $99/Month
               </span>
             </h1>
             <p className="text-xl text-neutral-600 mb-6 max-w-2xl mx-auto leading-relaxed">
@@ -130,7 +130,7 @@ export default function HomePage() {
 
             {/* Quick deliverables strip */}
             <div className="flex flex-wrap justify-center gap-3 mb-10">
-              {["150 Posts/mo", "26 Podcast Episodes/yr", "4 Videos/mo", "Monthly Report"].map((item) => (
+              {["Social Posts", "AI Podcast", "AI Videos", "Monthly Report"].map((item) => (
                 <span key={item} className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-neutral-200 rounded-full text-sm text-neutral-700 font-medium shadow-sm">
                   <Check className="w-3.5 h-3.5 text-green-500" /> {item}
                 </span>
@@ -145,10 +145,10 @@ export default function HomePage() {
                 Try Free Demo →
               </Link>
               <Link
-                href="/sign-up"
+                href="#pricing"
                 className="px-8 py-4 bg-white text-neutral-700 border border-neutral-200 font-semibold rounded-lg hover:bg-neutral-50 transition-all shadow-sm hover:shadow-md"
               >
-                Get Started — $745/mo
+                See Plans →
               </Link>
             </div>
             <p className="text-sm text-neutral-400 mt-4">No lock-in contracts. Cancel anytime.</p>
@@ -217,60 +217,100 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Pricing — Single Card */}
+      {/* Pricing — Two Tiers */}
       <section id="pricing" className="py-24 bg-neutral-50">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-neutral-900 mb-4">One Plan. Everything Included.</h2>
+            <h2 className="text-4xl font-bold text-neutral-900 mb-4">Pick Your Plan</h2>
             <p className="text-lg text-neutral-600">
-              No tiers. No upsells. No wondering what&apos;s included. Just results.
+              Both plans use the same AI-powered onboarding. Upgrade anytime.
             </p>
           </div>
 
-          <div className="bg-neutral-900 rounded-3xl p-10 text-white shadow-2xl relative overflow-hidden">
-            {/* Background pattern */}
-            <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
-            <div className="relative">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+            {/* Lite */}
+            <div className="bg-white rounded-3xl p-8 border-2 border-neutral-200 shadow-sm relative">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center">
-                  <Zap className="w-6 h-6 text-white" />
+                <div className="w-11 h-11 bg-neutral-100 rounded-xl flex items-center justify-center">
+                  <Zap className="w-5 h-5 text-neutral-600" />
                 </div>
                 <div>
-                  <p className="font-bold text-xl">PulseCommand</p>
-                  <p className="text-neutral-400 text-sm">Complete AI Marketing Service</p>
+                  <p className="font-bold text-lg text-neutral-900">PulseCommand Lite</p>
+                  <p className="text-neutral-500 text-xs">Perfect to get started</p>
                 </div>
               </div>
-
-              <div className="flex items-end gap-2 mb-2">
-                <span className="text-6xl font-bold">$745</span>
-                <span className="text-neutral-400 text-lg pb-2">/month</span>
+              <div className="flex items-end gap-2 mb-1">
+                <span className="text-5xl font-bold text-neutral-900">$99</span>
+                <span className="text-neutral-400 text-lg pb-1">/month</span>
               </div>
-              <p className="text-neutral-400 text-sm mb-8">No lock-in. Cancel anytime.</p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-10">
-                {included.map((item) => (
-                  <div key={item} className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-primary-600 flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <Check className="w-3 h-3 text-white" />
-                    </div>
-                    <span className="text-neutral-300 text-sm">{item}</span>
+              <p className="text-neutral-400 text-xs mb-6">14-day free trial · No credit card needed</p>
+              <div className="space-y-3 mb-8">
+                {[
+                  { icon: <Share2 className="w-4 h-4 text-indigo-500" />, text: "30 social posts/month" },
+                  { icon: <Mic className="w-4 h-4 text-purple-500" />, text: "1 podcast episode/month" },
+                  { icon: <Video className="w-4 h-4 text-rose-500" />, text: "1 AI presenter video/month" },
+                  { icon: <Check className="w-4 h-4 text-green-500" />, text: "3 platforms" },
+                  { icon: <Check className="w-4 h-4 text-green-500" />, text: "Same AI onboarding process" },
+                ].map(({ icon, text }) => (
+                  <div key={text} className="flex items-center gap-3">
+                    <div className="w-6 h-6 bg-neutral-50 rounded-lg flex items-center justify-center flex-shrink-0 border border-neutral-100">{icon}</div>
+                    <span className="text-neutral-600 text-sm">{text}</span>
                   </div>
                 ))}
               </div>
-
-              <Link
-                href="/sign-up"
-                className="block w-full py-4 bg-white text-neutral-900 font-bold rounded-xl text-center hover:bg-primary-50 transition-colors shadow-lg text-lg"
-              >
-                Get Started Today <ArrowRight className="inline w-5 h-5 ml-1" />
+              <Link href="/sign-up?plan=lite"
+                className="block w-full py-3.5 bg-neutral-900 text-white font-bold rounded-xl text-center hover:bg-neutral-800 transition-colors text-base">
+                Get Started — $99/mo <ArrowRight className="inline w-4 h-4 ml-1" />
               </Link>
-              <p className="text-center text-neutral-500 text-xs mt-4">Setup begins within 24 hours of signup.</p>
+              <p className="text-center text-neutral-400 text-xs mt-3">Setup begins within 24 hours.</p>
+            </div>
+
+            {/* Full */}
+            <div className="bg-neutral-900 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden border-2 border-primary-500">
+              <div className="absolute top-4 right-4 bg-primary-500 text-white text-xs font-bold px-3 py-1 rounded-full">Most Popular</div>
+              <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-11 h-11 bg-primary-600 rounded-xl flex items-center justify-center">
+                    <Zap className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-bold text-lg">PulseCommand Full</p>
+                    <p className="text-neutral-400 text-xs">Complete AI marketing machine</p>
+                  </div>
+                </div>
+                <div className="flex items-end gap-2 mb-1">
+                  <span className="text-5xl font-bold">$745</span>
+                  <span className="text-neutral-400 text-lg pb-1">/month</span>
+                </div>
+                <p className="text-neutral-500 text-xs mb-6">14-day free trial · No credit card needed</p>
+                <div className="space-y-3 mb-8">
+                  {[
+                    { icon: <Share2 className="w-4 h-4 text-indigo-400" />, text: "150 social posts/month across 5 channels" },
+                    { icon: <Mic className="w-4 h-4 text-purple-400" />, text: "Bi-weekly podcast — 26 episodes/year" },
+                    { icon: <Video className="w-4 h-4 text-rose-400" />, text: "4 HeyGen AI presenter videos/month" },
+                    { icon: <BarChart3 className="w-4 h-4 text-teal-400" />, text: "Monthly performance report & review" },
+                    { icon: <Check className="w-4 h-4 text-green-400" />, text: "All 5 platforms" },
+                    { icon: <Check className="w-4 h-4 text-green-400" />, text: "Priority support" },
+                  ].map(({ icon, text }) => (
+                    <div key={text} className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-neutral-800 rounded-lg flex items-center justify-center flex-shrink-0">{icon}</div>
+                      <span className="text-neutral-300 text-sm">{text}</span>
+                    </div>
+                  ))}
+                </div>
+                <Link href="/sign-up?plan=full"
+                  className="block w-full py-3.5 bg-white text-neutral-900 font-bold rounded-xl text-center hover:bg-primary-50 transition-colors text-base">
+                  Get Started — $745/mo <ArrowRight className="inline w-4 h-4 ml-1" />
+                </Link>
+                <p className="text-center text-neutral-500 text-xs mt-3">Setup begins within 24 hours.</p>
+              </div>
             </div>
           </div>
 
           {/* Value comparison */}
           <div className="mt-10 bg-white rounded-2xl border border-neutral-200 p-8">
-            <p className="text-center text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-6">What this replaces</p>
+            <p className="text-center text-sm font-semibold text-neutral-500 uppercase tracking-wide mb-6">What Full replaces</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               {[
                 { role: "Social Media Manager", cost: "$4,500/mo" },
@@ -288,7 +328,7 @@ export default function HomePage() {
             </div>
             <div className="mt-6 text-center">
               <p className="text-neutral-500 text-sm">vs.</p>
-              <p className="text-3xl font-bold text-primary-600 mt-1">$745/mo with PulseCommand</p>
+              <p className="text-3xl font-bold text-primary-600 mt-1">$745/mo with PulseCommand Full</p>
             </div>
           </div>
         </div>
@@ -325,9 +365,9 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-4">Ready to Command Your Growth?</h2>
           <p className="text-primary-100 text-lg mb-3">
-            150 posts. 26 podcast episodes. 4 videos. Monthly reporting.
+            Start with Lite at $99/mo or go all-in with Full at $745/mo.
           </p>
-          <p className="text-primary-200 text-sm mb-8">All for $745/month. Setup within 24 hours.</p>
+          <p className="text-primary-200 text-sm mb-8">Same AI onboarding. Same quality. Setup within 24 hours.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/demo"
@@ -339,7 +379,7 @@ export default function HomePage() {
               href="/sign-up"
               className="inline-flex items-center gap-2 px-8 py-4 bg-white/15 border border-white/30 text-white font-bold rounded-lg hover:bg-white/25 transition-colors text-lg"
             >
-              Get Started — $745/mo
+              See Plans →
             </Link>
           </div>
           <p className="text-primary-200 text-xs mt-4">No contracts. Cancel anytime.</p>
