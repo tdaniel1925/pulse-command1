@@ -34,7 +34,7 @@ async function generatePredisPost(params: {
   businessDescription?: string;
   toneOfVoice?: string;
   targetAudience?: string;
-}): Promise<string | null> {
+}): Promise<{ postId: string | null; error?: string }> {
   const brandDetails = JSON.stringify({
     color_1: params.primaryColor?.replace("#", "") || "1AABCF",
     color_2: params.secondaryColor?.replace("#", "") || "F5873A",
@@ -67,12 +67,15 @@ async function generatePredisPost(params: {
   if (!res.ok) {
     const err = await res.text();
     console.error(`[predis] create_content failed:`, err);
-    return null;
+    return { postId: null, error: `HTTP ${res.status}: ${err}` };
   }
 
   const data = await res.json();
-  const postId = data.post_id ?? data.posts?.[0]?.post_id;
-  return postId ?? null;
+  const postId = data.post_id ?? data.post_ids?.[0] ?? data.posts?.[0]?.post_id;
+  if (!postId) {
+    return { postId: null, error: `No post_id in response: ${JSON.stringify(data)}` };
+  }
+  return { postId };
 }
 
 export async function GET(req: NextRequest) {
@@ -88,16 +91,10 @@ export async function GET(req: NextRequest) {
 
   console.log(`[weekly-social] Running for week topic: "${weekTopic}"`);
 
-  // Get all active clients with their brand profiles
+  // Get all active clients
   const { data: clients, error } = await supabase
     .from("clients")
-    .select(`
-      id, business_name, website,
-      brand_profiles (
-        primary_color, secondary_color, logo_url, priority_channels,
-        business_description, tagline, tone_of_voice, target_audience
-      )
-    `)
+    .select("id, business_name, website")
     .eq("status", "active");
 
   if (error) {
@@ -109,19 +106,26 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ ok: true, message: "No active clients" });
   }
 
+  // Fetch all brand profiles in one query
+  const clientIds = clients.map((c) => c.id);
+  const { data: brandProfiles } = await supabase
+    .from("brand_profiles")
+    .select("client_id, primary_color, secondary_color, logo_url, priority_channels, business_description, tagline, tone_of_voice, target_audience")
+    .in("client_id", clientIds);
+
+  const bpMap = new Map((brandProfiles ?? []).map((bp) => [bp.client_id, bp]));
+
   let generated = 0;
   let failed = 0;
 
   for (const client of clients) {
     try {
-      const bp = Array.isArray(client.brand_profiles)
-        ? client.brand_profiles[0]
-        : client.brand_profiles;
+      const bp = bpMap.get(client.id);
 
       const handle = `@${(client.business_name ?? "brand").toLowerCase().replace(/\s+/g, "")}`;
 
       // Generate image post
-      const postId = await generatePredisPost({
+      const { postId, error: predisError } = await generatePredisPost({
         topic: weekTopic,
         businessName: client.business_name ?? "Our Business",
         website: client.website ?? "",
@@ -136,6 +140,7 @@ export async function GET(req: NextRequest) {
       });
 
       if (!postId) {
+        console.error(`[weekly-social] ${client.business_name}: ${predisError ?? "no post_id"}`);
         failed++;
         continue;
       }
