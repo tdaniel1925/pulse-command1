@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect } from "react";
-import { X, Instagram, Facebook, Linkedin, Twitter } from "lucide-react";
+import { X } from "lucide-react";
 
-const platformIcons: Record<string, React.ReactNode> = {
-  instagram: <Instagram className="w-4 h-4" />,
-  facebook: <Facebook className="w-4 h-4" />,
-  linkedin: <Linkedin className="w-4 h-4" />,
-  twitter: <Twitter className="w-4 h-4" />,
+const platformIcons: Record<string, string> = {
+  instagram: "IG",
+  facebook: "FB",
+  linkedin: "LI",
+  twitter: "X",
+  tiktok: "TK",
 };
 
 const platformStyles: Record<string, string> = {
@@ -75,7 +76,7 @@ export function PostModal({ post, onClose }: PostModalProps) {
                 key={p}
                 className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-full capitalize ${platformStyles[p.toLowerCase()] ?? "bg-neutral-100 text-neutral-600"}`}
               >
-                {platformIcons[p.toLowerCase()] ?? null}
+                <span className="text-[10px] font-bold">{platformIcons[p.toLowerCase()] ?? p.slice(0,2).toUpperCase()}</span>
                 {p}
               </span>
             ))}

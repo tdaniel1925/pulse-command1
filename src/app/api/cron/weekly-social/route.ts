@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import Anthropic from "@anthropic-ai/sdk";
+import { generateSocialPostImage } from "@/lib/image-engine/orchestrator";
+import type { BrandContext, BrandVibe, ClientTier } from "@/lib/image-engine/types";
 
-const PREDIS_API_KEY = process.env.PREDIS_API_KEY!;
-const PREDIS_BRAND_ID = process.env.PREDIS_BRAND_ID!;
 const CRON_SECRET = process.env.CRON_SECRET!;
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-// Topics to rotate through weekly — AI picks which fits the brand
+// ─── Weekly topics ───────────────────────────────────────────────────────────
+
 const POST_TOPICS = [
   "Why customers choose us over the competition",
   "A tip your customers need to know this week",
@@ -22,67 +25,66 @@ function getWeekTopic(): string {
   return POST_TOPICS[weekNumber % POST_TOPICS.length];
 }
 
-async function generatePredisPost(params: {
+// ─── Claude caption generator ─────────────────────────────────────────────────
+
+type PlatformCaptions = {
+  instagram: string;
+  linkedin: string;
+  facebook: string;
+  twitter: string;
+};
+
+async function generateCaptions(params: {
   topic: string;
   businessName: string;
+  businessDescription: string;
+  toneOfVoice: string;
+  targetAudience: string;
   website: string;
-  primaryColor: string;
-  secondaryColor: string;
-  logoUrl: string;
-  handle: string;
-  mediaType: "single_image" | "carousel";
-  businessDescription?: string;
-  toneOfVoice?: string;
-  targetAudience?: string;
-}): Promise<{ postId: string | null; error?: string }> {
-  const brandDetails = JSON.stringify({
-    color_1: params.primaryColor?.replace("#", "") || "1AABCF",
-    color_2: params.secondaryColor?.replace("#", "") || "F5873A",
-    brand_website: params.website || "",
-    brand_handle: params.handle || "",
-    logo_url: params.logoUrl || "",
+}): Promise<PlatformCaptions> {
+  const response = await anthropic.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: 1200,
+    messages: [{
+      role: "user",
+      content: `You are a social media expert. Write platform-specific captions for this business.
+
+BUSINESS: ${params.businessName}
+WEBSITE: ${params.website}
+DESCRIPTION: ${params.businessDescription}
+TONE: ${params.toneOfVoice}
+AUDIENCE: ${params.targetAudience}
+TOPIC: ${params.topic}
+
+Write 4 captions — one per platform. Each must be tailored to that platform's style and character limits.
+
+INSTAGRAM: Engaging, conversational, 3-5 relevant hashtags, up to 300 chars before hashtags. Emoji ok.
+LINKEDIN: Professional, insightful, no hashtags, 150-200 chars. No emoji.
+FACEBOOK: Friendly and conversational, 100-150 chars, 1-2 hashtags max.
+TWITTER: Punchy and direct, under 240 chars, 1-2 hashtags.
+
+Return ONLY valid JSON:
+{
+  "instagram": "...",
+  "linkedin": "...",
+  "facebook": "...",
+  "twitter": "..."
+}`,
+    }],
   });
 
-  // Richer prompt = better Predis output
-  const contextParts = [params.topic, params.businessName];
-  if (params.businessDescription) contextParts.push(params.businessDescription.slice(0, 120));
-  if (params.toneOfVoice) contextParts.push(`Tone: ${params.toneOfVoice}`);
-  if (params.targetAudience) contextParts.push(`Audience: ${params.targetAudience.slice(0, 80)}`);
-  const text = contextParts.join(" | ");
-
-  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/predis`;
-
-  const formData = new FormData();
-  formData.append("brand_id", PREDIS_BRAND_ID);
-  formData.append("text", text);
-  formData.append("media_type", params.mediaType);
-  formData.append("model_version", "4");
-  formData.append("n_posts", "1");
-  formData.append("brand_details", brandDetails);
-  formData.append("webhook_url", webhookUrl);
-
-  const res = await fetch("https://brain.predis.ai/predis_api/v1/create_content/", {
-    method: "POST",
-    headers: { Authorization: PREDIS_API_KEY },
-    body: formData,
-  });
-
-  if (!res.ok) {
-    const err = await res.text();
-    console.error(`[predis] create_content failed:`, err);
-    return { postId: null, error: `HTTP ${res.status}: ${err}` };
+  const text = response.content[0].type === "text" ? response.content[0].text.trim() : "{}";
+  try {
+    return JSON.parse(text) as PlatformCaptions;
+  } catch {
+    const fallback = `${params.topic} — ${params.businessName}. ${params.website}`;
+    return { instagram: fallback, linkedin: fallback, facebook: fallback, twitter: fallback };
   }
-
-  const data = await res.json();
-  const postId = data.post_id ?? data.post_ids?.[0] ?? data.posts?.[0]?.post_id;
-  if (!postId) {
-    return { postId: null, error: `No post_id in response: ${JSON.stringify(data)}` };
-  }
-  return { postId };
 }
 
+// ─── Cron handler ─────────────────────────────────────────────────────────────
+
 export async function GET(req: NextRequest) {
-  // Verify cron secret
   const auth = req.headers.get("authorization");
   if (auth !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -90,30 +92,24 @@ export async function GET(req: NextRequest) {
 
   const supabase = createAdminClient();
   const weekTopic = getWeekTopic();
-  const monthBatch = new Date().toISOString().slice(0, 7); // "2025-04"
+  const monthBatch = new Date().toISOString().slice(0, 7);
 
-  console.log(`[weekly-social] Running for week topic: "${weekTopic}"`);
+  console.log(`[weekly-social] Topic: "${weekTopic}"`);
 
-  // Get all active clients
+  // Fetch active clients
   const { data: clients, error } = await supabase
     .from("clients")
-    .select("id, business_name, website")
+    .select("id, business_name, website, brand_vibe")
     .eq("status", "active");
 
-  if (error) {
-    console.error("[weekly-social] Failed to fetch clients:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (!clients?.length) return NextResponse.json({ ok: true, message: "No active clients" });
 
-  if (!clients?.length) {
-    return NextResponse.json({ ok: true, message: "No active clients" });
-  }
-
-  // Fetch all brand profiles in one query
+  // Fetch brand profiles
   const clientIds = clients.map((c) => c.id);
   const { data: brandProfiles } = await supabase
     .from("brand_profiles")
-    .select("client_id, primary_color, secondary_color, logo_url, priority_channels, business_description, tagline, tone_of_voice, target_audience")
+    .select("client_id, primary_color, secondary_color, logo_url, priority_channels, business_description, tone_of_voice, target_audience, brand_vibe")
     .in("client_id", clientIds);
 
   const bpMap = new Map((brandProfiles ?? []).map((bp) => [bp.client_id, bp]));
@@ -124,58 +120,107 @@ export async function GET(req: NextRequest) {
   for (const client of clients) {
     try {
       const bp = bpMap.get(client.id);
+      const platforms: string[] = (bp?.priority_channels as string[]) ?? ["instagram", "facebook", "linkedin"];
+      const primaryPlatform = platforms[0] ?? "instagram";
 
-      const handle = `@${(client.business_name ?? "brand").toLowerCase().replace(/\s+/g, "")}`;
+      const brandVibe = (bp?.brand_vibe ?? client.brand_vibe ?? "professional_warm") as BrandVibe;
+      const businessDescription = bp?.business_description ?? "";
+      const toneOfVoice = bp?.tone_of_voice ?? "professional";
+      const targetAudience = bp?.target_audience ?? "general audience";
+      const primaryColor = bp?.primary_color ?? "#1a1a2e";
+      const secondaryColor = bp?.secondary_color ?? "#4ade80";
 
-      // Generate image post
-      const { postId, error: predisError } = await generatePredisPost({
+      // Step 1: Generate captions for all platforms
+      const captions = await generateCaptions({
         topic: weekTopic,
         businessName: client.business_name ?? "Our Business",
+        businessDescription,
+        toneOfVoice,
+        targetAudience,
         website: client.website ?? "",
-        primaryColor: bp?.primary_color ?? "#1AABCF",
-        secondaryColor: bp?.secondary_color ?? "#F5873A",
-        logoUrl: bp?.logo_url ?? "",
-        handle,
-        mediaType: "single_image",
-        businessDescription: bp?.business_description ?? undefined,
-        toneOfVoice: bp?.tone_of_voice ?? undefined,
-        targetAudience: bp?.target_audience ?? undefined,
       });
 
-      if (!postId) {
-        console.error(`[weekly-social] ${client.business_name}: ${predisError ?? "no post_id"}`);
-        failed++;
-        continue;
-      }
+      // Step 2: Build brand context for image engine
+      const brand: BrandContext = {
+        clientId: client.id,
+        businessName: client.business_name ?? "Our Business",
+        industry: businessDescription.slice(0, 80),
+        website: client.website ?? "",
+        vibe: brandVibe,
+        colors: `primary: ${primaryColor}, secondary: ${secondaryColor}`,
+        voice: toneOfVoice,
+        audience: targetAudience,
+        description: businessDescription,
+        logoUrl: bp?.logo_url ?? undefined,
+      };
 
-      // Insert a placeholder row — webhook will fill image_url + caption when done
-      const platforms = (bp?.priority_channels as string[]) ?? ["instagram", "facebook", "linkedin"];
+      // Step 3: Generate image for the primary platform
+      const imageResult = await generateSocialPostImage({
+        post: {
+          id: `${client.id}-${Date.now()}`,
+          caption: captions[primaryPlatform as keyof PlatformCaptions] ?? captions.instagram,
+          hook: weekTopic,
+          cta: `Learn more at ${client.website ?? "our website"}`,
+          platform: primaryPlatform,
+          postType: "weekly_social",
+        },
+        brand,
+        platform: primaryPlatform,
+        clientTier: "starter" as ClientTier,
+      });
 
-      await supabase.from("social_posts").insert({
+      // Step 4: Check auto_approve
+      const { data: clientRow } = await supabase
+        .from("clients")
+        .select("auto_approve")
+        .eq("id", client.id)
+        .single();
+      const autoApprove = clientRow?.auto_approve ?? true;
+      const postStatus = autoApprove ? "scheduled" : "pending_approval";
+
+      // Step 5: Insert one social post row with all platform captions
+      const { data: insertedPost } = await supabase.from("social_posts").insert({
         client_id: client.id,
-        content: `[Generating] ${weekTopic}`, // webhook will update this
+        content: captions[primaryPlatform as keyof PlatformCaptions] ?? captions.instagram,
         platforms,
-        status: "draft", // webhook upgrades to pending_approval
+        status: postStatus,
         month_batch: monthBatch,
-        metadata: { predis_post_id: postId, topic: weekTopic },
+        image_url: imageResult.imageUrl,
+        metadata: {
+          topic: weekTopic,
+          captions,
+          image_type: imageResult.imageType,
+          photo_style: imageResult.photoStyle,
+          infographic_style: imageResult.infographicStyle,
+          generation_cost: imageResult.generationCost,
+        },
+      } as never).select("id").single();
+
+      // Step 6: Log activity
+      await supabase.from("activities").insert({
+        client_id: client.id,
+        type: "post",
+        title: autoApprove ? "Social post scheduled" : "Social post ready for approval",
+        description: `Weekly post: "${weekTopic}" — ${imageResult.imageType} image generated.`,
+        created_by: "system",
       } as never);
 
       generated++;
-      console.log(`[weekly-social] Queued post for ${client.business_name} — predis_post_id: ${postId}`);
+      console.log(
+        `[weekly-social] ✓ ${client.business_name} | ${imageResult.imageType}` +
+        (imageResult.photoStyle ? ` (${imageResult.photoStyle})` : "") +
+        (imageResult.infographicStyle ? ` (${imageResult.infographicStyle})` : "") +
+        ` | $${imageResult.generationCost.toFixed(4)} | ${postStatus}`
+      );
 
-      // Predis allows max 3 in-progress — small delay between clients
-      await new Promise((r) => setTimeout(r, 2000));
+      // Small delay between clients to avoid rate limits
+      await new Promise((r) => setTimeout(r, 1000));
+
     } catch (err) {
-      console.error(`[weekly-social] Error for client ${client.id}:`, err);
+      console.error(`[weekly-social] ✗ ${client.business_name}:`, err);
       failed++;
     }
   }
 
-  return NextResponse.json({
-    ok: true,
-    topic: weekTopic,
-    generated,
-    failed,
-    total: clients.length,
-  });
+  return NextResponse.json({ ok: true, topic: weekTopic, generated, failed, total: clients.length });
 }
