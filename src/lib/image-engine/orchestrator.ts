@@ -5,7 +5,7 @@ import { COST_ESTIMATES, CLAUDE_COST_ESTIMATES, IMAGE_ENGINE_CONFIG } from './co
 import { createAdminClient } from '@/lib/supabase/admin';
 import type {
   PostContext, BrandContext, ImageGenerationResult,
-  ImageType, ClientTier, GeminiModel,
+  ImageType, ClientTier, GeminiModel, LayoutTemplate, CompositionStyle,
 } from './types';
 
 // ─── Supabase Storage Upload ─────────────────────────────────────────────────
@@ -81,7 +81,8 @@ export async function generateSocialPostImage(input: {
   const startTime = Date.now();
   let attempts = 1;
 
-  // Step 1: Classify
+  // Step 1: Classify (pass clientId + weekSeed for seeded layout fallback)
+  const weekSeed = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
   const classification = await classifyImageType({
     caption: input.post.caption,
     hook: input.post.hook,
@@ -90,11 +91,13 @@ export async function generateSocialPostImage(input: {
     brandVibe: input.brand.vibe,
     postType: input.post.postType,
     platform: input.platform,
+    clientId: input.brand.clientId,
+    weekSeed,
   });
 
   console.log(
     `[ImageEngine] ${input.brand.businessName} | ${input.platform} | ` +
-    `Type: ${classification.primary_type}` +
+    `Type: ${classification.primary_type} | Layout: ${classification.layout} | Composition: ${classification.composition}` +
     (classification.infographic_style ? ` | ${classification.infographic_style}` : '') +
     (classification.photo_style ? ` | ${classification.photo_style}` : '')
   );
@@ -105,8 +108,10 @@ export async function generateSocialPostImage(input: {
   let usedType = classification.primary_type;
 
   try {
-    imagePrompt = await generateImagePrompt(
+    imagePrompt = generateImagePrompt(
       classification.primary_type,
+      classification.layout,
+      classification.composition,
       input.post,
       input.brand,
       subStyle
@@ -145,8 +150,10 @@ export async function generateSocialPostImage(input: {
     attempts = 2;
     usedType = classification.fallback_type;
 
-    const fallbackPrompt = await generateImagePrompt(
+    const fallbackPrompt = generateImagePrompt(
       classification.fallback_type,
+      'hero_bottom_bar',
+      'single',
       input.post,
       input.brand
     );
@@ -194,6 +201,8 @@ export async function generateSocialPostImage(input: {
   return {
     imageUrl,
     imageType: usedType,
+    layout: classification.layout,
+    composition: classification.composition,
     infographicStyle: classification.infographic_style,
     photoStyle: classification.photo_style,
     classifierReasoning: classification.reasoning,

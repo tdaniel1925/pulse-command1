@@ -43,10 +43,25 @@ export type ClientTier =
   | 'premium'
   | 'agency';
 
+// ─── Layout Templates ────────────────────────────────────────────────────────
+
+export type LayoutTemplate =
+  | 'hero_bottom_bar'     // Full bleed photo + solid color bar bottom 28% with bold headline
+  | 'vision_board'        // Cork/mood board with pinned photos + center text card
+  | 'photo_mosaic'        // 5-photo grid + white header bar + centered CTA button
+  | 'split_panel'         // Left half solid color + right half photo, headline on color side
+  | 'quote_card'          // Full color background, large centered pull-quote, minimal
+  | 'stat_callout'        // Dark background, 2-3 large stats/benefits in boxes, photo accent
+  | 'single_hero';        // Single striking image, text overlaid or below, no collage
+
+export type CompositionStyle = 'single' | 'collage';
+
 // ─── Classification ──────────────────────────────────────────────────────────
 
 export type ClassificationResult = {
   primary_type: ImageType;
+  layout: LayoutTemplate;
+  composition: CompositionStyle;
   reasoning: string;
   fallback_type: ImageType;
   infographic_style?: InfographicStyle;
@@ -99,6 +114,8 @@ export type PlatformSpec = {
 export type ImageGenerationResult = {
   imageUrl: string;
   imageType: ImageType;
+  layout: LayoutTemplate;
+  composition: CompositionStyle;
   infographicStyle?: InfographicStyle;
   photoStyle?: PhotoStyle;
   classifierReasoning: string;

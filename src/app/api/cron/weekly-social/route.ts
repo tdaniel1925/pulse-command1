@@ -191,6 +191,8 @@ export async function GET(req: NextRequest) {
           topic: weekTopic,
           captions,
           image_type: imageResult.imageType,
+          layout: imageResult.layout,
+          composition: imageResult.composition,
           photo_style: imageResult.photoStyle,
           infographic_style: imageResult.infographicStyle,
           generation_cost: imageResult.generationCost,
