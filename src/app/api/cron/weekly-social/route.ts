@@ -116,6 +116,7 @@ export async function GET(req: NextRequest) {
 
   let generated = 0;
   let failed = 0;
+  const errors: string[] = [];
 
   for (const client of clients) {
     try {
@@ -216,11 +217,13 @@ export async function GET(req: NextRequest) {
       // Small delay between clients to avoid rate limits
       await new Promise((r) => setTimeout(r, 1000));
 
-    } catch (err) {
-      console.error(`[weekly-social] ✗ ${client.business_name}:`, err);
+    } catch (err: any) {
+      const msg = err?.message ?? String(err);
+      console.error(`[weekly-social] ✗ ${client.business_name}:`, msg);
+      errors.push(`${client.business_name}: ${msg}`);
       failed++;
     }
   }
 
-  return NextResponse.json({ ok: true, topic: weekTopic, generated, failed, total: clients.length });
+  return NextResponse.json({ ok: true, topic: weekTopic, generated, failed, total: clients.length, errors });
 }
