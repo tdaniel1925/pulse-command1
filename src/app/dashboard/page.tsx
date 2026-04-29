@@ -12,6 +12,7 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
+import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
 
 const PlatformBadge = ({ platform }: { platform: string }) => {
   const styles: Record<string, string> = {
@@ -111,6 +112,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <WelcomeBanner />
       {/* Welcome banner */}
       <div className="bg-primary-600 rounded-2xl px-6 py-5 text-white">
         <p className="text-lg font-bold">Good morning, {firstName}!</p>
