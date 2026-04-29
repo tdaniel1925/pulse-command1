@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { AutoApproveToggle } from "@/components/dashboard/AutoApproveToggle";
 import { SocialPostsGrid } from "@/components/dashboard/SocialPostsGrid";
+import { SocialViewToggle } from "@/components/dashboard/SocialViewToggle";
 
 export default async function SocialPage() {
   const supabase = await createClient();
@@ -13,7 +14,7 @@ export default async function SocialPage() {
 
   const { data: posts } = await supabase
     .from("social_posts")
-    .select("id, content, platforms, status, scheduled_at, published_at, image_url, performance")
+    .select("id, content, platforms, status, scheduled_at, published_at, image_url, performance, metadata")
     .eq("client_id", client?.id ?? "")
     .order("created_at", { ascending: false });
 
@@ -56,7 +57,7 @@ export default async function SocialPage() {
         ))}
       </div>
 
-      <SocialPostsGrid posts={posts ?? []} failed={failed} />
+      <SocialViewToggle posts={posts ?? []} failed={failed} />
     </div>
   );
 }
