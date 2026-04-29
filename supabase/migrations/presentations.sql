@@ -34,3 +34,10 @@ create policy "clients can update own presentations"
 -- Add presentations_used to clients if not exists
 alter table clients add column if not exists presentations_used int default 0;
 alter table clients add column if not exists presentations_limit int default 1;
+
+-- Add new columns for creation modes and slide style
+alter table presentations add column if not exists source_mode text default 'ai'; -- ai | paste | url | interview
+alter table presentations add column if not exists source_content text; -- pasted text or scraped URL content
+alter table presentations add column if not exists source_url text; -- URL if mode=url
+alter table presentations add column if not exists slide_style text default 'regular'; -- regular | nano
+alter table presentations add column if not exists interview_answers jsonb; -- Q&A from interview mode

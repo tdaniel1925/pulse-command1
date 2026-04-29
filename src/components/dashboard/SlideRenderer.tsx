@@ -10,7 +10,11 @@ export type SlideLayout =
   | 'quote'
   | 'stats'
   | 'two_col'
-  | 'section';
+  | 'section'
+  | 'nano_statement'
+  | 'nano_number'
+  | 'nano_question'
+  | 'nano_quote';
 
 export interface Slide {
   index: number;
@@ -297,6 +301,105 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
           <p className="text-xl text-neutral-600 max-w-2xl px-16">{slide.body}</p>
         )}
         <div className="w-24 h-1 rounded-full mt-8" style={{ backgroundColor: accent }} />
+      </div>
+    );
+  }
+
+  // ── NANO STATEMENT ─────────────────────────────────────────────────────────
+  if (slide.layout === 'nano_statement') {
+    return (
+      <div
+        className="w-full h-full flex flex-col items-center justify-center text-center px-12 relative overflow-hidden"
+        style={{ backgroundColor: accent }}
+      >
+        {slide.title && (
+          <h1
+            className={`font-black text-white leading-tight ${
+              isFullscreen ? 'text-6xl' : 'text-5xl'
+            }`}
+          >
+            {slide.title}
+          </h1>
+        )}
+        {slide.subtitle && (
+          <p className="text-white/70 text-xl mt-4 leading-relaxed">{slide.subtitle}</p>
+        )}
+      </div>
+    );
+  }
+
+  // ── NANO NUMBER ────────────────────────────────────────────────────────────
+  if (slide.layout === 'nano_number') {
+    return (
+      <div className="w-full h-full bg-white flex flex-col items-center justify-center text-center relative overflow-hidden px-12">
+        {/* Thin accent line above the number */}
+        <div className="w-24 h-1 rounded-full mb-8" style={{ backgroundColor: accent }} />
+        {slide.title && (
+          <span
+            className={`font-black leading-none ${isFullscreen ? 'text-9xl' : 'text-8xl'}`}
+            style={{ color: accent }}
+          >
+            {slide.title}
+          </span>
+        )}
+        {slide.subtitle && (
+          <p className="text-neutral-400 text-lg uppercase tracking-widest mt-6">
+            {slide.subtitle}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // ── NANO QUESTION ──────────────────────────────────────────────────────────
+  if (slide.layout === 'nano_question') {
+    return (
+      <div
+        className="w-full h-full flex flex-col items-center justify-center text-center px-16 relative overflow-hidden"
+        style={{
+          background: `linear-gradient(to top, rgba(${rgb}, 0.10) 0%, transparent 60%)`,
+        }}
+      >
+        {/* Large decorative quotation mark */}
+        <span
+          className="text-[12rem] font-serif leading-none select-none absolute top-0 left-4 opacity-[0.15] pointer-events-none"
+          style={{ color: accent }}
+        >
+          &ldquo;
+        </span>
+        {slide.title && (
+          <h1
+            className={`font-bold italic text-neutral-900 leading-tight relative z-10 ${
+              isFullscreen ? 'text-6xl' : 'text-5xl'
+            }`}
+          >
+            {slide.title}
+          </h1>
+        )}
+      </div>
+    );
+  }
+
+  // ── NANO QUOTE ─────────────────────────────────────────────────────────────
+  if (slide.layout === 'nano_quote') {
+    return (
+      <div className="w-full h-full bg-white flex overflow-hidden">
+        {/* Left accent border */}
+        <div className="w-2 flex-shrink-0" style={{ backgroundColor: accent }} />
+        <div className="flex-1 flex flex-col justify-center px-12 py-12">
+          {slide.title && (
+            <p
+              className={`font-semibold italic text-neutral-800 leading-snug ${
+                isFullscreen ? 'text-5xl' : 'text-4xl'
+              }`}
+            >
+              {slide.title}
+            </p>
+          )}
+          {slide.subtitle && (
+            <p className="text-neutral-400 text-base mt-6">&mdash; {slide.subtitle}</p>
+          )}
+        </div>
       </div>
     );
   }

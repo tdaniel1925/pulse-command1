@@ -12,6 +12,8 @@ interface Props {
 }
 
 type Tone = "professional" | "inspiring" | "educational" | "casual";
+type SourceMode = "ai" | "paste" | "url" | "interview";
+type SlideStyle = "regular" | "nano";
 
 const TONES: { value: Tone; label: string; icon: React.ReactNode }[] = [
   {
@@ -54,13 +56,77 @@ const TONES: { value: Tone; label: string; icon: React.ReactNode }[] = [
 
 const SLIDE_COUNTS = [5, 10, 15, 20];
 
+const INTERVIEW_QUESTIONS = [
+  "What is this presentation for?",
+  "Who is your audience and what do they care about?",
+  "What is the ONE thing they must walk away knowing?",
+  "What proof points, stats, or results can you share?",
+  "What do you want them to DO after seeing this?",
+];
+
+const MODE_CARDS: {
+  value: SourceMode;
+  title: string;
+  subtitle: string;
+  badge?: string;
+  icon: React.ReactNode;
+}[] = [
+  {
+    value: "ai",
+    title: "Start from a Topic",
+    subtitle: "Tell AI what you need — it handles the rest",
+    badge: "Most popular",
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+      </svg>
+    ),
+  },
+  {
+    value: "paste",
+    title: "Paste Your Content",
+    subtitle: "Drop in notes, a doc, or bullet points",
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+      </svg>
+    ),
+  },
+  {
+    value: "url",
+    title: "Import from Website",
+    subtitle: "Point to your site and we'll build from it",
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+      </svg>
+    ),
+  },
+  {
+    value: "interview",
+    title: "AI Interview",
+    subtitle: "Answer 5 questions, get a custom deck",
+    icon: (
+      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8.625 9.75a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375m-13.5 3.01c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+      </svg>
+    ),
+  },
+];
+
 export function NewPresentationModal({ open, onClose, presentationsUsed, presentationsLimit }: Props) {
   const router = useRouter();
-  const [step, setStep] = useState(1);
+  // Step 0 = mode select, 1 = content, 2 = style, 3 = review
+  const [step, setStep] = useState(0);
+  const [sourceMode, setSourceMode] = useState<SourceMode>("ai");
   const [topic, setTopic] = useState("");
   const [audience, setAudience] = useState("");
   const [tone, setTone] = useState<Tone>("professional");
   const [slideCount, setSlideCount] = useState(10);
+  const [slideStyle, setSlideStyle] = useState<SlideStyle>("regular");
+  const [sourceContent, setSourceContent] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [interviewAnswers, setInterviewAnswers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
@@ -68,15 +134,41 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
   const atLimit = presentationsUsed >= presentationsLimit;
 
   function handleClose() {
-    setStep(1);
+    setStep(0);
+    setSourceMode("ai");
     setTopic("");
     setAudience("");
     setTone("professional");
     setSlideCount(10);
+    setSlideStyle("regular");
+    setSourceContent("");
+    setSourceUrl("");
+    setInterviewAnswers({});
     setLoading(false);
     setError(null);
     setShowUpgrade(false);
     onClose();
+  }
+
+  function step1Valid(): boolean {
+    if (sourceMode === "ai") return topic.trim().length > 0;
+    if (sourceMode === "paste") return sourceContent.trim().length > 0;
+    if (sourceMode === "url") return sourceUrl.trim().length > 0;
+    if (sourceMode === "interview") {
+      return INTERVIEW_QUESTIONS.every((q) => (interviewAnswers[q] ?? "").trim().length > 0);
+    }
+    return false;
+  }
+
+  // Derive topic for non-ai modes
+  function resolvedTopic(): string {
+    if (sourceMode === "ai") return topic;
+    if (sourceMode === "paste") return topic || "Presentation from provided content";
+    if (sourceMode === "url") return topic || sourceUrl;
+    if (sourceMode === "interview") {
+      return interviewAnswers[INTERVIEW_QUESTIONS[0]] ?? "Presentation";
+    }
+    return topic;
   }
 
   async function handleGenerate() {
@@ -86,11 +178,21 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
       const res = await fetch("/api/presentations/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic, audience, tone, slideCount }),
+        body: JSON.stringify({
+          topic: resolvedTopic(),
+          audience,
+          tone,
+          slideCount,
+          sourceMode,
+          sourceContent: sourceMode === "paste" ? sourceContent : undefined,
+          sourceUrl: sourceMode === "url" ? sourceUrl : undefined,
+          slideStyle,
+          interviewAnswers: sourceMode === "interview" ? interviewAnswers : undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        if (data.code === "trial_exhausted") {
+        if (data.error === "trial_exhausted") {
           setLoading(false);
           setShowUpgrade(true);
           return;
@@ -105,6 +207,9 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
   }
 
   if (!open) return null;
+
+  // Total steps: 0, 1, 2, 3 → show 4 dots
+  const totalSteps = 4;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -140,30 +245,19 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                 <span className="ml-2 text-sm font-semibold text-indigo-700">— Unlimited Presentations</span>
               </div>
               <ul className="space-y-2 text-sm text-neutral-700">
-                <li className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  Unlimited AI-generated presentations
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  Professional slide designs
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  Export to PowerPoint &amp; PDF
-                </li>
-                <li className="flex items-center gap-2">
-                  <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  Custom branding &amp; themes
-                </li>
+                {[
+                  "Unlimited AI-generated presentations",
+                  "Professional slide designs",
+                  "Export to PowerPoint & PDF",
+                  "Custom branding & themes",
+                ].map((item) => (
+                  <li key={item} className="flex items-center gap-2">
+                    <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                    </svg>
+                    {item}
+                  </li>
+                ))}
               </ul>
             </div>
 
@@ -181,65 +275,261 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
           <>
             {/* Progress dots */}
             <div className="flex items-center justify-center gap-2 mb-8">
-              {[1, 2, 3].map((s) => (
+              {Array.from({ length: totalSteps }, (_, i) => (
                 <div
-                  key={s}
+                  key={i}
                   className={`w-2.5 h-2.5 rounded-full transition-colors ${
-                    s <= step ? "bg-indigo-600" : "bg-neutral-200"
+                    i <= step ? "bg-indigo-600" : "bg-neutral-200"
                   }`}
                 />
               ))}
             </div>
 
-            {/* Step 1 */}
-            {step === 1 && (
+            {/* ── STEP 0: Mode selection ── */}
+            {step === 0 && (
               <div>
-                <h2 className="text-xl font-bold text-neutral-900 mb-1">What&apos;s it about?</h2>
-                <p className="text-sm text-neutral-500 mb-6">Tell us about your presentation topic and audience.</p>
+                <h2 className="text-xl font-bold text-neutral-900 mb-1">How do you want to create this?</h2>
+                <p className="text-sm text-neutral-500 mb-6">Choose your starting point.</p>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-                      Presentation topic <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      value={topic}
-                      onChange={(e) => setTopic(e.target.value)}
-                      placeholder="e.g. Q3 Sales Results, Product Launch, Company Overview..."
-                      rows={3}
-                      className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-neutral-700 mb-1.5">
-                      Who&apos;s your audience?
-                    </label>
-                    <input
-                      type="text"
-                      value={audience}
-                      onChange={(e) => setAudience(e.target.value)}
-                      placeholder="e.g. Investors, Sales team, Potential customers"
-                      className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    />
-                  </div>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  {MODE_CARDS.map((card) => {
+                    const selected = sourceMode === card.value;
+                    return (
+                      <button
+                        key={card.value}
+                        onClick={() => setSourceMode(card.value)}
+                        className={`relative text-left rounded-xl border-2 p-4 transition-all ${
+                          selected
+                            ? "border-indigo-500 bg-indigo-50"
+                            : "border-neutral-200 bg-white hover:border-neutral-300"
+                        }`}
+                      >
+                        {/* Checkmark */}
+                        {selected && (
+                          <span className="absolute top-2 right-2 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                          </span>
+                        )}
+                        <span className={`mb-2 block ${selected ? "text-indigo-600" : "text-neutral-400"}`}>
+                          {card.icon}
+                        </span>
+                        <p className={`text-sm font-semibold leading-tight mb-1 ${selected ? "text-indigo-700" : "text-neutral-800"}`}>
+                          {card.title}
+                        </p>
+                        <p className="text-xs text-neutral-500 leading-snug">{card.subtitle}</p>
+                        {card.badge && (
+                          <span className="mt-2 inline-block text-[10px] font-semibold uppercase tracking-wide bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5">
+                            {card.badge}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <button
-                  onClick={() => setStep(2)}
-                  disabled={!topic.trim()}
-                  className="mt-6 w-full bg-indigo-600 text-white font-semibold rounded-xl py-3 hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  onClick={() => setStep(1)}
+                  className="w-full bg-indigo-600 text-white font-semibold rounded-xl py-3 hover:bg-indigo-700 transition-colors"
                 >
                   Next
                 </button>
               </div>
             )}
 
-            {/* Step 2 */}
+            {/* ── STEP 1: Content input (varies by mode) ── */}
+            {step === 1 && (
+              <div>
+                {/* AI mode */}
+                {sourceMode === "ai" && (
+                  <>
+                    <h2 className="text-xl font-bold text-neutral-900 mb-1">What&apos;s it about?</h2>
+                    <p className="text-sm text-neutral-500 mb-6">Tell us about your presentation topic and audience.</p>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                          Presentation topic <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          value={topic}
+                          onChange={(e) => setTopic(e.target.value)}
+                          placeholder="e.g. Q3 Sales Results, Product Launch, Company Overview..."
+                          rows={3}
+                          className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                          Who&apos;s your audience?
+                        </label>
+                        <input
+                          type="text"
+                          value={audience}
+                          onChange={(e) => setAudience(e.target.value)}
+                          placeholder="e.g. Investors, Sales team, Potential customers"
+                          className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Paste mode */}
+                {sourceMode === "paste" && (
+                  <>
+                    <h2 className="text-xl font-bold text-neutral-900 mb-1">Paste your content</h2>
+                    <p className="text-sm text-neutral-500 mb-6">We&apos;ll turn your text into slides.</p>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                          Your content <span className="text-red-500">*</span>
+                        </label>
+                        <textarea
+                          value={sourceContent}
+                          onChange={(e) => setSourceContent(e.target.value)}
+                          placeholder="Paste your notes, document text, bullet points, or any content you want to turn into slides..."
+                          rows={6}
+                          className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none min-h-[200px]"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                          What should we call this presentation? <span className="text-neutral-400 font-normal">(optional)</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={topic}
+                          onChange={(e) => setTopic(e.target.value)}
+                          placeholder="e.g. Q3 Results, Product Overview..."
+                          className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                          Who&apos;s your audience?
+                        </label>
+                        <input
+                          type="text"
+                          value={audience}
+                          onChange={(e) => setAudience(e.target.value)}
+                          placeholder="e.g. Investors, Sales team, Potential customers"
+                          className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* URL mode */}
+                {sourceMode === "url" && (
+                  <>
+                    <h2 className="text-xl font-bold text-neutral-900 mb-1">Import from website</h2>
+                    <p className="text-sm text-neutral-500 mb-6">We&apos;ll read your site and build from it.</p>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                          Website URL <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                            </svg>
+                          </span>
+                          <input
+                            type="url"
+                            value={sourceUrl}
+                            onChange={(e) => setSourceUrl(e.target.value)}
+                            placeholder="https://yourwebsite.com"
+                            className="w-full rounded-xl border border-neutral-200 pl-10 pr-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                        </div>
+                        <p className="mt-1.5 text-xs text-neutral-400">
+                          We&apos;ll read your homepage and key pages to extract your content.
+                        </p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                          Who&apos;s your audience?
+                        </label>
+                        <input
+                          type="text"
+                          value={audience}
+                          onChange={(e) => setAudience(e.target.value)}
+                          placeholder="e.g. Investors, Sales team, Potential customers"
+                          className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Interview mode */}
+                {sourceMode === "interview" && (
+                  <>
+                    <h2 className="text-xl font-bold text-neutral-900 mb-1">Quick interview</h2>
+                    <p className="text-sm text-neutral-500 mb-6">Answer 5 questions — we&apos;ll build your custom deck.</p>
+                    <div className="space-y-4">
+                      {INTERVIEW_QUESTIONS.map((q, i) => {
+                        const isTextarea = i === 3; // Q4 is a textarea
+                        return (
+                          <div key={q}>
+                            <label className="block text-sm font-medium text-neutral-700 mb-1.5">
+                              <span className="text-indigo-500 font-bold">Q{i + 1}.</span> {q}
+                            </label>
+                            {isTextarea ? (
+                              <textarea
+                                value={interviewAnswers[q] ?? ""}
+                                onChange={(e) =>
+                                  setInterviewAnswers((prev) => ({ ...prev, [q]: e.target.value }))
+                                }
+                                rows={3}
+                                placeholder="Share any data, results, or examples..."
+                                className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                value={interviewAnswers[q] ?? ""}
+                                onChange={(e) =>
+                                  setInterviewAnswers((prev) => ({ ...prev, [q]: e.target.value }))
+                                }
+                                className="w-full rounded-xl border border-neutral-200 px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                              />
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+
+                <div className="flex gap-3 mt-6">
+                  <button
+                    onClick={() => setStep(0)}
+                    className="flex-1 border border-neutral-200 text-neutral-700 font-semibold rounded-xl py-3 hover:bg-neutral-50 transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={() => setStep(2)}
+                    disabled={!step1Valid()}
+                    className="flex-1 bg-indigo-600 text-white font-semibold rounded-xl py-3 hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 2: Style & length ── */}
             {step === 2 && (
               <div>
                 <h2 className="text-xl font-bold text-neutral-900 mb-1">Style &amp; Length</h2>
-                <p className="text-sm text-neutral-500 mb-6">Choose the tone and how many slides you need.</p>
+                <p className="text-sm text-neutral-500 mb-6">Choose the tone, slide count, and style.</p>
 
+                {/* Tone */}
                 <div className="mb-5">
                   <p className="text-sm font-medium text-neutral-700 mb-2">Tone</p>
                   <div className="grid grid-cols-2 gap-2">
@@ -262,7 +552,8 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                   </div>
                 </div>
 
-                <div className="mb-6">
+                {/* Slide count */}
+                <div className="mb-5">
                   <p className="text-sm font-medium text-neutral-700 mb-2">Number of slides</p>
                   <div className="flex gap-2">
                     {SLIDE_COUNTS.map((n) => (
@@ -278,6 +569,54 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                         {n}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                {/* Slide style */}
+                <div className="mb-6">
+                  <p className="text-sm font-medium text-neutral-700 mb-2">Slide Style</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* Regular */}
+                    <button
+                      onClick={() => setSlideStyle("regular")}
+                      className={`relative text-left rounded-xl border-2 p-4 transition-all ${
+                        slideStyle === "regular"
+                          ? "border-indigo-500 bg-indigo-50"
+                          : "border-neutral-200 hover:border-neutral-300"
+                      }`}
+                    >
+                      {/* Slide icon: rectangle with lines */}
+                      <span className={`mb-2 block ${slideStyle === "regular" ? "text-indigo-600" : "text-neutral-400"}`}>
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
+                        </svg>
+                      </span>
+                      <p className={`text-sm font-semibold mb-0.5 ${slideStyle === "regular" ? "text-indigo-700" : "text-neutral-800"}`}>
+                        Regular
+                      </p>
+                      <p className="text-xs text-neutral-500">Professional &amp; detailed</p>
+                      <p className="text-xs text-neutral-400 mt-1">Best for: Sales decks, reports, training</p>
+                    </button>
+
+                    {/* Nano */}
+                    <button
+                      onClick={() => setSlideStyle("nano")}
+                      className={`relative text-left rounded-xl border-2 p-4 transition-all ${
+                        slideStyle === "nano"
+                          ? "border-indigo-500 bg-indigo-50"
+                          : "border-neutral-200 hover:border-neutral-300"
+                      }`}
+                    >
+                      <span className={`mb-2 block font-black text-xl leading-none ${slideStyle === "nano" ? "text-indigo-600" : "text-neutral-400"}`}>
+                        N
+                      </span>
+                      <p className={`text-sm font-semibold mb-0.5 ${slideStyle === "nano" ? "text-indigo-700" : "text-neutral-800"}`}>
+                        Nano
+                      </p>
+                      <p className="text-xs text-neutral-500">Ultra-minimal, one idea per slide</p>
+                      <p className="text-xs text-neutral-400 mt-1">Best for: Keynotes, pitches, TED-style talks</p>
+                      <p className="text-xs text-indigo-400 mt-1">Recommended: 15–20 slides</p>
+                    </button>
                   </div>
                 </div>
 
@@ -298,17 +637,27 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
               </div>
             )}
 
-            {/* Step 3 */}
+            {/* ── STEP 3: Review & Generate ── */}
             {step === 3 && (
               <div>
                 <h2 className="text-xl font-bold text-neutral-900 mb-1">Review &amp; Generate</h2>
                 <p className="text-sm text-neutral-500 mb-6">Everything look good? Let&apos;s create your presentation.</p>
 
                 <div className="bg-neutral-50 rounded-xl border border-neutral-200 p-4 space-y-3 mb-6">
+                  {/* Mode */}
                   <div className="flex items-start gap-3">
-                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0 pt-0.5">Topic</span>
-                    <span className="text-sm text-neutral-800">{topic}</span>
+                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0 pt-0.5">Mode</span>
+                    <span className="text-sm text-neutral-800 capitalize">
+                      {MODE_CARDS.find((c) => c.value === sourceMode)?.title ?? sourceMode}
+                    </span>
                   </div>
+                  {/* Topic (if applicable) */}
+                  {resolvedTopic() && (
+                    <div className="flex items-start gap-3">
+                      <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0 pt-0.5">Topic</span>
+                      <span className="text-sm text-neutral-800 line-clamp-2">{resolvedTopic()}</span>
+                    </div>
+                  )}
                   {audience && (
                     <div className="flex items-start gap-3">
                       <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0 pt-0.5">Audience</span>
@@ -322,6 +671,10 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0">Slides</span>
                     <span className="text-sm text-neutral-800">{slideCount}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0">Style</span>
+                    <span className="text-sm text-neutral-800 capitalize">{slideStyle}</span>
                   </div>
                 </div>
 

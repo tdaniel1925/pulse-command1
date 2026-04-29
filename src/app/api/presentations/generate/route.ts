@@ -2,6 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
+async function scrapeUrl(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; PulseCommand/1.0)' },
+      signal: AbortSignal.timeout(10000),
+    });
+    const html = await res.text();
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[\s\S]*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .slice(0, 8000);
+    return text;
+  } catch {
+    return '';
+  }
+}
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
   const admin = createAdminClient();
@@ -33,15 +53,36 @@ export async function POST(req: NextRequest) {
 
   // Parse body
   const body = await req.json();
-  const { topic, audience, tone, slideCount } = body as {
+  const {
+    topic,
+    audience,
+    tone,
+    slideCount,
+    sourceMode,
+    sourceContent,
+    sourceUrl,
+    slideStyle,
+    interviewAnswers,
+  } = body as {
     topic: string;
     audience?: string;
     tone?: string;
     slideCount?: number;
+    sourceMode?: 'ai' | 'paste' | 'url' | 'interview';
+    sourceContent?: string;
+    sourceUrl?: string;
+    slideStyle?: 'regular' | 'nano';
+    interviewAnswers?: Record<string, string>;
   };
 
   if (!topic) {
     return NextResponse.json({ error: 'topic is required' }, { status: 400 });
+  }
+
+  // For URL mode: scrape before inserting
+  let resolvedSourceContent = sourceContent ?? null;
+  if (sourceMode === 'url' && sourceUrl) {
+    resolvedSourceContent = await scrapeUrl(sourceUrl);
   }
 
   // Create presentation row
@@ -55,6 +96,11 @@ export async function POST(req: NextRequest) {
       tone: tone ?? 'professional',
       slide_count: slideCount ?? 10,
       status: 'generating',
+      source_mode: sourceMode ?? 'ai',
+      source_content: resolvedSourceContent,
+      source_url: sourceUrl ?? null,
+      slide_style: slideStyle ?? 'regular',
+      interview_answers: interviewAnswers ?? null,
     })
     .select('id')
     .single();
@@ -75,7 +121,17 @@ export async function POST(req: NextRequest) {
     req.nextUrl.origin
   ).toString();
 
-  fetch(buildUrl, { method: 'POST' }).catch((err) => {
+  fetch(buildUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      sourceMode: sourceMode ?? 'ai',
+      sourceContent: resolvedSourceContent,
+      sourceUrl: sourceUrl ?? null,
+      slideStyle: slideStyle ?? 'regular',
+      interviewAnswers: interviewAnswers ?? null,
+    }),
+  }).catch((err) => {
     console.error('[presentations/generate] build trigger failed:', err?.message ?? err);
   });
 
