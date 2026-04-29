@@ -197,7 +197,30 @@ export async function GET(req: NextRequest) {
         },
       } as never).select("id").single();
 
-      // Step 6: Log activity
+      // Step 6: Auto-publish via Ayrshare if client has profile key and auto_approve is on
+      if (autoApprove && insertedPost?.id) {
+        const { data: clientData } = await supabase
+          .from("clients")
+          .select("ayrshare_profile_key")
+          .eq("id", client.id)
+          .single();
+
+        if (clientData?.ayrshare_profile_key) {
+          try {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+            await fetch(`${baseUrl}/api/ayrshare/publish`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ postId: insertedPost.id }),
+            });
+            console.log(`[weekly-social] ✓ Published to Ayrshare: ${client.business_name}`);
+          } catch (publishErr: any) {
+            console.error(`[weekly-social] Ayrshare publish failed for ${client.business_name}:`, publishErr.message);
+          }
+        }
+      }
+
+      // Step 7: Log activity
       await supabase.from("activities").insert({
         client_id: client.id,
         type: "post",

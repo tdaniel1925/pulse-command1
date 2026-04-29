@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { User, Bell, Shield, Save, Eye, EyeOff, AlertTriangle } from "lucide-react";
+import { User, Bell, Shield, Save, Eye, EyeOff, AlertTriangle, Share2 } from "lucide-react";
 import { BillingPortalButton } from "@/components/dashboard/BillingPortalButton";
+import { ConnectSocialAccounts } from "@/components/dashboard/ConnectSocialAccounts";
 
-type Tab = "profile" | "notifications" | "security";
+type Tab = "profile" | "notifications" | "security" | "social";
 
 function Toggle({
   checked,
@@ -107,6 +108,7 @@ export default function SettingsPage() {
   const tabs: { key: Tab; label: string; Icon: React.ElementType }[] = [
     { key: "profile", label: "Profile", Icon: User },
     { key: "notifications", label: "Notifications", Icon: Bell },
+    { key: "social", label: "Social", Icon: Share2 },
     { key: "security", label: "Security", Icon: Shield },
   ];
 
@@ -227,8 +229,13 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* Save button */}
-        <div className="mt-6 pt-5 border-t border-neutral-100 flex items-center gap-3">
+        {/* Social Tab */}
+        {activeTab === "social" && (
+          <ConnectSocialAccounts connectedPlatforms={[]} />
+        )}
+
+        {/* Save button — hidden on social tab */}
+        {activeTab !== "social" && <div className="mt-6 pt-5 border-t border-neutral-100 flex items-center gap-3">
           <button
             onClick={handleSave}
             className="flex items-center gap-2 px-5 py-2.5 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-colors"
@@ -237,7 +244,7 @@ export default function SettingsPage() {
             Save Changes
           </button>
           {saved && <span className="text-sm text-green-600 font-medium">Saved!</span>}
-        </div>
+        </div>}
       </div>
     </div>
   );

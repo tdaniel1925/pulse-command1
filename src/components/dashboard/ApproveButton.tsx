@@ -22,6 +22,16 @@ export function ApproveButton({ type, id }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ type, id, action }),
       });
+
+      // If approving a social post, publish it via Ayrshare
+      if (action === "approve" && type === "post") {
+        await fetch("/api/ayrshare/publish", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ postId: id }),
+        });
+      }
+
       setDone(action === "approve" ? "approved" : "rejected");
       router.refresh();
     } finally {
