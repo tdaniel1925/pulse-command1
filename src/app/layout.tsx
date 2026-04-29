@@ -5,9 +5,13 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "BundledContent — AI Marketing for Every Business",
+  title: "PulseCommand — AI Marketing for Every Business",
   description:
-    "From automated social posts to AI-powered campaigns. BundledContent gives you a Fortune 500 marketing operation without the overhead.",
+    "From automated social posts to AI-powered campaigns. PulseCommand gives you a Fortune 500 marketing operation without the overhead.",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/favicon.png",
+  },
 };
 
 export default function RootLayout({
