@@ -1,287 +1,244 @@
-import Link from "next/link";
-import { FileText, Film, User, Zap } from "lucide-react";
+import {
+  Share2,
+  Video,
+  Mic,
+  Globe,
+  Calendar,
+  Download,
+  User,
+  GitBranch,
+  CheckCircle,
+  FileText,
+  PlayCircle,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
-import { WelcomeBanner } from "@/components/dashboard/WelcomeBanner";
+import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
 
-// ── helpers ────────────────────────────────────────────────────────────────
-
-function relativeTime(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60_000);
-  const hours = Math.floor(mins / 60);
-  const days = Math.floor(hours / 24);
-  if (mins < 2) return "just now";
-  if (mins < 60) return `${mins} minutes ago`;
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  if (days === 1) return "yesterday";
-  return `${days} days ago`;
-}
-
-function formatDate(dateStr: string | null | undefined): string {
-  if (!dateStr) return "None scheduled";
-  return new Date(dateStr).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  });
-}
-
-const PLATFORM_STYLES: Record<string, string> = {
-  instagram: "bg-pink-100 text-pink-700",
-  facebook: "bg-blue-100 text-blue-700",
-  twitter: "bg-sky-100 text-sky-700",
-  linkedin: "bg-blue-100 text-blue-800",
-  tiktok: "bg-neutral-100 text-neutral-700",
-};
-
-function PlatformPill({ platform }: { platform: string }) {
-  const key = platform.toLowerCase();
+const PlatformBadge = ({ platform }: { platform: string }) => {
+  const styles: Record<string, string> = {
+    Instagram: "bg-pink-100 text-pink-700",
+    Facebook: "bg-blue-100 text-blue-700",
+    Twitter: "bg-sky-100 text-sky-700",
+    LinkedIn: "bg-blue-100 text-blue-800",
+    TikTok: "bg-neutral-100 text-neutral-700",
+    instagram: "bg-pink-100 text-pink-700",
+    facebook: "bg-blue-100 text-blue-700",
+    twitter: "bg-sky-100 text-sky-700",
+    linkedin: "bg-blue-100 text-blue-800",
+    tiktok: "bg-neutral-100 text-neutral-700",
+  };
   return (
-    <span
-      className={`text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize ${PLATFORM_STYLES[key] ?? "bg-neutral-100 text-neutral-600"}`}
-    >
+    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize ${styles[platform] ?? "bg-neutral-100 text-neutral-600"}`}>
       {platform}
     </span>
   );
-}
-
-const ACTIVITY_ICONS: Record<string, React.ElementType> = {
-  post: FileText,
-  video: Film,
-  onboarding: User,
 };
 
-// ── page ───────────────────────────────────────────────────────────────────
+const quickActions = [
+  { label: "View Social Calendar", icon: Calendar, color: "bg-blue-50 text-blue-700" },
+  { label: "Download Report", icon: Download, color: "bg-neutral-100 text-neutral-700" },
+  { label: "Update Profile", icon: User, color: "bg-neutral-100 text-neutral-700" },
+  { label: "View Workflow", icon: GitBranch, color: "bg-violet-50 text-violet-700" },
+];
+
+function timeAgo(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffHours < 1) return "Just now";
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays === 1) return "Yesterday";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+function formatScheduledDate(dateStr: string | null): string {
+  if (!dateStr) return "—";
+  return new Date(dateStr).toLocaleDateString("en-US", {
+    month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit",
+  });
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+  const { data: { user } } = await supabase.auth.getUser();
   const { data: client } = await supabase
     .from("clients")
-    .select("id, business_name, status, created_at")
+    .select("*")
     .eq("user_id", user?.id ?? "")
     .single();
 
-  if (!client) {
-    return (
-      <div className="flex flex-col items-center justify-center py-24 gap-4">
-        <p className="text-neutral-600 text-lg">Your account setup isn't complete yet.</p>
-        <Link
-          href="/onboarding/welcome"
-          className="px-5 py-2.5 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition-colors"
-        >
-          Complete Onboarding →
-        </Link>
-      </div>
-    );
-  }
+  const { count: publishedPosts } = await supabase
+    .from("social_posts").select("*", { count: "exact", head: true })
+    .eq("client_id", client?.id ?? "").eq("status", "published");
 
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const { count: scheduledPosts } = await supabase
+    .from("social_posts").select("*", { count: "exact", head: true })
+    .eq("client_id", client?.id ?? "").eq("status", "scheduled");
 
-  const [
-    { count: publishedCount },
-    { count: pendingCount },
-    { data: nextPostArr },
-    { data: lastPostArr },
-    { data: activities },
-  ] = await Promise.all([
-    supabase
-      .from("social_posts")
-      .select("id", { count: "exact" })
-      .eq("client_id", client.id)
-      .eq("status", "published")
-      .gte("created_at", startOfMonth),
-    supabase
-      .from("social_posts")
-      .select("id", { count: "exact" })
-      .eq("client_id", client.id)
-      .eq("status", "pending_approval"),
-    supabase
-      .from("social_posts")
-      .select("id, scheduled_at, platforms")
-      .eq("client_id", client.id)
-      .eq("status", "scheduled")
-      .gte("scheduled_at", now.toISOString())
-      .order("scheduled_at", { ascending: true })
-      .limit(1),
-    supabase
-      .from("social_posts")
-      .select("id, content, image_url, platforms, status, published_at, metadata")
-      .eq("client_id", client.id)
-      .eq("status", "published")
-      .order("published_at", { ascending: false })
-      .limit(1),
-    supabase
-      .from("activities")
-      .select("id, type, title, description, created_at")
-      .eq("client_id", client.id)
-      .order("created_at", { ascending: false })
-      .limit(5),
-  ]);
+  const { data: upcomingPosts } = await supabase
+    .from("social_posts").select("*")
+    .eq("client_id", client?.id ?? "").eq("status", "scheduled")
+    .order("scheduled_at", { ascending: true }).limit(3);
 
-  const nextPost = nextPostArr?.[0] ?? null;
-  const lastPost = lastPostArr?.[0] ?? null;
+  const { data: recentActivities } = await supabase
+    .from("activities").select("*")
+    .eq("client_id", client?.id ?? "")
+    .order("created_at", { ascending: false }).limit(5);
 
-  const hour = now.getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-  const businessName = client.business_name ?? "there";
+  const { count: videosReady } = await supabase
+    .from("videos").select("*", { count: "exact", head: true })
+    .eq("client_id", client?.id ?? "").eq("status", "ready");
+
+  const { count: audioReady } = await supabase
+    .from("audio_episodes").select("*", { count: "exact", head: true })
+    .eq("client_id", client?.id ?? "").eq("status", "ready");
+
+  const { count: activePages } = await supabase
+    .from("landing_pages").select("*", { count: "exact", head: true })
+    .eq("client_id", client?.id ?? "").eq("status", "live");
+
+  const totalPosts = (publishedPosts ?? 0) + (scheduledPosts ?? 0);
+
+  const stats = [
+    { label: "Posts This Month", value: String(totalPosts), sub: "published + scheduled", icon: Share2, color: "text-blue-600 bg-blue-50" },
+    { label: "Videos Ready", value: String(videosReady ?? 0), sub: "ready to view", icon: Video, color: "text-violet-600 bg-violet-50" },
+    { label: "Audio Episodes", value: String(audioReady ?? 0), sub: "ready to listen", icon: Mic, color: "text-orange-600 bg-orange-50" },
+    { label: "Active Landing Pages", value: String(activePages ?? 0), sub: "currently live", icon: Globe, color: "text-green-600 bg-green-50" },
+  ];
+
+  const firstName = client?.first_name ?? "there";
 
   return (
     <div className="space-y-6">
-      {/* Welcome banner (client component) */}
       <WelcomeBanner />
+      {/* Welcome banner */}
+      <div className="bg-primary-600 rounded-2xl px-6 py-5 text-white">
+        <p className="text-lg font-bold">Good morning, {firstName}!</p>
+        <p className="text-primary-200 text-sm mt-0.5">Your content machine is running.</p>
+      </div>
 
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-neutral-900">
-          {greeting}, {businessName}
-        </h1>
+      {/* Trial status card */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-6 py-4 flex items-center justify-between">
+        <div>
+          <p className="font-semibold text-yellow-800 text-sm">You have 18 days left in your free trial</p>
+          <p className="text-yellow-600 text-xs mt-0.5">Upgrade to keep your content flowing after May 15.</p>
+        </div>
+        <button className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap">
+          Upgrade Now
+        </button>
       </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-4 gap-4">
-        {/* Posts This Month */}
-        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
-          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Posts This Month</p>
-          <p className="text-3xl font-bold text-blue-600">{publishedCount ?? 0}</p>
-          <p className="text-xs text-neutral-400 mt-1">published</p>
-        </div>
-
-        {/* Pending Approval */}
-        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
-          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Pending Approval</p>
-          <p className={`text-3xl font-bold ${(pendingCount ?? 0) > 0 ? "text-amber-500" : "text-neutral-400"}`}>
-            {pendingCount ?? 0}
-          </p>
-          {(pendingCount ?? 0) > 0 ? (
-            <Link href="/dashboard/social" className="text-xs text-amber-600 underline mt-1 block">
-              Review now →
-            </Link>
-          ) : (
-            <p className="text-xs text-neutral-400 mt-1">none waiting</p>
-          )}
-        </div>
-
-        {/* Next Post */}
-        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
-          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Next Post</p>
-          <p className="text-sm font-semibold text-blue-600 mt-1">
-            {nextPost ? formatDate(nextPost.scheduled_at) : "None scheduled"}
-          </p>
-        </div>
-
-        {/* Account Status */}
-        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
-          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Account Status</p>
-          {client.status === "active" ? (
-            <span className="inline-block px-2.5 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-              Active
-            </span>
-          ) : (
-            <div className="space-y-1">
-              <span className="inline-block px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
-                Setup needed
-              </span>
-              <Link href="/onboarding/welcome" className="text-xs text-amber-600 underline block">
-                Complete setup →
-              </Link>
+        {stats.map((s) => (
+          <div key={s.label} className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
+            <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${s.color}`}>
+              <s.icon className="w-4 h-4" />
             </div>
-          )}
-        </div>
+            <p className="text-2xl font-bold text-neutral-900">
+              {s.value}
+              <span className="text-sm font-normal text-neutral-400 ml-1">{s.sub}</span>
+            </p>
+            <p className="text-xs text-neutral-500 mt-0.5">{s.label}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Last post preview */}
-      {lastPost && (
-        <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
-          <div className="flex gap-4">
-            {/* Thumbnail */}
-            <div className="w-28 h-28 rounded-xl overflow-hidden flex-shrink-0 bg-neutral-100">
-              {lastPost.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={lastPost.image_url} alt="" className="w-full h-full object-cover" />
-              ) : null}
-            </div>
+      <div className="grid grid-cols-3 gap-6">
+        {/* This Month's Content */}
+        <div className="col-span-2 space-y-4">
+          <h2 className="font-semibold text-neutral-900">Upcoming Scheduled Posts</h2>
 
-            {/* Info */}
-            <div className="flex-1 min-w-0 space-y-2">
-              <p className="text-sm text-neutral-700 line-clamp-2">{lastPost.content}</p>
-              <div className="flex gap-1 flex-wrap">
-                {(Array.isArray(lastPost.platforms) ? lastPost.platforms : []).map((p: string) => (
-                  <PlatformPill key={p} platform={p} />
-                ))}
-              </div>
-              <span className="inline-block px-2.5 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
-                Published
-              </span>
+          {upcomingPosts && upcomingPosts.length > 0 ? (
+            <div className="grid grid-cols-3 gap-4">
+              {upcomingPosts.map((post) => {
+                const platforms: string[] = Array.isArray(post.platforms) ? post.platforms : [];
+                return (
+                  <div key={post.id} className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
+                    {/* Image placeholder */}
+                    <div className="h-28 bg-neutral-100 flex items-center justify-center">
+                      {post.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={post.image_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <Share2 className="w-6 h-6 text-neutral-300" />
+                      )}
+                    </div>
+                    <div className="p-3 space-y-2">
+                      {/* Platform badges */}
+                      <div className="flex gap-1 flex-wrap">
+                        {platforms.map((p) => <PlatformBadge key={p} platform={p} />)}
+                      </div>
+                      <p className="text-xs text-neutral-700 line-clamp-2">{post.content}</p>
+                      <p className="text-xs text-neutral-400">{formatScheduledDate(post.scheduled_at)}</p>
+                      <span className="inline-block text-xs font-medium bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
+                        Scheduled
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
-          </div>
-          <div className="flex justify-end mt-3">
-            <Link href="/dashboard/social" className="text-xs text-indigo-600 font-medium hover:underline">
-              View all posts →
-            </Link>
+          ) : (
+            <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-8 text-center">
+              <Share2 className="w-8 h-8 text-neutral-300 mx-auto mb-3" />
+              <p className="text-sm text-neutral-500">No scheduled posts yet — your first batch will arrive within 48 hours of onboarding.</p>
+            </div>
+          )}
+
+          {/* Quick Actions */}
+          <h2 className="font-semibold text-neutral-900 pt-2">Quick Actions</h2>
+          <div className="grid grid-cols-4 gap-3">
+            {quickActions.map((a) => (
+              <button
+                key={a.label}
+                className={`flex flex-col items-center gap-2 p-4 rounded-2xl border border-neutral-200 bg-white hover:shadow-sm transition-shadow text-center`}
+              >
+                <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${a.color}`}>
+                  <a.icon className="w-4 h-4" />
+                </span>
+                <span className="text-xs font-medium text-neutral-700 leading-tight">{a.label}</span>
+              </button>
+            ))}
           </div>
         </div>
-      )}
 
-      {/* Recent activity */}
-      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
-        <h2 className="text-base font-semibold text-neutral-900 mb-4">Recent Activity</h2>
-        {activities && activities.length > 0 ? (
-          <ul className="space-y-3">
-            {activities.map((item) => {
-              const Icon = ACTIVITY_ICONS[item.type ?? ""] ?? Zap;
-              return (
-                <li key={item.id} className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-neutral-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Icon className="w-3.5 h-3.5 text-neutral-500" />
+        {/* Recent Activity */}
+        <div className="space-y-4">
+          <h2 className="font-semibold text-neutral-900">Recent Activity</h2>
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 space-y-4">
+            {recentActivities && recentActivities.length > 0 ? (
+              recentActivities.map((item, i) => {
+                // Pick icon based on activity type
+                const iconMap: Record<string, { icon: React.ElementType; color: string }> = {
+                  post: { icon: CheckCircle, color: "text-green-600" },
+                  video: { icon: PlayCircle, color: "text-violet-600" },
+                  report: { icon: FileText, color: "text-blue-600" },
+                  page: { icon: Globe, color: "text-green-600" },
+                  audio: { icon: Mic, color: "text-orange-600" },
+                };
+                const typeKey = item.type ?? "post";
+                const { icon: Icon, color } = iconMap[typeKey] ?? { icon: CheckCircle, color: "text-neutral-500" };
+                return (
+                  <div key={item.id} className="flex gap-3">
+                    <div className="flex flex-col items-center">
+                      <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${color}`} />
+                      {i < recentActivities.length - 1 && <div className="w-px flex-1 bg-neutral-100 mt-1" />}
+                    </div>
+                    <div className="pb-3 min-w-0">
+                      <p className="text-xs text-neutral-700 leading-snug">{item.description ?? item.text}</p>
+                      <p className="text-xs text-neutral-400 mt-0.5">{timeAgo(item.created_at)}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-neutral-900">{item.title}</p>
-                    {item.description && (
-                      <p className="text-sm text-neutral-500">{item.description}</p>
-                    )}
-                  </div>
-                  <span className="text-xs text-neutral-400 flex-shrink-0 mt-0.5">
-                    {relativeTime(item.created_at)}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p className="text-sm text-neutral-400 text-center py-4">
-            No activity yet — your first post is on its way.
-          </p>
-        )}
-      </div>
-
-      {/* Quick actions */}
-      <div className="flex gap-3">
-        <Link
-          href="/dashboard/social"
-          className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors"
-        >
-          Social Posts
-        </Link>
-        <Link
-          href="/dashboard/settings"
-          className="px-5 py-2.5 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-700 text-sm font-semibold rounded-xl transition-colors"
-        >
-          Connect Accounts
-        </Link>
-        <Link
-          href="/dashboard/report"
-          className="px-5 py-2.5 bg-white border border-neutral-200 hover:bg-neutral-50 text-neutral-700 text-sm font-semibold rounded-xl transition-colors"
-        >
-          View Report
-        </Link>
+                );
+              })
+            ) : (
+              <p className="text-xs text-neutral-400 text-center py-4">No activity yet — check back after your first content batch.</p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
