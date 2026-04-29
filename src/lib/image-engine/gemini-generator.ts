@@ -59,8 +59,8 @@ export async function generateWithGemini(
       const result = await model.generateContent({
         contents: [{ role: 'user', parts }],
         generationConfig: {
-          // @ts-expect-error — responseModalities is valid for imagen models
-          responseModalities: ['IMAGE'],
+          // @ts-expect-error — responseModalities is valid for gemini image models
+          responseModalities: ['TEXT', 'IMAGE'],
         },
       });
 

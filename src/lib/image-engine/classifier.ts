@@ -101,7 +101,8 @@ Return ONLY valid JSON, no markdown:
 
   let result: ClassificationResult;
   try {
-    const parsed = JSON.parse(text.trim());
+    const cleaned = text.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '');
+    const parsed = JSON.parse(cleaned);
     result = {
       primary_type: parsed.primary_type as ImageType,
       reasoning: parsed.reasoning,

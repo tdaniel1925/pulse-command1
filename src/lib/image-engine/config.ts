@@ -4,8 +4,8 @@ export type { ImageType };
 // ─── Gemini Model IDs ────────────────────────────────────────────────────────
 
 export const GEMINI_MODELS: Record<GeminiModel, string> = {
-  nano_banana_2:  'imagen-4.0-generate-001',
-  nano_banana_pro: 'imagen-4.0-ultra-001',
+  nano_banana_2:   'gemini-2.5-flash-image',
+  nano_banana_pro: 'gemini-3.1-flash-image-preview',
 };
 
 // ─── Brand Vibe → Preferred Styles ──────────────────────────────────────────
