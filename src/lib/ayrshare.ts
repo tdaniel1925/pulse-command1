@@ -106,3 +106,48 @@ export async function deleteAyrshareProfile(profileKey: string): Promise<void> {
     body: JSON.stringify({ profileKey }),
   });
 }
+
+// ─── Get engagement for a single post ────────────────────────────────────────
+
+export async function getPostEngagement(profileKey: string, postId: string): Promise<{
+  likes: number; comments: number; shares: number; impressions: number;
+}> {
+  try {
+    const res = await fetch(`${BASE}/analytics/post?id=${postId}`, {
+      headers: headers(profileKey),
+    });
+    if (!res.ok) return { likes: 0, comments: 0, shares: 0, impressions: 0 };
+    const data = await res.json();
+    return {
+      likes: data.likes ?? 0,
+      comments: data.comments ?? 0,
+      shares: data.shares ?? 0,
+      impressions: data.impressions ?? 0,
+    };
+  } catch {
+    return { likes: 0, comments: 0, shares: 0, impressions: 0 };
+  }
+}
+
+// ─── Get analytics summary for a profile ─────────────────────────────────────
+
+export async function getProfileAnalyticsSummary(profileKey: string): Promise<{
+  totalPosts: number;
+  totalEngagement: number;
+  platformBreakdown: Record<string, { posts: number; engagement: number }>;
+}> {
+  try {
+    const res = await fetch(`${BASE}/analytics/social`, {
+      headers: headers(profileKey),
+    });
+    if (!res.ok) return { totalPosts: 0, totalEngagement: 0, platformBreakdown: {} };
+    const data = await res.json();
+    return {
+      totalPosts: data.totalPosts ?? 0,
+      totalEngagement: data.totalEngagement ?? 0,
+      platformBreakdown: data.platformBreakdown ?? {},
+    };
+  } catch {
+    return { totalPosts: 0, totalEngagement: 0, platformBreakdown: {} };
+  }
+}
