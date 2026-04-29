@@ -2,8 +2,16 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import { CheckCircle, X } from 'lucide-react';
 import { SlideRenderer } from './SlideRenderer';
 import type { Slide } from './SlideRenderer';
+
+interface SlideGrade {
+  index: number;
+  score: number;
+  flag: 'too_much_text' | 'too_vague' | 'no_visual' | 'weak_title' | 'missing_cta' | null;
+  suggestion: string | null;
+}
 
 export type { Slide };
 export type { SlideLayout } from './SlideRenderer';
@@ -36,6 +44,9 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
   const [isPolling, setIsPolling] = useState(isGenerating || initialPresentation.status === 'generating');
   const [exportLoading, setExportLoading] = useState<'pdf' | 'pptx' | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [grades, setGrades] = useState<SlideGrade[] | null>(null);
+  const [showGrader, setShowGrader] = useState(false);
+  const [isGrading, setIsGrading] = useState(false);
 
   const slidesRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -241,6 +252,22 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
     }
   };
 
+  // ── GRADE DECK ─────────────────────────────────────────────────────────────
+  const handleGrade = async () => {
+    try {
+      setIsGrading(true);
+      const res = await fetch(`/api/presentations/${presentation.id}/grade`, { method: 'POST' });
+      if (!res.ok) throw new Error('Grade request failed');
+      const data = await res.json() as { grades: SlideGrade[] };
+      setGrades(data.grades);
+      setShowGrader(true);
+    } catch {
+      showToast('Grading failed. Please try again.');
+    } finally {
+      setIsGrading(false);
+    }
+  };
+
   // ── FULLSCREEN MODE ────────────────────────────────────────────────────────
   if (isFullscreen) {
     return (
@@ -346,6 +373,23 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
             }`}
           >
             Thumbnails
+          </button>
+          <button
+            onClick={handleGrade}
+            disabled={isGrading || isPolling}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition-colors disabled:opacity-50"
+          >
+            {isGrading ? (
+              <>
+                <span className="w-3 h-3 border-2 border-neutral-300 border-t-neutral-600 rounded-full animate-spin" />
+                Grading…
+              </>
+            ) : (
+              <>
+                <CheckCircle className="w-3.5 h-3.5" />
+                Grade Deck
+              </>
+            )}
           </button>
           <button
             onClick={() => setIsFullscreen(true)}
@@ -456,6 +500,79 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
           )}
         </div>
       </div>
+
+      {/* Grader Panel */}
+      {showGrader && grades && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-neutral-200 shadow-lg max-h-64 overflow-y-auto">
+          <div className="px-4 py-3">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-semibold text-neutral-900">Deck Quality Report</span>
+                {(() => {
+                  const avg = Math.round(grades.reduce((sum, g) => sum + g.score, 0) / grades.length);
+                  const color = avg >= 7 ? 'bg-green-100 text-green-700' : avg >= 5 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700';
+                  return (
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${color}`}>
+                      {avg}/10
+                    </span>
+                  );
+                })()}
+                {grades.some((g) => g.score < 7) && (
+                  <span className="text-xs text-amber-600 font-medium">
+                    {grades.filter((g) => g.score < 7).length} slides need attention
+                  </span>
+                )}
+              </div>
+              <button
+                onClick={() => setShowGrader(false)}
+                className="p-1 text-neutral-400 hover:text-neutral-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Grade pills */}
+            <div className="flex flex-wrap gap-2">
+              {grades.map((grade) => {
+                const scoreColor =
+                  grade.score >= 7
+                    ? 'bg-green-50 border-green-200 text-green-700'
+                    : grade.score >= 5
+                    ? 'bg-amber-50 border-amber-200 text-amber-700'
+                    : 'bg-red-50 border-red-200 text-red-700';
+                const badgeColor =
+                  grade.score >= 7
+                    ? 'bg-green-100 text-green-800'
+                    : grade.score >= 5
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-red-100 text-red-800';
+
+                return (
+                  <div key={grade.index} className="relative group">
+                    <button
+                      onClick={() => setCurrentSlide(grade.index)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-medium transition-colors hover:opacity-80 ${scoreColor}`}
+                    >
+                      <span>Slide {grade.index + 1}</span>
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${badgeColor}`}>
+                        {grade.score}
+                      </span>
+                      {grade.flag && <span>⚠️</span>}
+                    </button>
+                    {grade.suggestion && (
+                      <div className="absolute bottom-full left-0 mb-2 w-64 bg-neutral-900 text-white text-xs rounded-lg px-3 py-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50 leading-relaxed">
+                        {grade.suggestion}
+                        <div className="absolute top-full left-4 border-4 border-transparent border-t-neutral-900" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

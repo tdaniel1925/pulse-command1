@@ -14,7 +14,8 @@ export type SlideLayout =
   | 'nano_statement'
   | 'nano_number'
   | 'nano_question'
-  | 'nano_quote';
+  | 'nano_quote'
+  | 'exec_summary';
 
 export interface Slide {
   index: number;
@@ -399,6 +400,46 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
           {slide.subtitle && (
             <p className="text-neutral-400 text-base mt-6">&mdash; {slide.subtitle}</p>
           )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── EXEC SUMMARY ───────────────────────────────────────────────────────────
+  if (slide.layout === 'exec_summary') {
+    const bullets = slide.bullets ?? [];
+    return (
+      <div className="w-full h-full bg-white flex flex-col overflow-hidden">
+        {/* Top accent rule */}
+        <div className="h-[3px] w-full flex-shrink-0" style={{ backgroundColor: accent }} />
+        <div className={`flex-1 flex flex-col ${pad} pt-8`}>
+          {/* Section label */}
+          <p
+            className="text-sm font-semibold uppercase tracking-widest mb-6"
+            style={{ color: accent }}
+          >
+            Executive Summary
+          </p>
+          {/* Bullet items */}
+          <ul className="flex flex-col gap-4 flex-1 justify-center">
+            {bullets.map((bullet, i) => {
+              const colonIdx = bullet.indexOf(': ');
+              const keyTerm = colonIdx !== -1 ? bullet.slice(0, colonIdx) : bullet;
+              const rest = colonIdx !== -1 ? bullet.slice(colonIdx + 2) : '';
+              return (
+                <li key={i} className="flex items-start gap-3">
+                  <span
+                    className="mt-1 flex-shrink-0 rounded-sm"
+                    style={{ width: 8, height: 8, backgroundColor: accent }}
+                  />
+                  <span className="text-base leading-relaxed">
+                    <span className="font-bold text-neutral-900">{keyTerm}:</span>
+                    {rest && <span className="font-normal text-neutral-600"> {rest}</span>}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </div>
     );

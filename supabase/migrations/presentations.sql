@@ -41,3 +41,8 @@ alter table presentations add column if not exists source_content text; -- paste
 alter table presentations add column if not exists source_url text; -- URL if mode=url
 alter table presentations add column if not exists slide_style text default 'regular'; -- regular | nano
 alter table presentations add column if not exists interview_answers jsonb; -- Q&A from interview mode
+
+-- Add template and deck mode columns
+alter table presentations add column if not exists template_id text default 'pitch';
+alter table presentations add column if not exists deck_mode text default 'standard';
+alter table presentations add column if not exists narrative_framework text default 'free';

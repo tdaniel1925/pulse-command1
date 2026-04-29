@@ -63,6 +63,9 @@ export async function POST(req: NextRequest) {
     sourceUrl,
     slideStyle,
     interviewAnswers,
+    templateId,
+    deckMode,
+    narrativeFramework,
   } = body as {
     topic: string;
     audience?: string;
@@ -73,6 +76,9 @@ export async function POST(req: NextRequest) {
     sourceUrl?: string;
     slideStyle?: 'regular' | 'nano';
     interviewAnswers?: Record<string, string>;
+    templateId?: string;
+    deckMode?: string;
+    narrativeFramework?: string;
   };
 
   if (!topic) {
@@ -101,6 +107,9 @@ export async function POST(req: NextRequest) {
       source_url: sourceUrl ?? null,
       slide_style: slideStyle ?? 'regular',
       interview_answers: interviewAnswers ?? null,
+      template_id: templateId ?? 'pitch',
+      deck_mode: deckMode ?? 'standard',
+      narrative_framework: narrativeFramework ?? 'free',
     })
     .select('id')
     .single();

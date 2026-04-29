@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import type { TemplateId, DeckMode, NarrativeFramework } from "@/lib/presentation-templates";
+import { getAllTemplates, narrativeFrameworks, getAllDeckModes } from "@/lib/presentation-templates";
 
 interface Props {
   open: boolean;
@@ -13,7 +15,6 @@ interface Props {
 
 type Tone = "professional" | "inspiring" | "educational" | "casual";
 type SourceMode = "ai" | "paste" | "url" | "interview";
-type SlideStyle = "regular" | "nano";
 
 const TONES: { value: Tone; label: string; icon: React.ReactNode }[] = [
   {
@@ -114,24 +115,37 @@ const MODE_CARDS: {
   },
 ];
 
+const DECK_MODE_CARDS: { value: DeckMode; emoji: string; name: string; desc: string }[] = [
+  { value: "standard", emoji: "📊", name: "Standard", desc: "Balanced" },
+  { value: "nano", emoji: "⚡", name: "Nano", desc: "One idea/slide" },
+  { value: "infographic", emoji: "📈", name: "Infographic", desc: "Data-visual" },
+  { value: "document", emoji: "📄", name: "Document", desc: "Dense detail" },
+  { value: "story", emoji: "🎬", name: "Story", desc: "Visual-first" },
+];
+
 export function NewPresentationModal({ open, onClose, presentationsUsed, presentationsLimit }: Props) {
   const router = useRouter();
-  // Step 0 = mode select, 1 = content, 2 = style, 3 = review
+  // Step 0 = mode select, 1 = content, 2 = template & narrative, 3 = style, 4 = review
   const [step, setStep] = useState(0);
   const [sourceMode, setSourceMode] = useState<SourceMode>("ai");
   const [topic, setTopic] = useState("");
   const [audience, setAudience] = useState("");
   const [tone, setTone] = useState<Tone>("professional");
   const [slideCount, setSlideCount] = useState(10);
-  const [slideStyle, setSlideStyle] = useState<SlideStyle>("regular");
   const [sourceContent, setSourceContent] = useState("");
   const [sourceUrl, setSourceUrl] = useState("");
   const [interviewAnswers, setInterviewAnswers] = useState<Record<string, string>>({});
+  const [templateId, setTemplateId] = useState<TemplateId>("pitch");
+  const [narrativeFramework, setNarrativeFramework] = useState<NarrativeFramework>("free");
+  const [deckMode, setDeckMode] = useState<DeckMode>("standard");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showUpgrade, setShowUpgrade] = useState(false);
 
   const atLimit = presentationsUsed >= presentationsLimit;
+  const allTemplates = getAllTemplates();
+  const allNarrativeFrameworks = narrativeFrameworks;
+  const allDeckModes = getAllDeckModes();
 
   function handleClose() {
     setStep(0);
@@ -140,10 +154,12 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
     setAudience("");
     setTone("professional");
     setSlideCount(10);
-    setSlideStyle("regular");
     setSourceContent("");
     setSourceUrl("");
     setInterviewAnswers({});
+    setTemplateId("pitch");
+    setNarrativeFramework("free");
+    setDeckMode("standard");
     setLoading(false);
     setError(null);
     setShowUpgrade(false);
@@ -160,7 +176,6 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
     return false;
   }
 
-  // Derive topic for non-ai modes
   function resolvedTopic(): string {
     if (sourceMode === "ai") return topic;
     if (sourceMode === "paste") return topic || "Presentation from provided content";
@@ -186,8 +201,10 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
           sourceMode,
           sourceContent: sourceMode === "paste" ? sourceContent : undefined,
           sourceUrl: sourceMode === "url" ? sourceUrl : undefined,
-          slideStyle,
           interviewAnswers: sourceMode === "interview" ? interviewAnswers : undefined,
+          templateId,
+          narrativeFramework,
+          deckMode,
         }),
       });
       const data = await res.json();
@@ -208,12 +225,17 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
 
   if (!open) return null;
 
-  // Total steps: 0, 1, 2, 3 → show 4 dots
-  const totalSteps = 4;
+  // Total steps: 0, 1, 2, 3, 4 → show 5 dots
+  const totalSteps = 5;
+
+  // Helper to find deck mode label for review
+  const selectedDeckModeCard = DECK_MODE_CARDS.find((c) => c.value === deckMode);
+  const selectedTemplate = allTemplates.find((t) => t.id === templateId);
+  const selectedNarrative = allNarrativeFrameworks.find((f) => f.id === narrativeFramework);
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-lg relative">
+      <div className="bg-white rounded-2xl p-8 w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={handleClose}
@@ -304,7 +326,6 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                             : "border-neutral-200 bg-white hover:border-neutral-300"
                         }`}
                       >
-                        {/* Checkmark */}
                         {selected && (
                           <span className="absolute top-2 right-2 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
@@ -472,7 +493,7 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                     <p className="text-sm text-neutral-500 mb-6">Answer 5 questions — we&apos;ll build your custom deck.</p>
                     <div className="space-y-4">
                       {INTERVIEW_QUESTIONS.map((q, i) => {
-                        const isTextarea = i === 3; // Q4 is a textarea
+                        const isTextarea = i === 3;
                         return (
                           <div key={q}>
                             <label className="block text-sm font-medium text-neutral-700 mb-1.5">
@@ -523,11 +544,136 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
               </div>
             )}
 
-            {/* ── STEP 2: Style & length ── */}
+            {/* ── STEP 2: Template & Narrative ── */}
             {step === 2 && (
               <div>
+                <h2 className="text-xl font-bold text-neutral-900 mb-1">Template &amp; Structure</h2>
+                <p className="text-sm text-neutral-500 mb-6">Choose a look and a storytelling framework.</p>
+
+                {/* Section A: Template picker */}
+                <p className="text-sm font-medium text-neutral-700 mb-2">Choose a Template</p>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  {allTemplates.map((tmpl) => {
+                    const selected = templateId === tmpl.id;
+                    return (
+                      <button
+                        key={tmpl.id}
+                        onClick={() => setTemplateId(tmpl.id)}
+                        className={`relative text-left rounded-xl border-2 p-4 transition-all ${
+                          selected
+                            ? "border-indigo-500 bg-indigo-50"
+                            : "border-neutral-200 bg-white hover:border-neutral-300"
+                        }`}
+                      >
+                        {selected && (
+                          <span className="absolute top-2 right-2 w-5 h-5 bg-indigo-600 rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                            </svg>
+                          </span>
+                        )}
+                        {/* Preview swatch */}
+                        {tmpl.id === "obsidian" ? (
+                          <div
+                            className="h-16 rounded-lg mb-3 border border-neutral-700"
+                            style={{ background: "#0F0F0F" }}
+                          />
+                        ) : (
+                          <div className={`h-16 rounded-lg mb-3 border ${tmpl.previewGradient}`} />
+                        )}
+                        <p className={`text-sm font-semibold mb-0.5 ${selected ? "text-indigo-700" : "text-neutral-800"}`}>
+                          {tmpl.name}
+                        </p>
+                        <p className="text-xs text-neutral-500 mb-1.5">{tmpl.vibe}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {tmpl.bestFor.slice(0, 2).map((b) => (
+                            <span
+                              key={b}
+                              className="text-[10px] bg-neutral-100 text-neutral-500 rounded-full px-2 py-0.5"
+                            >
+                              {b}
+                            </span>
+                          ))}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Section B: Narrative Structure */}
+                <p className="text-sm font-medium text-neutral-700 mb-2 mt-6">Narrative Structure</p>
+                <div className="grid grid-cols-2 gap-2 mb-6">
+                  {allNarrativeFrameworks.map((fw) => {
+                    const selected = narrativeFramework === fw.id;
+                    return (
+                      <button
+                        key={fw.id}
+                        onClick={() => setNarrativeFramework(fw.id)}
+                        className={`text-left rounded-xl border-2 p-3 transition-all ${
+                          selected
+                            ? "border-indigo-500 bg-indigo-50"
+                            : "border-neutral-200 bg-white hover:border-neutral-300"
+                        }`}
+                      >
+                        <p className={`text-sm font-medium mb-0.5 ${selected ? "text-indigo-700" : "text-neutral-800"}`}>
+                          {fw.name}
+                        </p>
+                        <p className="text-xs text-neutral-400 leading-snug">{fw.description}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Section C: Deck Mode */}
+                <p className="text-sm font-medium text-neutral-700 mb-1 mt-6">Presentation Style</p>
+                <p className="text-xs text-neutral-400 mb-2">How should this deck feel?</p>
+                <div className="grid grid-cols-5 gap-2 mb-6">
+                  {DECK_MODE_CARDS.map((card) => {
+                    const selected = deckMode === card.value;
+                    // Also check against getAllDeckModes for future-proofing, but use our local cards
+                    void allDeckModes;
+                    return (
+                      <button
+                        key={card.value}
+                        onClick={() => setDeckMode(card.value)}
+                        className={`flex flex-col items-center text-center rounded-xl border-2 p-2 transition-all ${
+                          selected
+                            ? "border-indigo-500 bg-indigo-50"
+                            : "border-neutral-200 bg-white hover:border-neutral-300"
+                        }`}
+                      >
+                        <span className="text-lg mb-1">{card.emoji}</span>
+                        <p className={`text-[11px] font-semibold leading-tight ${selected ? "text-indigo-700" : "text-neutral-800"}`}>
+                          {card.name}
+                        </p>
+                        <p className="text-[9px] text-neutral-400 leading-tight mt-0.5">{card.desc}</p>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setStep(1)}
+                    className="flex-1 border border-neutral-200 text-neutral-700 font-semibold rounded-xl py-3 hover:bg-neutral-50 transition-colors"
+                  >
+                    Back
+                  </button>
+                  <button
+                    onClick={() => setStep(3)}
+                    className="flex-1 bg-indigo-600 text-white font-semibold rounded-xl py-3 hover:bg-indigo-700 transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ── STEP 3: Style & Length ── */}
+            {step === 3 && (
+              <div>
                 <h2 className="text-xl font-bold text-neutral-900 mb-1">Style &amp; Length</h2>
-                <p className="text-sm text-neutral-500 mb-6">Choose the tone, slide count, and style.</p>
+                <p className="text-sm text-neutral-500 mb-6">Choose the tone and slide count.</p>
 
                 {/* Tone */}
                 <div className="mb-5">
@@ -553,7 +699,7 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                 </div>
 
                 {/* Slide count */}
-                <div className="mb-5">
+                <div className="mb-6">
                   <p className="text-sm font-medium text-neutral-700 mb-2">Number of slides</p>
                   <div className="flex gap-2">
                     {SLIDE_COUNTS.map((n) => (
@@ -572,63 +718,15 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                   </div>
                 </div>
 
-                {/* Slide style */}
-                <div className="mb-6">
-                  <p className="text-sm font-medium text-neutral-700 mb-2">Slide Style</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Regular */}
-                    <button
-                      onClick={() => setSlideStyle("regular")}
-                      className={`relative text-left rounded-xl border-2 p-4 transition-all ${
-                        slideStyle === "regular"
-                          ? "border-indigo-500 bg-indigo-50"
-                          : "border-neutral-200 hover:border-neutral-300"
-                      }`}
-                    >
-                      {/* Slide icon: rectangle with lines */}
-                      <span className={`mb-2 block ${slideStyle === "regular" ? "text-indigo-600" : "text-neutral-400"}`}>
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
-                        </svg>
-                      </span>
-                      <p className={`text-sm font-semibold mb-0.5 ${slideStyle === "regular" ? "text-indigo-700" : "text-neutral-800"}`}>
-                        Regular
-                      </p>
-                      <p className="text-xs text-neutral-500">Professional &amp; detailed</p>
-                      <p className="text-xs text-neutral-400 mt-1">Best for: Sales decks, reports, training</p>
-                    </button>
-
-                    {/* Nano */}
-                    <button
-                      onClick={() => setSlideStyle("nano")}
-                      className={`relative text-left rounded-xl border-2 p-4 transition-all ${
-                        slideStyle === "nano"
-                          ? "border-indigo-500 bg-indigo-50"
-                          : "border-neutral-200 hover:border-neutral-300"
-                      }`}
-                    >
-                      <span className={`mb-2 block font-black text-xl leading-none ${slideStyle === "nano" ? "text-indigo-600" : "text-neutral-400"}`}>
-                        N
-                      </span>
-                      <p className={`text-sm font-semibold mb-0.5 ${slideStyle === "nano" ? "text-indigo-700" : "text-neutral-800"}`}>
-                        Nano
-                      </p>
-                      <p className="text-xs text-neutral-500">Ultra-minimal, one idea per slide</p>
-                      <p className="text-xs text-neutral-400 mt-1">Best for: Keynotes, pitches, TED-style talks</p>
-                      <p className="text-xs text-indigo-400 mt-1">Recommended: 15–20 slides</p>
-                    </button>
-                  </div>
-                </div>
-
                 <div className="flex gap-3">
                   <button
-                    onClick={() => setStep(1)}
+                    onClick={() => setStep(2)}
                     className="flex-1 border border-neutral-200 text-neutral-700 font-semibold rounded-xl py-3 hover:bg-neutral-50 transition-colors"
                   >
                     Back
                   </button>
                   <button
-                    onClick={() => setStep(3)}
+                    onClick={() => setStep(4)}
                     className="flex-1 bg-indigo-600 text-white font-semibold rounded-xl py-3 hover:bg-indigo-700 transition-colors"
                   >
                     Next
@@ -637,8 +735,8 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
               </div>
             )}
 
-            {/* ── STEP 3: Review & Generate ── */}
-            {step === 3 && (
+            {/* ── STEP 4: Review & Generate ── */}
+            {step === 4 && (
               <div>
                 <h2 className="text-xl font-bold text-neutral-900 mb-1">Review &amp; Generate</h2>
                 <p className="text-sm text-neutral-500 mb-6">Everything look good? Let&apos;s create your presentation.</p>
@@ -646,35 +744,50 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                 <div className="bg-neutral-50 rounded-xl border border-neutral-200 p-4 space-y-3 mb-6">
                   {/* Mode */}
                   <div className="flex items-start gap-3">
-                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0 pt-0.5">Mode</span>
+                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-20 flex-shrink-0 pt-0.5">Mode</span>
                     <span className="text-sm text-neutral-800 capitalize">
                       {MODE_CARDS.find((c) => c.value === sourceMode)?.title ?? sourceMode}
                     </span>
                   </div>
-                  {/* Topic (if applicable) */}
+                  {/* Topic */}
                   {resolvedTopic() && (
                     <div className="flex items-start gap-3">
-                      <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0 pt-0.5">Topic</span>
+                      <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-20 flex-shrink-0 pt-0.5">Topic</span>
                       <span className="text-sm text-neutral-800 line-clamp-2">{resolvedTopic()}</span>
                     </div>
                   )}
                   {audience && (
                     <div className="flex items-start gap-3">
-                      <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0 pt-0.5">Audience</span>
+                      <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-20 flex-shrink-0 pt-0.5">Audience</span>
                       <span className="text-sm text-neutral-800">{audience}</span>
                     </div>
                   )}
+                  {/* Template */}
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0">Tone</span>
+                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-20 flex-shrink-0">Template</span>
+                    <span className="text-sm text-neutral-800">{selectedTemplate?.name ?? templateId}</span>
+                  </div>
+                  {/* Narrative */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-20 flex-shrink-0">Narrative</span>
+                    <span className="text-sm text-neutral-800">{selectedNarrative?.name ?? narrativeFramework}</span>
+                  </div>
+                  {/* Deck mode */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-20 flex-shrink-0">Deck style</span>
+                    <span className="text-sm text-neutral-800">
+                      {selectedDeckModeCard ? `${selectedDeckModeCard.emoji} ${selectedDeckModeCard.name}` : deckMode}
+                    </span>
+                  </div>
+                  {/* Tone */}
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-20 flex-shrink-0">Tone</span>
                     <span className="text-sm text-neutral-800 capitalize">{tone}</span>
                   </div>
+                  {/* Slides */}
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0">Slides</span>
+                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-20 flex-shrink-0">Slides</span>
                     <span className="text-sm text-neutral-800">{slideCount}</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-16 flex-shrink-0">Style</span>
-                    <span className="text-sm text-neutral-800 capitalize">{slideStyle}</span>
                   </div>
                 </div>
 
@@ -692,7 +805,7 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                 ) : (
                   <div className="flex gap-3">
                     <button
-                      onClick={() => setStep(2)}
+                      onClick={() => setStep(3)}
                       className="flex-1 border border-neutral-200 text-neutral-700 font-semibold rounded-xl py-3 hover:bg-neutral-50 transition-colors"
                     >
                       Back
