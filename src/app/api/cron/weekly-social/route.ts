@@ -50,6 +50,8 @@ async function generatePredisPost(params: {
   if (params.targetAudience) contextParts.push(`Audience: ${params.targetAudience.slice(0, 80)}`);
   const text = contextParts.join(" | ");
 
+  const webhookUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/predis`;
+
   const formData = new FormData();
   formData.append("brand_id", PREDIS_BRAND_ID);
   formData.append("text", text);
@@ -57,6 +59,7 @@ async function generatePredisPost(params: {
   formData.append("model_version", "4");
   formData.append("n_posts", "1");
   formData.append("brand_details", brandDetails);
+  formData.append("webhook_url", webhookUrl);
 
   const res = await fetch("https://brain.predis.ai/predis_api/v1/create_content/", {
     method: "POST",

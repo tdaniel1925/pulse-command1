@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       autoApprove = clientRow?.auto_approve ?? true
     }
 
-    if (status === 'failed' || !imageUrl) {
+    if (status === 'failed') {
       console.error('Predis generation failed for post_id:', postId)
       if (existingPost) {
         await admin
