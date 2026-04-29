@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendPostApprovedEmail } from '@/lib/email'
 
 // POST /api/content/approve
 // Body: { type: 'post' | 'video', id: string, action: 'approve' | 'reject' }
@@ -45,14 +46,37 @@ export async function POST(request: NextRequest) {
         created_by: user.id,
       })
 
-      // Auto-publish to Ayrshare on approval (fire and forget)
       if (action === 'approve') {
+        // Fetch post + client details for email
+        try {
+          const { data: post } = await admin
+            .from('social_posts')
+            .select('platforms, image_url')
+            .eq('id', id)
+            .single()
+          const { data: clientData } = await admin
+            .from('clients')
+            .select('email, business_name')
+            .eq('id', client.id)
+            .single()
+          if (clientData?.email && post) {
+            await sendPostApprovedEmail({
+              to: clientData.email,
+              businessName: clientData.business_name ?? 'Your Business',
+              platforms: Array.isArray(post.platforms) ? post.platforms : [],
+            }).catch((e: Error) => console.error('[approve] email failed:', e.message))
+          }
+        } catch (emailErr: any) {
+          console.error('[approve] email lookup failed:', emailErr.message)
+        }
+
+        // Publish to Ayrshare (fire and forget)
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pulse-command1.vercel.app'
-        fetch(`${baseUrl}/api/pipeline/publish-posts`, {
+        fetch(`${baseUrl}/api/ayrshare/publish`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ postIds: [id], clientId: client.id }),
-        }).catch(err => console.error('publish-posts trigger failed:', err))
+          body: JSON.stringify({ postId: id }),
+        }).catch((err: Error) => console.error('ayrshare publish trigger failed:', err))
       }
 
     } else if (type === 'video') {

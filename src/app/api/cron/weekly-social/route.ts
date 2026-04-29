@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import Anthropic from "@anthropic-ai/sdk";
 import { generateSocialPostImage } from "@/lib/image-engine/orchestrator";
 import type { BrandContext, BrandVibe, ClientTier } from "@/lib/image-engine/types";
+import { sendPostReadyEmail } from "@/lib/email";
 
 const CRON_SECRET = process.env.CRON_SECRET!;
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -99,7 +100,7 @@ export async function GET(req: NextRequest) {
   // Fetch active clients
   const { data: clients, error } = await supabase
     .from("clients")
-    .select("id, business_name, website, brand_vibe")
+    .select("id, business_name, website, brand_vibe, email")
     .eq("status", "active");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -230,6 +231,23 @@ export async function GET(req: NextRequest) {
         description: `Weekly post: "${weekTopic}" — ${imageResult.imageType} image generated.`,
         created_by: "system",
       } as never);
+
+      // Step 8: Email notification
+      if (client.email && insertedPost?.id) {
+        try {
+          if (!autoApprove) {
+            await sendPostReadyEmail({
+              to: client.email,
+              businessName: client.business_name ?? "Your Business",
+              caption: captions[primaryPlatform as keyof PlatformCaptions] ?? captions.instagram,
+              imageUrl: imageResult.imageUrl,
+              postId: insertedPost.id,
+            });
+          }
+        } catch (emailErr: any) {
+          console.error(`[weekly-social] Email failed for ${client.business_name}:`, emailErr.message);
+        }
+      }
 
       generated++;
       console.log(

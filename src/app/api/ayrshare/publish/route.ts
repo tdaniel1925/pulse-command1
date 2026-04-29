@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { postToAyrshare } from '@/lib/ayrshare';
+import { sendPostPublishedEmail } from '@/lib/email';
 
 // POST — publish a social_post row to all its platforms via Ayrshare
 export async function POST(req: NextRequest) {
@@ -91,6 +92,25 @@ export async function POST(req: NextRequest) {
         description: `Published to ${Object.keys(results).join(', ')}.`,
         created_by: 'system',
       } as never);
+
+      // Send published email
+      try {
+        const { data: clientData } = await admin
+          .from('clients')
+          .select('email, business_name')
+          .eq('id', post.client_id)
+          .single();
+        if (clientData?.email) {
+          await sendPostPublishedEmail({
+            to: clientData.email,
+            businessName: clientData.business_name ?? 'Your Business',
+            platforms: Object.keys(results),
+            imageUrl: post.image_url,
+          });
+        }
+      } catch (emailErr: any) {
+        console.error('[ayrshare/publish] Email failed:', emailErr.message);
+      }
     }
 
     return NextResponse.json({ ok: true, results, errors });
