@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { TemplateId, DeckMode, NarrativeFramework } from "@/lib/presentation-templates";
-import { getAllTemplates, narrativeFrameworks, getAllDeckModes } from "@/lib/presentation-templates";
+import { getAllTemplates, narrativeFrameworks } from "@/lib/presentation-templates";
 
 interface Props {
   open: boolean;
@@ -147,7 +147,6 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
   const allNarrativeFrameworks = (Object.entries(narrativeFrameworks) as [NarrativeFramework, { name: string; description: string; slideFlow: string }][]).map(
     ([id, val]) => ({ id, ...val })
   );
-  const allDeckModes = getAllDeckModes();
 
   function handleClose() {
     setStep(0);
@@ -633,8 +632,6 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                 <div className="grid grid-cols-5 gap-2 mb-6">
                   {DECK_MODE_CARDS.map((card) => {
                     const selected = deckMode === card.value;
-                    // Also check against getAllDeckModes for future-proofing, but use our local cards
-                    void allDeckModes;
                     return (
                       <button
                         key={card.value}

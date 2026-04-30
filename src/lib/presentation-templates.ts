@@ -60,6 +60,7 @@ const ALL_LAYOUTS = [
   'title', 'bullets', 'image_left', 'image_right', 'quote',
   'stats', 'two_col', 'section', 'nano_statement', 'nano_number',
   'nano_question', 'nano_quote',
+  'waterfall', 'timeline', 'comparison', 'process', 'big_stat',
 ]
 
 const TEMPLATES: PresentationTemplate[] = [
@@ -270,7 +271,7 @@ const DECK_MODES: DeckModeConfig[] = [
     maxWordsPerSlide: 40,
     maxBulletsPerSlide: 6,
     imageFrequency: 'high',
-    allowedLayouts: ['title', 'stats', 'bullets', 'image_left', 'image_right', 'section', 'two_col'],
+    allowedLayouts: ['title', 'stats', 'bullets', 'image_left', 'image_right', 'section', 'two_col', 'waterfall', 'timeline', 'comparison', 'process', 'big_stat'],
     claudeInstruction: 'INFOGRAPHIC MODE: Data-driven, visual-first. Every slide should have a visual anchor — a stat, chart data, or image. Use stats layout frequently. Numbers should be prominent.',
   },
   {
@@ -281,7 +282,7 @@ const DECK_MODES: DeckModeConfig[] = [
     maxWordsPerSlide: 150,
     maxBulletsPerSlide: 8,
     imageFrequency: 'none',
-    allowedLayouts: ['title', 'bullets', 'two_col', 'section', 'quote', 'stats'],
+    allowedLayouts: ['title', 'bullets', 'two_col', 'section', 'quote', 'stats', 'waterfall', 'timeline', 'comparison', 'process'],
     claudeInstruction: 'DOCUMENT MODE: Dense, consulting-style deliverable. More text is acceptable. Structure like a McKinsey report. Every slide earns its place with specific, substantive content.',
   },
   {

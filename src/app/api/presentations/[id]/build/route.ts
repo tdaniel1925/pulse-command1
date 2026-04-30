@@ -167,6 +167,11 @@ Layout descriptions:
 - "nano_number": one massive statistic as title, tiny label as subtitle, minimal design
 - "nano_question": rhetorical question as title, no subtitle needed
 - "nano_quote": short quote as title (under 15 words), speaker name as subtitle
+- "waterfall": financial waterfall chart. bullets format: "Label|+500000" or "Label|-120000" or "Label|800000|total". Use for revenue/cost breakdowns.
+- "timeline": horizontal roadmap. bullets format: "Q1 2025|Milestone title|done" (status: done/active/upcoming). Use for roadmaps, history, plans.
+- "comparison": competitive comparison table. First bullet = pipe-separated headers e.g. "Us|Competitor A|Competitor B". Remaining bullets = rows e.g. "Feature|✓|✗". Use for competitive slides.
+- "process": step-by-step flow. bullets format: "1|Step Title|Short description|emoji". 3-5 steps max. Use for how-it-works, methodology slides.
+- "big_stat": single massive stat/number. title = the stat (e.g. "$4.2B"), subtitle = context sentence, bullets[0] = optional label above. Use for impactful single numbers.
 
 ═══ IMAGE PROMPTS ═══
 For slides with image_left or image_right layouts, write a specific, vivid image_prompt.

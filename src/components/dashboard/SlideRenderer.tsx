@@ -471,6 +471,114 @@ export function SlideRenderer({ slide, isFullscreen, template }: SlideRendererPr
     );
   }
 
+  // ── WATERFALL ──────────────────────────────────────────────────────────────
+  if (slide.layout === 'waterfall') {
+    const bars = parseWaterfallFromBullets(slide.bullets ?? []);
+    return (
+      <div className={`w-full h-full flex flex-col ${pad}`} style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
+        {slide.title && (
+          <h2 className="text-3xl mb-6 leading-tight" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, textAlign: tokens.titleAlign, fontFamily: tokens.fontTitle }}>
+            {slide.title}
+          </h2>
+        )}
+        <div className="flex-1 flex items-start pt-4">
+          <WaterfallChart bars={bars} accentColor={accent} textColor={tokens.textPrimary} />
+        </div>
+      </div>
+    );
+  }
+
+  // ── TIMELINE ───────────────────────────────────────────────────────────────
+  if (slide.layout === 'timeline') {
+    const items = parseTimelineFromBullets(slide.bullets ?? []);
+    return (
+      <div className={`w-full h-full flex flex-col ${pad}`} style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
+        {slide.title && (
+          <h2 className="text-3xl mb-8 leading-tight" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, textAlign: tokens.titleAlign, fontFamily: tokens.fontTitle }}>
+            {slide.title}
+          </h2>
+        )}
+        <div className="flex-1 flex items-center">
+          <TimelineChart items={items} accentColor={accent} textColor={tokens.textPrimary} />
+        </div>
+      </div>
+    );
+  }
+
+  // ── COMPARISON ─────────────────────────────────────────────────────────────
+  if (slide.layout === 'comparison') {
+    const { headers, rows } = parseComparisonFromBullets(slide.bullets ?? []);
+    return (
+      <div className={`w-full h-full flex flex-col ${pad}`} style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
+        {slide.title && (
+          <h2 className="text-3xl mb-6 leading-tight" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, textAlign: tokens.titleAlign, fontFamily: tokens.fontTitle }}>
+            {slide.title}
+          </h2>
+        )}
+        <div className="flex-1 flex items-start">
+          <ComparisonTable
+            headers={headers}
+            rows={rows}
+            highlightCol={1}
+            accentColor={accent}
+            accentLight={tokens.accentLight}
+            textColor={tokens.textPrimary}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // ── PROCESS ────────────────────────────────────────────────────────────────
+  if (slide.layout === 'process') {
+    const steps = parseProcessFromBullets(slide.bullets ?? []);
+    return (
+      <div className={`w-full h-full flex flex-col ${pad}`} style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
+        {slide.title && (
+          <h2 className="text-3xl mb-8 leading-tight" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, textAlign: tokens.titleAlign, fontFamily: tokens.fontTitle }}>
+            {slide.title}
+          </h2>
+        )}
+        <div className="flex-1 flex items-center">
+          <ProcessFlow steps={steps} accentColor={accent} accentLight={tokens.accentLight} textColor={tokens.textPrimary} />
+        </div>
+      </div>
+    );
+  }
+
+  // ── BIG STAT ───────────────────────────────────────────────────────────────
+  if (slide.layout === 'big_stat') {
+    const label = slide.bullets?.[0] ?? null;
+    return (
+      <div
+        className={`w-full h-full flex flex-col items-center justify-center text-center ${pad} relative overflow-hidden`}
+        style={{ background: tokens.background, fontFamily: tokens.fontBody }}
+      >
+        {label && (
+          <p
+            className="text-xs font-semibold uppercase tracking-widest mb-4"
+            style={{ color: accent }}
+          >
+            {label}
+          </p>
+        )}
+        {slide.title && (
+          <span
+            className={`font-black leading-none ${isFullscreen ? 'text-[10rem]' : 'text-9xl'}`}
+            style={{ color: accent, fontFamily: tokens.fontTitle }}
+          >
+            {slide.title}
+          </span>
+        )}
+        {(slide.subtitle ?? slide.body) && (
+          <p className="text-xl mt-6 max-w-2xl" style={{ color: tokens.textSecondary }}>
+            {slide.subtitle ?? slide.body}
+          </p>
+        )}
+      </div>
+    );
+  }
+
   // ── FALLBACK ───────────────────────────────────────────────────────────────
   return (
     <div className={`w-full h-full flex flex-col ${pad}`} style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
