@@ -7,6 +7,8 @@ export type NotificationType =
   | 'presentation_ready'
   | 'payment_failed'
   | 'welcome'
+  | 'strategy_approved'
+  | 'monthly_content_ready'
 
 export async function createNotification({
   clientId,
