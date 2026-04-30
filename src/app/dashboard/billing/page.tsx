@@ -73,12 +73,12 @@ export default async function BillingPage() {
   const nextBillingDate = formatDate(subscription?.current_period_end ?? null);
 
   return (
-    <div className="max-w-2xl flex flex-col gap-8">
+    <div className="max-w-2xl flex flex-col gap-6 sm:gap-8">
       <h2 className="text-2xl font-bold text-neutral-900">Billing</h2>
 
       {/* Current Plan */}
-      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
-        <div className="flex items-start justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
           <div>
             <p className="text-xs font-semibold text-primary-600 uppercase tracking-wide mb-1">Current Plan</p>
             <h3 className="text-xl font-bold text-neutral-900">{planName}</h3>
@@ -112,7 +112,7 @@ export default async function BillingPage() {
       </div>
 
       {/* What's included */}
-      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-6">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">What&apos;s Included</h3>
         <ul className="flex flex-col gap-3">
           {deliverables.map((item) => (
@@ -152,9 +152,10 @@ export default async function BillingPage() {
       </div>
 
       {/* Invoice History */}
-      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6">
+      <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-4 sm:p-6">
         <h3 className="text-base font-semibold text-neutral-900 mb-4">Invoice History</h3>
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-full">
           <thead>
             <tr className="text-xs font-semibold text-neutral-400 uppercase tracking-wide border-b border-neutral-100">
               <th className="text-left pb-3">Date</th>
@@ -179,7 +180,8 @@ export default async function BillingPage() {
               </tr>
             ))}
           </tbody>
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   );
