@@ -321,6 +321,72 @@ create table workflow_templates (
 );
 
 -- =============================================
+-- REPUTATION MANAGEMENT
+-- =============================================
+create table reputation_integrations (
+  id uuid primary key default uuid_generate_v4(),
+  client_id uuid not null references clients(id) on delete cascade,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+
+  -- Platform type
+  platform text not null check (platform in ('google', 'yelp')),
+
+  -- Google Business Profile
+  google_location_id text,
+  google_access_token text,
+  google_business_account_id text,
+
+  -- Yelp
+  yelp_business_id text,
+  yelp_access_token text,
+
+  -- Connection status
+  connected boolean default false,
+  last_sync_at timestamptz,
+
+  unique(client_id, platform)
+);
+
+create table reputation_reviews (
+  id uuid primary key default uuid_generate_v4(),
+  client_id uuid not null references clients(id) on delete cascade,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+
+  -- Review metadata
+  platform text not null check (platform in ('google', 'yelp')),
+  external_review_id text not null,
+  author text not null,
+  rating integer not null check (rating >= 0 and rating <= 5),
+  text text,
+  published_at timestamptz,
+
+  -- Response tracking
+  replied boolean default false,
+  reply_text text,
+  ai_draft_response text,
+  reply_posted_at timestamptz,
+
+  unique(client_id, platform, external_review_id)
+);
+
+create table reputation_responses (
+  id uuid primary key default uuid_generate_v4(),
+  review_id uuid not null references reputation_reviews(id) on delete cascade,
+  client_id uuid not null references clients(id) on delete cascade,
+  created_at timestamptz default now(),
+
+  -- Response lifecycle
+  ai_draft text not null,
+  approved_draft text,
+  final_response text,
+  status text not null default 'draft'
+    check (status in ('draft', 'pending_approval', 'approved', 'posted', 'rejected')),
+  posted_at timestamptz
+);
+
+-- =============================================
 -- ADMIN USERS
 -- =============================================
 create table admin_users (
@@ -366,6 +432,9 @@ alter table tasks enable row level security;
 alter table assets enable row level security;
 alter table pipeline_nodes enable row level security;
 alter table pipeline_edges enable row level security;
+alter table reputation_integrations enable row level security;
+alter table reputation_reviews enable row level security;
+alter table reputation_responses enable row level security;
 
 -- Clients can only see their own data
 create policy "clients_own_data" on clients
@@ -397,6 +466,21 @@ create policy "clients_own_pages" on landing_pages
   );
 
 create policy "clients_own_reports" on reports
+  for all using (
+    client_id in (select id from clients where user_id = auth.uid())
+  );
+
+create policy "clients_own_reputation_integrations" on reputation_integrations
+  for all using (
+    client_id in (select id from clients where user_id = auth.uid())
+  );
+
+create policy "clients_own_reputation_reviews" on reputation_reviews
+  for all using (
+    client_id in (select id from clients where user_id = auth.uid())
+  );
+
+create policy "clients_own_reputation_responses" on reputation_responses
   for all using (
     client_id in (select id from clients where user_id = auth.uid())
   );
@@ -447,3 +531,10 @@ create index idx_audio_client_id on audio_episodes(client_id);
 create index idx_activities_client_id on activities(client_id);
 create index idx_tasks_client_id on tasks(client_id);
 create index idx_tasks_status on tasks(status);
+create index idx_reputation_integrations_client on reputation_integrations(client_id);
+create index idx_reputation_integrations_platform on reputation_integrations(platform);
+create index idx_reputation_reviews_client on reputation_reviews(client_id);
+create index idx_reputation_reviews_platform on reputation_reviews(platform);
+create index idx_reputation_reviews_replied on reputation_reviews(replied);
+create index idx_reputation_responses_review on reputation_responses(review_id);
+create index idx_reputation_responses_status on reputation_responses(status);
