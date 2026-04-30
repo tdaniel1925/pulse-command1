@@ -1,0 +1,36 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const body = await req.json();
+    const { notifications } = body;
+
+    const { data: client } = await supabase
+      .from('clients')
+      .select('id, metadata')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!client) return NextResponse.json({ error: 'Client not found' }, { status: 404 });
+
+    const updatedMetadata = {
+      ...(client.metadata ?? {}),
+      notifications,
+    };
+
+    await supabase
+      .from('clients')
+      .update({ metadata: updatedMetadata })
+      .eq('id', client.id);
+
+    return NextResponse.json({ ok: true });
+  } catch (err: any) {
+    console.error('[settings/notifications]', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}

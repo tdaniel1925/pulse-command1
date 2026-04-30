@@ -1,50 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Stripe from 'stripe'
+import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { getStripe, getPlan } from '@/lib/stripe'
 
-const getStripe = () => new Stripe(process.env.STRIPE_SECRET_KEY!)
-
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const { email, firstName, lastName, businessName } = await request.json()
-
-    if (!email) {
-      return NextResponse.json({ error: 'Email required' }, { status: 400 })
+    const stripe = getStripe()
+    if (!stripe) {
+      return NextResponse.json({ error: 'Stripe not configured' }, { status: 403 })
     }
 
-    // Create or retrieve Stripe customer
-    const customers = await getStripe().customers.list({ email, limit: 1 })
-    let customer = customers.data[0]
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    if (!customer) {
-      customer = await getStripe().customers.create({
-        email,
-        name: `${firstName} ${lastName}`,
-        metadata: { businessName },
+    const body = await req.json()
+    const { planId } = body as { planId: string }
+
+    const plan = getPlan(planId)
+    if (!plan) {
+      return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
+    }
+
+    const admin = createAdminClient()
+    const { data: client, error: clientError } = await admin
+      .from('clients')
+      .select('id, stripe_customer_id')
+      .eq('user_id', user.id)
+      .single()
+
+    if (clientError || !client) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 })
+    }
+
+    let stripeCustomerId = client.stripe_customer_id as string | null
+
+    if (!stripeCustomerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        metadata: { clientId: client.id },
       })
+      stripeCustomerId = customer.id
+      await admin
+        .from('clients')
+        .update({ stripe_customer_id: stripeCustomerId })
+        .eq('id', client.id)
     }
 
-    // Create checkout session with 14-day trial
-    const session = await getStripe().checkout.sessions.create({
-      customer: customer.id,
+    const session = await stripe.checkout.sessions.create({
+      customer: stripeCustomerId,
       mode: 'subscription',
       payment_method_types: ['card'],
-      line_items: [{
-        price: process.env.STRIPE_PRICE_ID!,
-        quantity: 1,
-      }],
-      subscription_data: {
-        trial_period_days: 14,
-        metadata: { businessName },
-      },
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/onboarding/welcome?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/sign-up`,
+      line_items: [{ price: plan.priceId, quantity: 1 }],
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?upgraded=1`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
+      metadata: { clientId: client.id, planId },
+      subscription_data: { metadata: { clientId: client.id, planId } },
       allow_promotion_codes: true,
-      billing_address_collection: 'auto',
     })
 
-    return NextResponse.json({ url: session.url, sessionId: session.id })
+    return NextResponse.json({ url: session.url })
   } catch (err) {
-    console.error('create-checkout error:', err)
-    return NextResponse.json({ error: 'Failed to create checkout session' }, { status: 500 })
+    console.error('[stripe/create-checkout]', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { CheckCircle, X } from 'lucide-react';
+import { CheckCircle, X, Pencil, Check, Loader2, Sparkles } from 'lucide-react';
 import { SlideRenderer } from './SlideRenderer';
 import { SlideMaster } from './SlideMaster';
 import { getAllTemplates, getTemplate } from '@/lib/presentation-templates';
@@ -39,6 +39,8 @@ interface PresentationViewerProps {
   isGenerating: boolean;
 }
 
+const SUBTITLE_LAYOUTS = new Set(['title', 'section', 'nano_statement', 'nano_number', 'nano_quote']);
+
 export function PresentationViewer({ presentation: initialPresentation, isGenerating }: PresentationViewerProps) {
   const [presentation, setPresentation] = useState<Presentation>(initialPresentation);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -57,10 +59,21 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const allTemplates = getAllTemplates();
 
+  // ── EDIT MODE STATE ────────────────────────────────────────────────────────
+  const [editMode, setEditMode] = useState(false);
+  const [localSlides, setLocalSlides] = useState<Slide[]>(initialPresentation.slides ?? []);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [regeneratingIndex, setRegeneratingIndex] = useState<number | null>(null);
+
+  // Keep localSlides in sync when polling completes
+  useEffect(() => {
+    setLocalSlides(presentation.slides ?? []);
+  }, [presentation.slides]);
+
   const slidesRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const slides = presentation.slides ?? [];
+  const slides = localSlides;
   const total = slides.length;
   const slide = slides[currentSlide];
 
@@ -131,6 +144,78 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
     return () => window.removeEventListener('keydown', handleKey);
   }, [total]);
 
+  // ── EDIT HELPERS ───────────────────────────────────────────────────────────
+  function updateLocalSlide(index: number, updates: Partial<Slide>) {
+    setLocalSlides((prev) => prev.map((s, i) => i === index ? { ...s, ...updates } : s));
+  }
+
+  async function handleSaveSlide(index: number) {
+    const s = localSlides[index];
+    await fetch(`/api/presentations/${presentation.id}/update-slide`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slideIndex: index, updates: s }),
+    });
+    showToast('Slide saved.');
+  }
+
+  async function handleRegenerateSlide(index: number) {
+    setIsRegenerating(true);
+    setRegeneratingIndex(index);
+    try {
+      const res = await fetch(`/api/presentations/${presentation.id}/regenerate-slide`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slideIndex: index }),
+      });
+      const data = await res.json() as { slide?: Slide };
+      if (data.slide) {
+        updateLocalSlide(index, data.slide);
+        showToast('Slide regenerated!');
+      }
+    } catch {
+      showToast('Regeneration failed. Please try again.');
+    } finally {
+      setIsRegenerating(false);
+      setRegeneratingIndex(null);
+    }
+  }
+
+  function revertSlide(index: number) {
+    const original = presentation.slides[index];
+    if (original) {
+      setLocalSlides((prev) => prev.map((s, i) => i === index ? original : s));
+    }
+  }
+
+  async function moveSlide(index: number, direction: 'up' | 'down') {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= localSlides.length) return;
+
+    const newSlides = [...localSlides];
+    const temp = newSlides[index];
+    newSlides[index] = newSlides[targetIndex];
+    newSlides[targetIndex] = temp;
+    setLocalSlides(newSlides);
+
+    // Save both swapped slides
+    await Promise.all([
+      fetch(`/api/presentations/${presentation.id}/update-slide`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slideIndex: index, updates: newSlides[index] }),
+      }),
+      fetch(`/api/presentations/${presentation.id}/update-slide`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slideIndex: targetIndex, updates: newSlides[targetIndex] }),
+      }),
+    ]);
+
+    // Keep current slide focused on the moved slide
+    setCurrentSlide(targetIndex);
+  }
+
   // ── EXPORT PDF ─────────────────────────────────────────────────────────────
   const handleExportPdf = async () => {
     try {
@@ -163,32 +248,32 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
       pptx.layout = 'LAYOUT_WIDE';
 
       for (const s of slides) {
-        const slide = pptx.addSlide();
+        const pptxSlide = pptx.addSlide();
         const accentHex = s.accent_color?.replace('#', '') || '6366f1';
 
         if (s.layout === 'title') {
           if (s.title) {
-            slide.addText(s.title, {
+            pptxSlide.addText(s.title, {
               x: 0.5, y: 2, w: 12, h: 1.5,
               fontSize: 40, bold: true, color: '363636', align: 'center',
             });
           }
           if (s.subtitle) {
-            slide.addText(s.subtitle, {
+            pptxSlide.addText(s.subtitle, {
               x: 0.5, y: 3.8, w: 12, h: 1,
               fontSize: 24, color: '737373', align: 'center',
             });
           }
         } else if (s.layout === 'bullets' || s.layout === 'two_col') {
           if (s.title) {
-            slide.addText(s.title, {
+            pptxSlide.addText(s.title, {
               x: 0.5, y: 0.4, w: 12, h: 0.8,
               fontSize: 28, bold: true, color: '363636',
             });
           }
           if (s.bullets && s.bullets.length > 0) {
             const bulletItems = s.bullets.map((b) => ({ text: b, options: { bullet: true } }));
-            slide.addText(bulletItems, {
+            pptxSlide.addText(bulletItems, {
               x: 0.5, y: 1.5, w: 12, h: 5,
               fontSize: 18, color: '404040',
             });
@@ -196,19 +281,19 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
         } else if (s.layout === 'quote') {
           const quoteText = s.bullets?.[0] ?? s.body ?? '';
           const attribution = s.bullets?.[1] ?? null;
-          slide.addText(`"${quoteText}"`, {
+          pptxSlide.addText(`"${quoteText}"`, {
             x: 1, y: 2, w: 11, h: 2,
             fontSize: 28, italic: true, color: '363636', align: 'center',
           });
           if (attribution) {
-            slide.addText(`— ${attribution}`, {
+            pptxSlide.addText(`— ${attribution}`, {
               x: 1, y: 4.2, w: 11, h: 0.5,
               fontSize: 18, color: '737373', align: 'center',
             });
           }
         } else if (s.layout === 'stats') {
           if (s.title) {
-            slide.addText(s.title, {
+            pptxSlide.addText(s.title, {
               x: 0.5, y: 0.4, w: 12, h: 0.8,
               fontSize: 28, bold: true, color: '363636',
             });
@@ -219,32 +304,31 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
           });
           statItems.forEach((stat, i) => {
             const x = 0.5 + i * 4.3;
-            slide.addText(stat.value, {
+            pptxSlide.addText(stat.value, {
               x, y: 2, w: 4, h: 1.2,
               fontSize: 36, bold: true, color: accentHex, align: 'center',
             });
-            slide.addText(stat.label, {
+            pptxSlide.addText(stat.label, {
               x, y: 3.3, w: 4, h: 0.5,
               fontSize: 14, color: '737373', align: 'center',
             });
           });
         } else {
-          // Generic fallback for section, image_left, image_right
           if (s.title) {
-            slide.addText(s.title, {
+            pptxSlide.addText(s.title, {
               x: 0.5, y: 0.4, w: 12, h: 0.8,
               fontSize: 28, bold: true, color: '363636',
             });
           }
           if (s.body) {
-            slide.addText(s.body, {
+            pptxSlide.addText(s.body, {
               x: 0.5, y: 1.5, w: 12, h: 5,
               fontSize: 18, color: '404040',
             });
           }
           if (s.bullets && s.bullets.length > 0) {
             const bulletItems = s.bullets.map((b) => ({ text: b, options: { bullet: true } }));
-            slide.addText(bulletItems, {
+            pptxSlide.addText(bulletItems, {
               x: 0.5, y: 1.5, w: 12, h: 5,
               fontSize: 18, color: '404040',
             });
@@ -284,7 +368,6 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
         className="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center"
         onClick={() => setCurrentSlide((c) => Math.min(c + 1, total - 1))}
       >
-        {/* 16:9 slide */}
         <div
           className="relative"
           style={{
@@ -306,7 +389,6 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
           )}
         </div>
 
-        {/* Bottom controls */}
         <div
           className="absolute bottom-4 left-0 right-0 flex items-center justify-center gap-6"
           onClick={(e) => e.stopPropagation()}
@@ -350,6 +432,10 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
     </div>
   );
 
+  const currentSlideData = slides[currentSlide];
+  const showSubtitleField = currentSlideData && SUBTITLE_LAYOUTS.has(currentSlideData.layout);
+  const showBulletsField = currentSlideData && Array.isArray(currentSlideData.bullets);
+
   // ── NORMAL MODE ────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-full bg-neutral-100 relative">
@@ -374,6 +460,29 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
 
         {/* toolbar buttons */}
         <div className="flex items-center gap-2">
+          {/* Edit toggle */}
+          <button
+            onClick={() => setEditMode((v) => !v)}
+            disabled={isPolling}
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors disabled:opacity-50 ${
+              editMode
+                ? 'bg-indigo-600 border-indigo-600 text-white hover:bg-indigo-700'
+                : 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+            }`}
+          >
+            {editMode ? (
+              <>
+                <Check className="w-3.5 h-3.5" />
+                Done Editing
+              </>
+            ) : (
+              <>
+                <Pencil className="w-3.5 h-3.5" />
+                Edit Slides
+              </>
+            )}
+          </button>
+
           <button
             onClick={() => setShowNotes((v) => !v)}
             className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
@@ -471,35 +580,83 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
         {showThumbnails && (
           <div className="w-48 flex-shrink-0 bg-white border-r border-neutral-200 overflow-y-auto py-3 flex flex-col gap-2 px-2">
             {slides.map((s, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentSlide(i)}
-                className={`relative rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
-                  i === currentSlide
-                    ? 'border-primary-500 shadow-md'
-                    : 'border-transparent hover:border-neutral-300'
-                }`}
-                style={{ aspectRatio: '16/9' }}
-              >
-                <div className="w-full h-full" style={{ transform: 'scale(0.35)', transformOrigin: 'top left', width: '285%', height: '285%', pointerEvents: 'none' }}>
-                  <SlideRenderer slide={s} isFullscreen={false} template={activeTemplate} />
+              <div key={i} className="flex flex-col gap-1">
+                {/* Reorder arrows — edit mode only */}
+                {editMode && (
+                  <div className="flex gap-1 justify-end px-0.5">
+                    <button
+                      onClick={() => moveSlide(i, 'up')}
+                      disabled={i === 0}
+                      className="w-5 h-5 flex items-center justify-center rounded text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 disabled:opacity-20 transition-colors text-xs leading-none"
+                      title="Move up"
+                    >
+                      ↑
+                    </button>
+                    <button
+                      onClick={() => moveSlide(i, 'down')}
+                      disabled={i === slides.length - 1}
+                      className="w-5 h-5 flex items-center justify-center rounded text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 disabled:opacity-20 transition-colors text-xs leading-none"
+                      title="Move down"
+                    >
+                      ↓
+                    </button>
+                  </div>
+                )}
+
+                {/* Thumbnail */}
+                <div className="relative group">
+                  <button
+                    onClick={() => setCurrentSlide(i)}
+                    className={`relative w-full rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
+                      i === currentSlide
+                        ? 'border-primary-500 shadow-md'
+                        : 'border-transparent hover:border-neutral-300'
+                    }`}
+                    style={{ aspectRatio: '16/9' }}
+                  >
+                    <div className="w-full h-full" style={{ transform: 'scale(0.35)', transformOrigin: 'top left', width: '285%', height: '285%', pointerEvents: 'none' }}>
+                      <SlideRenderer slide={s} isFullscreen={false} template={activeTemplate} />
+                    </div>
+                    <span className="absolute bottom-1 right-1 text-[9px] font-medium text-neutral-400 bg-white/80 rounded px-1">
+                      {i + 1}
+                    </span>
+                    {/* Regenerating spinner overlay on thumbnail */}
+                    {isRegenerating && regeneratingIndex === i && (
+                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                        <Loader2 className="w-4 h-4 animate-spin text-purple-600" />
+                      </div>
+                    )}
+                  </button>
+
+                  {/* AI regenerate icon on thumbnail hover — edit mode only */}
+                  {editMode && (
+                    <button
+                      onClick={() => handleRegenerateSlide(i)}
+                      disabled={isRegenerating}
+                      className="absolute top-1 left-1 w-5 h-5 bg-purple-600 text-white rounded flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-40"
+                      title="Regenerate with AI"
+                    >
+                      <span className="text-[10px] leading-none">✦</span>
+                    </button>
+                  )}
                 </div>
-                <span className="absolute bottom-1 right-1 text-[9px] font-medium text-neutral-400 bg-white/80 rounded px-1">
-                  {i + 1}
-                </span>
-              </button>
+              </div>
             ))}
           </div>
         )}
 
         {/* Main area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-y-auto">
           {/* Slide display */}
-          <div className="flex-1 flex items-center justify-center p-6 relative overflow-hidden">
-            {isPolling && <GeneratingOverlay />}
+          <div className="flex items-center justify-center p-6 relative">
+            {isPolling && (
+              <div className="absolute inset-0 flex items-center justify-center z-10">
+                <GeneratingOverlay />
+              </div>
+            )}
             <div
               ref={slidesRef}
-              className="relative rounded-xl overflow-hidden shadow-2xl bg-white"
+              className="relative rounded-xl overflow-hidden shadow-2xl bg-white w-full"
               style={{
                 width: 'min(100%, calc((100vh - 220px) * 16 / 9))',
                 aspectRatio: '16/9',
@@ -524,8 +681,100 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
             </div>
           </div>
 
+          {/* ── EDIT PANEL ── */}
+          {editMode && currentSlideData && (
+            <div className="mx-6 mb-4 bg-white border border-neutral-200 rounded-xl p-4 flex flex-col gap-3 shadow-sm">
+              <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">
+                Edit Slide {currentSlide + 1}
+              </p>
+
+              {/* Title */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-neutral-700">Slide Title</label>
+                <input
+                  value={currentSlideData.title ?? ''}
+                  onChange={(e) => updateLocalSlide(currentSlide, { title: e.target.value })}
+                  className="w-full border border-neutral-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                />
+              </div>
+
+              {/* Subtitle */}
+              {showSubtitleField && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-neutral-700">Subtitle</label>
+                  <input
+                    value={currentSlideData.subtitle ?? ''}
+                    onChange={(e) => updateLocalSlide(currentSlide, { subtitle: e.target.value || null })}
+                    className="w-full border border-neutral-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                  />
+                </div>
+              )}
+
+              {/* Bullets */}
+              {showBulletsField && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-medium text-neutral-700">Bullet Points (one per line)</label>
+                  <textarea
+                    value={currentSlideData.bullets?.join('\n') ?? ''}
+                    onChange={(e) =>
+                      updateLocalSlide(currentSlide, {
+                        bullets: e.target.value.split('\n').filter(Boolean),
+                      })
+                    }
+                    rows={5}
+                    className="w-full border border-neutral-200 rounded-lg p-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-y"
+                  />
+                </div>
+              )}
+
+              {/* Speaker Notes */}
+              <div className="flex flex-col gap-1">
+                <label className="text-xs font-medium text-neutral-700">Speaker Notes</label>
+                <textarea
+                  value={currentSlideData.speaker_notes ?? ''}
+                  onChange={(e) => updateLocalSlide(currentSlide, { speaker_notes: e.target.value || null })}
+                  rows={3}
+                  className="w-full border border-neutral-200 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 resize-y"
+                />
+              </div>
+
+              {/* Action buttons */}
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  onClick={() => handleSaveSlide(currentSlide)}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors"
+                >
+                  Save Changes
+                </button>
+                <button
+                  onClick={() => handleRegenerateSlide(currentSlide)}
+                  disabled={isRegenerating}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-50 transition-colors disabled:opacity-50"
+                >
+                  {isRegenerating && regeneratingIndex === currentSlide ? (
+                    <>
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      Regenerating…
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3 h-3" />
+                      Regenerate with AI
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => revertSlide(currentSlide)}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg text-neutral-500 hover:bg-neutral-100 transition-colors"
+                >
+                  Revert
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Navigation */}
-          <div className="flex items-center justify-center gap-4 py-3 bg-white border-t border-neutral-200 flex-shrink-0">
+          <div className="flex items-center justify-center gap-4 py-3 bg-white border-t border-neutral-200 flex-shrink-0 mt-auto">
             <button
               onClick={() => setCurrentSlide((c) => Math.max(c - 1, 0))}
               disabled={currentSlide === 0}
@@ -565,7 +814,6 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
       {showGrader && grades && (
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-neutral-200 shadow-lg max-h-64 overflow-y-auto">
           <div className="px-4 py-3">
-            {/* Header */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-3">
                 <span className="text-sm font-semibold text-neutral-900">Deck Quality Report</span>
@@ -592,7 +840,6 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
               </button>
             </div>
 
-            {/* Grade pills */}
             <div className="flex flex-wrap gap-2">
               {grades.map((grade) => {
                 const scoreColor =
