@@ -106,6 +106,13 @@ ${transcript}`,
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
+    // Generate Brand Strategy Plan (fire and forget)
+    fetch(`${baseUrl}/api/pipeline/generate-strategy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ clientId, analysis }),
+    }).catch(err => console.error('generate-strategy failed:', err))
+
     if (contentMode === 'auto') {
       // Log activity
       await admin.from('activities').insert({

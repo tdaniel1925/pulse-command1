@@ -82,6 +82,11 @@ create table if not exists brand_profiles (
   posting_frequency text,
   best_times text,
 
+  -- Brand Strategy Plan (full document)
+  brand_strategy jsonb,
+  strategy_approved boolean default false,
+  strategy_approved_at timestamptz,
+
   -- Settings
   posts_per_week int default 5,
 

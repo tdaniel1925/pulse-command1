@@ -283,6 +283,58 @@ export async function sendOnboardingCompleteEmail({
   });
 }
 
+// ─── Brand Strategy Plan ready for review ────────────────────────────────────
+
+export async function sendStrategyEmail({
+  to,
+  firstName,
+  businessName,
+  strategyHTML,
+  clientId,
+}: {
+  to: string;
+  firstName: string;
+  businessName: string;
+  strategyHTML: string;
+  clientId: string;
+}) {
+  const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/strategy`;
+  const approveUrl = `${process.env.NEXT_PUBLIC_APP_URL}/api/strategy/approve?clientId=${clientId}`;
+
+  const body = `
+    <p style="color:#6b7280;">Hi ${firstName}, your personalized Brand Strategy Plan has been created based on your interview with our AI.</p>
+
+    <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:12px;padding:20px;margin:20px 0;">
+      <h3 style="color:#0369a1;margin-top:0;">📋 Your Strategy Includes:</h3>
+      <ul style="color:#0c4a6e;margin:10px 0;">
+        <li>Business overview & value proposition</li>
+        <li>Target audience analysis</li>
+        <li>5 content pillars for your strategy</li>
+        <li>Channel & posting recommendations</li>
+        <li>Brand tone & voice guidelines</li>
+        <li>Success metrics & timeline</li>
+      </ul>
+    </div>
+
+    <p style="color:#6b7280;">Review your complete strategy below, make any edits you'd like in your dashboard, then approve to start generating content.</p>
+
+    <div style="border-top:2px solid #e5e7eb;border-bottom:2px solid #e5e7eb;padding:20px 0;margin:20px 0;">
+      ${strategyHTML}
+    </div>
+
+    ${ctaButton('Review & Approve Strategy', dashboardUrl, '#6366f1')}
+
+    <p style="color:#9ca3af;font-size:13px;">Once you approve, we'll start generating your first batch of content tailored to this strategy within 24 hours.</p>
+  `;
+
+  return getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `Your Brand Strategy Plan is ready, ${firstName}!`,
+    html: emailShell('Your Brand Strategy Plan 📊', body),
+  });
+}
+
 export async function sendSMSNotification(message: string) {
   // Slack fallback for internal notifications
   if (process.env.SLACK_WEBHOOK_URL) {
