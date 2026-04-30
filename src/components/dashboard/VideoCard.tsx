@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Video, Play } from "lucide-react";
 import VideoPlayerModal from "@/components/dashboard/VideoPlayerModal";
+import { getAvatarGroup } from "@/lib/heygen";
 
 interface VideoRow {
   id: string;
@@ -11,6 +12,7 @@ interface VideoRow {
   thumbnail_url: string | null;
   video_url: string | null;
   heygen_video_id: string | null;
+  heygen_avatar_group_id?: string | null;
   created_at: string;
   metadata?: Record<string, unknown> | null;
 }
@@ -111,7 +113,14 @@ export default function VideoCard({ video }: Props) {
         {/* Card body */}
         <div className="p-4 space-y-3">
           <p className="font-semibold text-neutral-900 text-sm line-clamp-1">{video.title}</p>
-          <p className="text-xs text-neutral-400">{formatDate(video.created_at)}</p>
+          <div>
+            <p className="text-xs text-neutral-400">{formatDate(video.created_at)}</p>
+            {video.heygen_avatar_group_id && (
+              <p className="text-xs text-neutral-400 mt-1">
+                Avatar: {getAvatarGroup(video.heygen_avatar_group_id)?.label ?? 'Unknown'}
+              </p>
+            )}
+          </div>
 
           <div className="flex items-center gap-2">
             {isWatchable && (

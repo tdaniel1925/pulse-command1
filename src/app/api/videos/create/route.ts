@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-
-const avatarMap: Record<string, string> = {
-  alex: process.env.HEYGEN_AVATAR_ALEX ?? 'default_avatar_1',
-  sarah: process.env.HEYGEN_AVATAR_SARAH ?? 'default_avatar_2',
-  marcus: process.env.HEYGEN_AVATAR_MARCUS ?? 'default_avatar_3',
-  priya: process.env.HEYGEN_AVATAR_PRIYA ?? 'default_avatar_4',
-}
+import { HEYGEN_AVATAR_GROUPS } from '@/lib/heygen'
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,6 +12,12 @@ export async function POST(request: NextRequest) {
     const { topic, script, avatarId, aspectRatio } = await request.json()
     if (!topic || !script) {
       return NextResponse.json({ error: 'topic and script are required' }, { status: 400 })
+    }
+
+    // Validate avatarId is in the list
+    const selectedAvatar = HEYGEN_AVATAR_GROUPS.find(a => a.id === avatarId)
+    if (!selectedAvatar) {
+      return NextResponse.json({ error: 'Invalid avatar' }, { status: 400 })
     }
 
     const admin = createAdminClient()
@@ -63,7 +63,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Call HeyGen
-    const resolvedAvatarId = avatarMap[avatarId] ?? avatarMap['alex']
     const dimension =
       aspectRatio === '9:16'
         ? { width: 720, height: 1280 }
@@ -80,7 +79,7 @@ export async function POST(request: NextRequest) {
           {
             character: {
               type: 'avatar',
-              avatar_id: resolvedAvatarId,
+              avatar_id: avatarId,
               avatar_style: 'normal',
             },
             voice: {
@@ -113,6 +112,7 @@ export async function POST(request: NextRequest) {
         title: topic,
         status: 'processing',
         heygen_video_id: heygenVideoId,
+        heygen_avatar_group_id: avatarId,
         metadata: { avatarId, aspectRatio },
       })
       .select('id')

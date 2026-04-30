@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { X, Download, Video } from "lucide-react";
 import { ApproveButton } from "@/components/dashboard/ApproveButton";
+import { getAvatarGroup } from "@/lib/heygen";
 
 interface VideoRow {
   id: string;
@@ -12,6 +13,7 @@ interface VideoRow {
   thumbnail_url: string | null;
   video_url: string | null;
   heygen_video_id: string | null;
+  heygen_avatar_group_id?: string | null;
   created_at: string;
   metadata?: Record<string, unknown> | null;
 }
@@ -105,7 +107,14 @@ export default function VideoPlayerModal({ video, open, onClose }: Props) {
         {/* Footer */}
         <div className="px-6 py-4 space-y-3">
           <div className="flex items-center justify-between text-sm text-neutral-500">
-            <span>{formatDate(video.created_at)}</span>
+            <div className="space-y-1">
+              <span>{formatDate(video.created_at)}</span>
+              {video.heygen_avatar_group_id && (
+                <div className="text-xs text-neutral-400">
+                  Avatar: {getAvatarGroup(video.heygen_avatar_group_id)?.label ?? 'Unknown'}
+                </div>
+              )}
+            </div>
             <span className="text-xs font-medium bg-neutral-100 text-neutral-600 px-2 py-0.5 rounded-full">
               {statusLabel}
             </span>

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Loader2, Sparkles, User } from "lucide-react";
+import { X, Loader2, Sparkles } from "lucide-react";
+import { HEYGEN_AVATAR_GROUPS } from "@/lib/heygen";
 
 interface Props {
   open: boolean;
@@ -11,19 +12,6 @@ interface Props {
 }
 
 type AspectRatio = "16:9" | "9:16";
-
-interface AvatarOption {
-  id: string;
-  name: string;
-  style: string;
-}
-
-const avatars: AvatarOption[] = [
-  { id: "alex", name: "Alex", style: "Professional" },
-  { id: "sarah", name: "Sarah", style: "Professional" },
-  { id: "marcus", name: "Marcus", style: "Casual" },
-  { id: "priya", name: "Priya", style: "Casual" },
-];
 
 export default function CreateVideoModal({ open, onClose, clientId }: Props) {
   const router = useRouter();
@@ -35,7 +23,7 @@ export default function CreateVideoModal({ open, onClose, clientId }: Props) {
   const [generatingScript, setGeneratingScript] = useState(false);
 
   // Step 2
-  const [avatarId, setAvatarId] = useState("alex");
+  const [avatarId, setAvatarId] = useState<string>(HEYGEN_AVATAR_GROUPS[0].id);
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("16:9");
 
   // Step 3
@@ -46,7 +34,7 @@ export default function CreateVideoModal({ open, onClose, clientId }: Props) {
     setStep(1);
     setTopic("");
     setScript("");
-    setAvatarId("alex");
+    setAvatarId(HEYGEN_AVATAR_GROUPS[0].id);
     setAspectRatio("16:9");
     setSubmitting(false);
     setError(null);
@@ -179,27 +167,23 @@ export default function CreateVideoModal({ open, onClose, clientId }: Props) {
         {step === 2 && (
           <div className="px-6 py-5 space-y-5">
             <div>
-              <label className="block text-sm font-medium text-neutral-700 mb-3">
-                Avatar
+              <label className="block text-sm font-semibold text-neutral-900 mb-3">
+                Avatar Presenter
               </label>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                {avatars.map((av) => (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {HEYGEN_AVATAR_GROUPS.map(avatar => (
                   <button
-                    key={av.id}
-                    onClick={() => setAvatarId(av.id)}
-                    className={`flex items-center gap-3 p-3 rounded-xl border-2 transition-colors text-left ${
-                      avatarId === av.id
-                        ? "border-indigo-500 bg-indigo-50"
-                        : "border-neutral-200 hover:border-neutral-300 bg-white"
+                    key={avatar.id}
+                    onClick={() => setAvatarId(avatar.id)}
+                    className={`p-4 rounded-xl border-2 transition ${
+                      avatarId === avatar.id
+                        ? 'border-indigo-500 bg-indigo-50'
+                        : 'border-neutral-200 bg-white hover:border-indigo-300'
                     }`}
                   >
-                    <div className="w-10 h-10 rounded-full bg-neutral-200 flex items-center justify-center flex-shrink-0">
-                      <User className="w-5 h-5 text-neutral-400" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-neutral-900">{av.name}</p>
-                      <p className="text-xs text-neutral-400">{av.style}</p>
-                    </div>
+                    <div className="text-3xl mb-2">{avatar.icon}</div>
+                    <div className="text-sm font-semibold text-neutral-900">{avatar.label}</div>
+                    <div className="text-xs text-neutral-400">{avatar.description}</div>
                   </button>
                 ))}
               </div>
@@ -254,7 +238,9 @@ export default function CreateVideoModal({ open, onClose, clientId }: Props) {
               </div>
               <div className="flex gap-2">
                 <span className="text-neutral-400 w-24 flex-shrink-0">Avatar</span>
-                <span className="text-neutral-900 font-medium capitalize">{avatarId}</span>
+                <span className="text-neutral-900 font-medium">
+                  {HEYGEN_AVATAR_GROUPS.find(a => a.id === avatarId)?.label ?? avatarId}
+                </span>
               </div>
               <div className="flex gap-2">
                 <span className="text-neutral-400 w-24 flex-shrink-0">Format</span>
