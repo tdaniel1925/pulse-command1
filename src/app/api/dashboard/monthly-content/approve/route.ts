@@ -1,12 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getCurrentUser } from '@/lib/auth'
 import { createNotification } from '@/lib/notifications'
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getCurrentUser()
-    if (!user) {
+    const admin = createAdminClient()
+
+    // Get current user from auth header
+    const authHeader = request.headers.get('authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const token = authHeader.slice(7)
+    const { data: { user }, error: authError } = await admin.auth.getUser(token)
+
+    if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -15,8 +24,6 @@ export async function POST(request: NextRequest) {
     if (!contentId) {
       return NextResponse.json({ error: 'contentId required' }, { status: 400 })
     }
-
-    const admin = createAdminClient()
 
     // Get client ID from user
     const { data: client, error: clientError } = await admin
