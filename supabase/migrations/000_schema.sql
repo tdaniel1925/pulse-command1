@@ -56,19 +56,48 @@ create policy "users can update own record"
 create table if not exists brand_profiles (
   id uuid primary key default gen_random_uuid(),
   client_id uuid not null unique references clients(id) on delete cascade,
+
+  -- Brand assets
   logo_url text,
   brand_colors text[],
   brand_voice text,
+
+  -- VAPI interview data
+  vapi_transcript text,
+  ai_analysis_raw jsonb,
+
+  -- Analysis results from Claude Opus
+  business_description text,
+  unique_value_prop text,
+  target_audience text,
+  audience_pain_points text,
+  competitors text,
+  differentiators text,
+  tone_of_voice text,
+  brand_personality text,
+  content_pillars text[],
+  keywords text[],
+  hashtags text[],
+  priority_channels text[],
+  posting_frequency text,
+  best_times text,
+
+  -- Settings
   posts_per_week int default 5,
+
+  -- Avatar & voice selection
   heygen_avatar_id text,
   heygen_avatar_group_id text,
   elevenlabs_voice_id text,
-  vapi_transcript text,
-  ai_analysis_raw jsonb,
+
+  -- Social integration
   ayrshare_profile_id text,
   ayrshare_connected boolean default false,
   connected_platforms text[],
+
+  -- Metadata
   metadata jsonb,
+
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );

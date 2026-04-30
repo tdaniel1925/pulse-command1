@@ -67,41 +67,28 @@ ${transcript}`,
 
     const admin = createAdminClient()
 
-    // Get client's brand_profile_id
-    const { data: client, error: clientError } = await admin
-      .from('clients')
-      .select('id, brand_profile_id')
-      .eq('id', clientId)
-      .single()
-
-    if (clientError || !client) {
-      return NextResponse.json({ error: 'Client not found' }, { status: 404 })
-    }
-
     // Update brand profile with analysis results
-    if (client.brand_profile_id) {
-      const { error: profileError } = await admin
-        .from('brand_profiles')
-        .update({
-          business_description: analysis.businessDescription,
-          unique_value_prop: analysis.uniqueValueProp,
-          target_audience: analysis.targetAudience,
-          audience_pain_points: analysis.audiencePainPoints,
-          competitors: analysis.competitors,
-          differentiators: analysis.differentiators,
-          tone_of_voice: analysis.toneOfVoice,
-          brand_personality: analysis.brandPersonality,
-          content_pillars: analysis.contentPillars,
-          keywords: analysis.keywords,
-          hashtags: analysis.hashtags,
-          priority_channels: analysis.priorityChannels,
-          posting_frequency: analysis.postingFrequency,
-          best_times: analysis.bestTimes,
-        })
-        .eq('id', client.brand_profile_id)
+    const { error: profileError } = await admin
+      .from('brand_profiles')
+      .update({
+        business_description: analysis.businessDescription,
+        unique_value_prop: analysis.uniqueValueProp,
+        target_audience: analysis.targetAudience,
+        audience_pain_points: analysis.audiencePainPoints,
+        competitors: analysis.competitors,
+        differentiators: analysis.differentiators,
+        tone_of_voice: analysis.toneOfVoice,
+        brand_personality: analysis.brandPersonality,
+        content_pillars: analysis.contentPillars,
+        keywords: analysis.keywords,
+        hashtags: analysis.hashtags,
+        priority_channels: analysis.priorityChannels,
+        posting_frequency: analysis.postingFrequency,
+        best_times: analysis.bestTimes,
+      })
+      .eq('client_id', clientId)
 
-      if (profileError) console.error('Error updating brand profile:', profileError)
-    }
+    if (profileError) console.error('Error updating brand profile:', profileError)
 
     // Update client onboarding step
     await admin
