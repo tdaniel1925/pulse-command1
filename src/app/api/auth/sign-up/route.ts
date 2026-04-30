@@ -52,6 +52,9 @@ export async function POST(request: NextRequest) {
     // Use admin client for all DB writes — bypasses RLS since session isn't established yet
     const admin = createAdminClient()
 
+    // Generate 6-digit PIN for VAPI interview
+    const pin = String(Math.floor(100000 + Math.random() * 900000))
+
     // Insert client record first
     const { data: client, error: clientError } = await admin
       .from('clients')
@@ -62,9 +65,10 @@ export async function POST(request: NextRequest) {
         email,
         business_name: businessName ?? '',
         phone: phone ?? null,
-        status: 'onboarding',
-        subscription_status: 'trialing',
-        onboarding_step: 'signup',
+        status: 'active',
+        subscription_status: 'free',
+        onboarding_step: 'welcome',
+        onboarding_pin: pin,
       })
       .select('id')
       .single()
@@ -75,18 +79,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Create brand profile linked to client
-    const { data: brandProfile } = await admin
+    await admin
       .from('brand_profiles')
       .insert({ client_id: client.id })
-      .select('id')
-      .single()
-
-    // Link brand profile back to client
-    if (brandProfile) {
-      await admin.from('clients')
-        .update({ brand_profile_id: brandProfile.id })
-        .eq('id', client.id)
-    }
 
     // TODO: create Stripe customer
     console.log('TODO: Create Stripe customer for user:', userId)

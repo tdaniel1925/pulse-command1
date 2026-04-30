@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     // Look up client by onboarding PIN
     const { data: client, error: clientError } = await admin
       .from('clients')
-      .select('id, brand_profile_id')
+      .select('id')
       .eq('onboarding_pin', pin)
       .single()
 
@@ -69,12 +69,10 @@ export async function POST(request: NextRequest) {
     }).eq('id', client.id)
 
     // Save transcript + summary to brand_profiles
-    if (client.brand_profile_id) {
-      await admin.from('brand_profiles').update({
-        vapi_transcript: transcript,
-        ai_analysis_raw: summary || null,
-      }).eq('id', client.brand_profile_id)
-    }
+    await admin.from('brand_profiles').update({
+      vapi_transcript: transcript,
+      ai_analysis_raw: summary || null,
+    }).eq('client_id', client.id)
 
     // Log activity
     await admin.from('activities').insert({
