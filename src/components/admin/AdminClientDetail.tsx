@@ -296,7 +296,8 @@ export function AdminClientDetail({ client, posts, videos, presentations, activi
 
   const filteredPosts = postFilter === "all" ? posts : posts.filter((p) => p.status === postFilter);
 
-  const metadata = (client.metadata ?? {}) as Record<string, unknown>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const metadata = (client.metadata ?? {}) as Record<string, any>;
   const connectedPlatforms = client.ayrshare_connected_platforms ?? [];
 
   const TABS = [
@@ -666,7 +667,7 @@ export function AdminClientDetail({ client, posts, videos, presentations, activi
           {activeTab === "brand" && (
             <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-6 space-y-6">
               {/* Brand Colors */}
-              {Array.isArray(metadata.brand_colors) && (metadata.brand_colors as string[]).length > 0 && Boolean(metadata.brand_colors) && (
+              {!!(Array.isArray(metadata.brand_colors) && (metadata.brand_colors as string[]).length > 0) && (
                 <div>
                   <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Brand Colors</p>
                   <div className="flex gap-2 flex-wrap">
@@ -684,12 +685,12 @@ export function AdminClientDetail({ client, posts, videos, presentations, activi
               )}
 
               {/* Brand Voice */}
-              {metadata.brand_voice && (
+              {!!metadata.brand_voice ? (
                 <div>
                   <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Brand Voice</p>
                   <p className="text-sm text-neutral-800">{String(metadata.brand_voice)}</p>
                 </div>
-              )}
+              ) : null}
 
               {/* Industry / Website / Phone */}
               <div className="grid grid-cols-3 gap-4">

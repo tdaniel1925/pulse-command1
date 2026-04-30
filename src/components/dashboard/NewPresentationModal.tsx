@@ -237,7 +237,7 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-8 w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-2xl p-4 sm:p-8 w-full max-w-lg sm:max-w-lg relative max-h-[90vh] overflow-y-auto">
         {/* Close button */}
         <button
           onClick={handleClose}
@@ -315,7 +315,7 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                 <h2 className="text-xl font-bold text-neutral-900 mb-1">How do you want to create this?</h2>
                 <p className="text-sm text-neutral-500 mb-6">Choose your starting point.</p>
 
-                <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                   {MODE_CARDS.map((card) => {
                     const selected = sourceMode === card.value;
                     return (
@@ -554,7 +554,7 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
 
                 {/* Section A: Template picker */}
                 <p className="text-sm font-medium text-neutral-700 mb-2">Choose a Template</p>
-                <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
                   {allTemplates.map((tmpl) => {
                     const selected = templateId === tmpl.id;
                     return (

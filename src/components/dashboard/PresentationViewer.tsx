@@ -447,7 +447,7 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
       )}
 
       {/* Toolbar */}
-      <div className="flex items-center gap-3 px-4 py-3 bg-white border-b border-neutral-200 flex-shrink-0">
+      <div className="flex items-center gap-1 sm:gap-3 px-2 sm:px-4 py-3 bg-white border-b border-neutral-200 flex-shrink-0 flex-wrap">
         <Link
           href="/dashboard/presentations"
           className="flex items-center gap-1.5 text-sm text-neutral-500 hover:text-neutral-900 transition-colors mr-2"
@@ -456,10 +456,10 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
           <span>Back</span>
         </Link>
         <div className="w-px h-5 bg-neutral-200" />
-        <h1 className="text-sm font-semibold text-neutral-900 flex-1 truncate">{presentation.title}</h1>
+        <h1 className="text-xs sm:text-sm font-semibold text-neutral-900 flex-1 truncate hidden sm:block">{presentation.title}</h1>
 
         {/* toolbar buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 sm:gap-2 ml-auto">
           {/* Edit toggle */}
           <button
             onClick={() => setEditMode((v) => !v)}
@@ -576,9 +576,9 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
 
       {/* Body */}
       <div className="flex flex-1 overflow-hidden">
-        {/* Thumbnails panel */}
+        {/* Thumbnails panel — hidden on mobile */}
         {showThumbnails && (
-          <div className="w-48 flex-shrink-0 bg-white border-r border-neutral-200 overflow-y-auto py-3 flex flex-col gap-2 px-2">
+          <div className="hidden lg:flex w-48 flex-shrink-0 bg-white border-r border-neutral-200 overflow-y-auto py-3 flex-col gap-2 px-2">
             {slides.map((s, i) => (
               <div key={i} className="flex flex-col gap-1">
                 {/* Reorder arrows — edit mode only */}

@@ -117,7 +117,7 @@ export default async function AdminDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-neutral-900">Admin Dashboard</h2>
           <p className="text-sm text-neutral-500 mt-1">{todayStr}</p>
@@ -125,8 +125,8 @@ export default async function AdminDashboardPage() {
         <TriggerCronButton />
       </div>
 
-      {/* Stats row — 5 cards */}
-      <div className="grid grid-cols-5 gap-4">
+      {/* Stats row — responsive 1-2-5 cols */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
           <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Active Clients</p>
           <p className="text-3xl font-bold text-green-600">{activeCount ?? 0}</p>
@@ -157,14 +157,14 @@ export default async function AdminDashboardPage() {
 
       {/* Clients needing attention */}
       <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-neutral-100 flex items-center gap-3">
+        <div className="px-4 sm:px-6 py-4 border-b border-neutral-100 flex items-center gap-3">
           <h3 className="text-base font-semibold text-neutral-900">Needs Attention</h3>
           <span className="inline-block px-2.5 py-0.5 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full">
             {needsAttention.length}
           </span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full text-sm min-w-full">
             <thead>
               <tr className="bg-neutral-50 text-neutral-500 text-xs font-semibold uppercase tracking-wide">
                 <th className="text-left px-6 py-3">Business Name</th>

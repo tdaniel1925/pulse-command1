@@ -384,7 +384,7 @@ export default function AdminPipelineBoard({
 
       {/* Kanban board */}
       <div className="overflow-x-auto flex-1">
-        <div className="grid grid-cols-5 gap-3 min-w-[1000px] h-full">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 min-w-full lg:min-w-[1000px] h-full">
           <KanbanColumn
             title="Generating"
             posts={filteredGenerating}

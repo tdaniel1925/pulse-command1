@@ -120,18 +120,18 @@ export default async function DashboardPage() {
       </div>
 
       {/* Trial status card */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-6 py-4 flex items-center justify-between">
+      <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <p className="font-semibold text-yellow-800 text-sm">You have 18 days left in your free trial</p>
           <p className="text-yellow-600 text-xs mt-0.5">Upgrade to keep your content flowing after May 15.</p>
         </div>
-        <button className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap">
+        <button className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap w-full sm:w-auto">
           Upgrade Now
         </button>
       </div>
 
       {/* Stats row */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => (
           <div key={s.label} className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
             <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-3 ${s.color}`}>
@@ -146,13 +146,13 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* This Month's Content */}
-        <div className="col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4">
           <h2 className="font-semibold text-neutral-900">Upcoming Scheduled Posts</h2>
 
           {upcomingPosts && upcomingPosts.length > 0 ? (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {upcomingPosts.map((post) => {
                 const platforms: string[] = Array.isArray(post.platforms) ? post.platforms : [];
                 return (
@@ -190,7 +190,7 @@ export default async function DashboardPage() {
 
           {/* Quick Actions */}
           <h2 className="font-semibold text-neutral-900 pt-2">Quick Actions</h2>
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {quickActions.map((a) => (
               <button
                 key={a.label}
