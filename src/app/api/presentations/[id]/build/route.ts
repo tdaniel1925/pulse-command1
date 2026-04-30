@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { createNotification } from '@/lib/notifications';
 import Anthropic from '@anthropic-ai/sdk';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
@@ -396,6 +397,14 @@ Return ONLY a JSON array of 4 strings. Example:
         updated_at: new Date().toISOString(),
       })
       .eq('id', id);
+
+    await createNotification({
+      clientId: presentation.client_id,
+      type: 'presentation_ready',
+      title: 'Your presentation is ready',
+      body: `"${parsed.title}" has been generated and is ready to view.`,
+      link: `/dashboard/presentations/${id}`,
+    }).catch(() => {}) // never throw
 
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {

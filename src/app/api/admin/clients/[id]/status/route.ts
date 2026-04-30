@@ -20,6 +20,17 @@ export async function PATCH(
       .eq('id', id)
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+    // Log activity if status changed
+    if (status) {
+      await admin.from("activities").insert({
+        client_id: id,
+        type: "system",
+        title: `Status changed to ${status}`,
+        description: `Admin updated client status to ${status}`,
+      });
+    }
+
     return NextResponse.json({ ok: true })
   } catch (err) {
     console.error('[admin/clients/status]', err)

@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import DashboardNav from "@/components/dashboard/DashboardNav";
 import { LogoutButton } from "@/components/dashboard/LogoutButton";
+import NotificationBell from "@/components/dashboard/NotificationBell";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -11,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { data: client } = user
     ? await supabase
         .from("clients")
-        .select("first_name, last_name, business_name")
+        .select("id, first_name, last_name, business_name")
         .eq("user_id", user.id)
         .single()
     : { data: null };
@@ -51,8 +52,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="bg-white border-b border-neutral-200 px-8 py-4 flex items-center flex-shrink-0">
+        <header className="bg-white border-b border-neutral-200 px-8 py-4 flex items-center justify-between flex-shrink-0">
           <h1 className="text-base font-semibold text-neutral-900">Client Dashboard</h1>
+          {client?.id && <NotificationBell clientId={client.id} />}
         </header>
 
         {/* Page content */}

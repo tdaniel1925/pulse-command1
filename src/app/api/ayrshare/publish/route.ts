@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { postToAyrshare } from '@/lib/ayrshare';
 import { sendPostPublishedEmail } from '@/lib/email';
+import { createNotification } from '@/lib/notifications';
 
 // POST — publish a social_post row to all its platforms via Ayrshare
 export async function POST(req: NextRequest) {
@@ -92,6 +93,14 @@ export async function POST(req: NextRequest) {
         description: `Published to ${Object.keys(results).join(', ')}.`,
         created_by: 'system',
       } as never);
+
+      await createNotification({
+        clientId: post.client_id,
+        type: 'post_published',
+        title: 'Your post is live!',
+        body: `Published to ${Object.keys(results).join(', ')}.`,
+        link: '/dashboard/social',
+      }).catch(() => {})
 
       // Send published email
       try {

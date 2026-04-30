@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { generateSocialPostImage } from "@/lib/image-engine/orchestrator";
 import type { BrandContext, BrandVibe, ClientTier } from "@/lib/image-engine/types";
 import { sendPostReadyEmail } from "@/lib/email";
+import { createNotification } from "@/lib/notifications";
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -196,6 +197,17 @@ export async function generatePostForClient(
           console.error(`[generate-post] Ayrshare publish failed for ${client.business_name}:`, publishErr.message);
         }
       }
+    }
+
+    // Step 8b: In-app notification
+    if (insertedPost?.id && !autoApprove) {
+      await createNotification({
+        clientId: clientId,
+        type: 'post_ready',
+        title: 'New post ready for review',
+        body: 'Your weekly AI-generated post is ready to approve.',
+        link: '/dashboard/social',
+      }).catch(() => {})
     }
 
     // Step 9: Log activity
