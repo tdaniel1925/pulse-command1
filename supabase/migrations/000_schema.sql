@@ -426,3 +426,28 @@ create table if not exists demo_requests (
   name text,
   created_at timestamptz default now()
 );
+
+-- Monthly generated content
+create table if not exists monthly_content (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references clients(id) on delete cascade,
+  month text not null, -- YYYY-MM format
+  content jsonb not null, -- {whitepaper, articles, tweets, infographics, case_studies, emails, podcasts}
+  status text default 'ready_for_review', -- ready_for_review | approved | published | archived
+  published_at timestamptz,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
+create index if not exists idx_monthly_content_client on monthly_content(client_id, month);
+create index if not exists idx_monthly_content_status on monthly_content(status);
+
+alter table monthly_content enable row level security;
+
+create policy "users can read own monthly content"
+  on monthly_content for select
+  using (client_id in (select id from clients where user_id = auth.uid()));
+
+create policy "users can update own monthly content"
+  on monthly_content for update
+  using (client_id in (select id from clients where user_id = auth.uid()));
