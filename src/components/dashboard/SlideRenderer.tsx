@@ -1,6 +1,11 @@
 'use client';
 
 import Image from 'next/image';
+import type { PresentationTemplate } from '@/lib/presentation-templates';
+import { WaterfallChart, parseWaterfallFromBullets } from './charts/WaterfallChart';
+import { TimelineChart, parseTimelineFromBullets } from './charts/TimelineChart';
+import { ComparisonTable, parseComparisonFromBullets } from './charts/ComparisonTable';
+import { ProcessFlow, parseProcessFromBullets } from './charts/ProcessFlow';
 
 export type SlideLayout =
   | 'title'
@@ -15,7 +20,12 @@ export type SlideLayout =
   | 'nano_number'
   | 'nano_question'
   | 'nano_quote'
-  | 'exec_summary';
+  | 'exec_summary'
+  | 'waterfall'
+  | 'timeline'
+  | 'comparison'
+  | 'process'
+  | 'big_stat';
 
 export interface Slide {
   index: number;
@@ -34,6 +44,7 @@ interface SlideRendererProps {
   slide: Slide;
   isFullscreen: boolean;
   brandColor?: string;
+  template?: PresentationTemplate;
 }
 
 function hexToRgb(hex: string): string {
@@ -60,9 +71,28 @@ function ImagePlaceholder({ prompt, accent }: { prompt: string | null; accent: s
   );
 }
 
-export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
-  const accent = slide.accent_color || '#6366f1';
-  const pad = isFullscreen ? 'p-16' : 'p-12';
+export function SlideRenderer({ slide, isFullscreen, template }: SlideRendererProps) {
+  const tokens = template?.tokens ?? {
+    background: '#FFFFFF',
+    textPrimary: '#111111',
+    textSecondary: '#555555',
+    accent: '#6366F1',
+    accentLight: '#EEF2FF',
+    backgroundAlt: undefined as string | undefined,
+    border: '#E5E7EB',
+    fontTitle: 'Inter',
+    fontBody: 'Inter',
+    titleWeight: '700',
+    titleAlign: 'left' as const,
+    slidePadding: 'p-12',
+    showLogo: true,
+    showPageNumber: true,
+    showFooterRule: false,
+    footerText: null as string | null,
+  };
+
+  const accent = tokens.accent;
+  const pad = isFullscreen ? 'p-16' : (tokens.slidePadding ?? 'p-12');
   const rgb = hexToRgb(accent);
 
   const BulletList = ({ items }: { items: string[] }) => (
@@ -73,7 +103,7 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
             className="mt-2 w-2 h-2 rounded-full flex-shrink-0"
             style={{ backgroundColor: accent }}
           />
-          <span className="text-lg text-neutral-700 leading-relaxed">{item}</span>
+          <span className="text-lg leading-relaxed" style={{ color: tokens.textSecondary }}>{item}</span>
         </li>
       ))}
     </ul>
@@ -82,23 +112,23 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
   // ── TITLE ──────────────────────────────────────────────────────────────────
   if (slide.layout === 'title') {
     return (
-      <div className="w-full h-full bg-white flex flex-col relative overflow-hidden">
+      <div className="w-full h-full flex flex-col relative overflow-hidden" style={{ background: tokens.background, color: tokens.textPrimary, fontFamily: tokens.fontBody }}>
         {/* top accent bar */}
         <div className="h-2 w-full flex-shrink-0" style={{ backgroundColor: accent }} />
         {/* content */}
         <div className="flex-1 flex flex-col items-center justify-center text-center px-20 py-12">
           {slide.title && (
-            <h1 className="text-5xl font-bold text-neutral-900 leading-tight mb-6">
+            <h1 className="text-5xl leading-tight mb-6" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, textAlign: tokens.titleAlign, fontFamily: tokens.fontTitle }}>
               {slide.title}
             </h1>
           )}
           {slide.subtitle && (
-            <p className="text-2xl text-neutral-500 leading-relaxed max-w-3xl">
+            <p className="text-2xl leading-relaxed max-w-3xl" style={{ color: tokens.textSecondary }}>
               {slide.subtitle}
             </p>
           )}
           {slide.body && !slide.subtitle && (
-            <p className="text-2xl text-neutral-500 leading-relaxed max-w-3xl">{slide.body}</p>
+            <p className="text-2xl leading-relaxed max-w-3xl" style={{ color: tokens.textSecondary }}>{slide.body}</p>
           )}
         </div>
         {/* bottom accent bar */}
@@ -110,18 +140,18 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
   // ── BULLETS ────────────────────────────────────────────────────────────────
   if (slide.layout === 'bullets') {
     return (
-      <div className={`w-full h-full bg-white flex flex-col ${pad}`}>
+      <div className={`w-full h-full flex flex-col ${pad}`} style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
         <div className="flex items-stretch gap-4 mb-6">
           <div className="w-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: accent }} />
           {slide.title && (
-            <h2 className="text-3xl font-bold text-neutral-900 leading-tight">{slide.title}</h2>
+            <h2 className="text-3xl leading-tight" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, textAlign: tokens.titleAlign, fontFamily: tokens.fontTitle }}>{slide.title}</h2>
           )}
         </div>
         {slide.bullets && slide.bullets.length > 0 && (
           <BulletList items={slide.bullets} />
         )}
         {slide.body && (!slide.bullets || slide.bullets.length === 0) && (
-          <p className="text-lg text-neutral-700 leading-relaxed mt-4">{slide.body}</p>
+          <p className="text-lg leading-relaxed mt-4" style={{ color: tokens.textSecondary }}>{slide.body}</p>
         )}
       </div>
     );
@@ -130,7 +160,7 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
   // ── IMAGE LEFT ─────────────────────────────────────────────────────────────
   if (slide.layout === 'image_left') {
     return (
-      <div className="w-full h-full bg-white flex overflow-hidden">
+      <div className="w-full h-full flex overflow-hidden" style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
         {/* image 40% */}
         <div className="w-[40%] h-full relative flex-shrink-0">
           {slide.image_url ? (
@@ -147,13 +177,13 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
         {/* content 60% */}
         <div className={`flex-1 flex flex-col justify-center ${pad}`}>
           {slide.title && (
-            <h2 className="text-3xl font-bold text-neutral-900 mb-4 leading-tight">{slide.title}</h2>
+            <h2 className="text-3xl mb-4 leading-tight" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, textAlign: tokens.titleAlign, fontFamily: tokens.fontTitle }}>{slide.title}</h2>
           )}
           {slide.bullets && slide.bullets.length > 0 && (
             <BulletList items={slide.bullets} />
           )}
           {slide.body && (!slide.bullets || slide.bullets.length === 0) && (
-            <p className="text-lg text-neutral-700 leading-relaxed">{slide.body}</p>
+            <p className="text-lg leading-relaxed" style={{ color: tokens.textSecondary }}>{slide.body}</p>
           )}
         </div>
       </div>
@@ -163,17 +193,17 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
   // ── IMAGE RIGHT ────────────────────────────────────────────────────────────
   if (slide.layout === 'image_right') {
     return (
-      <div className="w-full h-full bg-white flex overflow-hidden">
+      <div className="w-full h-full flex overflow-hidden" style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
         {/* content 60% */}
         <div className={`flex-1 flex flex-col justify-center ${pad}`}>
           {slide.title && (
-            <h2 className="text-3xl font-bold text-neutral-900 mb-4 leading-tight">{slide.title}</h2>
+            <h2 className="text-3xl mb-4 leading-tight" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, textAlign: tokens.titleAlign, fontFamily: tokens.fontTitle }}>{slide.title}</h2>
           )}
           {slide.bullets && slide.bullets.length > 0 && (
             <BulletList items={slide.bullets} />
           )}
           {slide.body && (!slide.bullets || slide.bullets.length === 0) && (
-            <p className="text-lg text-neutral-700 leading-relaxed">{slide.body}</p>
+            <p className="text-lg leading-relaxed" style={{ color: tokens.textSecondary }}>{slide.body}</p>
           )}
         </div>
         {/* image 40% */}
@@ -198,7 +228,7 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
     const quoteText = slide.bullets?.[0] ?? slide.body ?? '';
     const attribution = slide.bullets?.[1] ?? null;
     return (
-      <div className={`w-full h-full bg-white flex flex-col items-center justify-center text-center ${pad} relative overflow-hidden`}>
+      <div className={`w-full h-full flex flex-col items-center justify-center text-center ${pad} relative overflow-hidden`} style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
         {/* decorative quote mark */}
         <span
           className="text-9xl font-serif leading-none select-none absolute top-4 left-8 opacity-10"
@@ -207,11 +237,11 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
           &ldquo;
         </span>
         <div className="relative z-10 max-w-3xl">
-          <p className="text-3xl italic font-medium text-neutral-800 leading-relaxed mb-6">
+          <p className="text-3xl italic font-medium leading-relaxed mb-6" style={{ color: tokens.textPrimary }}>
             {quoteText}
           </p>
           {attribution && (
-            <p className="text-lg text-neutral-500">&mdash; {attribution}</p>
+            <p className="text-lg" style={{ color: tokens.textSecondary }}>&mdash; {attribution}</p>
           )}
         </div>
       </div>
@@ -225,16 +255,17 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
       return { value: value?.trim() ?? b, label: label?.trim() ?? '' };
     });
     return (
-      <div className={`w-full h-full bg-white flex flex-col ${pad}`}>
+      <div className={`w-full h-full flex flex-col ${pad}`} style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
         {slide.title && (
-          <h2 className="text-3xl font-bold text-neutral-900 mb-8 leading-tight">{slide.title}</h2>
+          <h2 className="text-3xl mb-8 leading-tight" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, textAlign: tokens.titleAlign, fontFamily: tokens.fontTitle }}>{slide.title}</h2>
         )}
         <div className="flex gap-4 flex-1 items-center">
           {statItems.map((stat, i) => (
             <div
               key={i}
-              className="flex-1 bg-white rounded-2xl p-6 flex flex-col items-center justify-center text-center"
+              className="flex-1 rounded-2xl p-6 flex flex-col items-center justify-center text-center"
               style={{
+                background: tokens.accentLight,
                 border: `2px solid ${accent}`,
                 boxShadow: `0 4px 24px rgba(${rgb}, 0.08)`,
               }}
@@ -245,7 +276,7 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
               >
                 {stat.value}
               </span>
-              <span className="text-sm text-neutral-500 font-medium uppercase tracking-wide">
+              <span className="text-sm font-medium uppercase tracking-wide" style={{ color: tokens.textSecondary }}>
                 {stat.label}
               </span>
             </div>
@@ -262,15 +293,15 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
     const leftBullets = bullets.slice(0, mid);
     const rightBullets = bullets.slice(mid);
     return (
-      <div className={`w-full h-full bg-white flex flex-col ${pad}`}>
+      <div className={`w-full h-full flex flex-col ${pad}`} style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
         {slide.title && (
-          <h2 className="text-3xl font-bold text-neutral-900 mb-6 leading-tight">{slide.title}</h2>
+          <h2 className="text-3xl mb-6 leading-tight" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, textAlign: tokens.titleAlign, fontFamily: tokens.fontTitle }}>{slide.title}</h2>
         )}
         <div className="flex gap-8 flex-1">
           <div className="flex-1">
             {leftBullets.length > 0 && <BulletList items={leftBullets} />}
           </div>
-          <div className="w-px bg-neutral-100 flex-shrink-0" />
+          <div className="w-px flex-shrink-0" style={{ backgroundColor: tokens.border ?? '#E5E7EB' }} />
           <div className="flex-1">
             {rightBullets.length > 0 && <BulletList items={rightBullets} />}
           </div>
@@ -285,21 +316,21 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
       <div
         className="w-full h-full flex flex-col items-center justify-center text-center relative overflow-hidden"
         style={{
-          background: `linear-gradient(135deg, rgba(${rgb}, 0.08) 0%, rgba(${rgb}, 0.18) 100%)`,
+          background: tokens.backgroundAlt ?? `linear-gradient(135deg, rgba(${rgb}, 0.08) 0%, rgba(${rgb}, 0.18) 100%)`,
+          fontFamily: tokens.fontBody,
         }}
       >
-        {/* decorative horizontal rule */}
         <div className="w-24 h-1 rounded-full mb-8" style={{ backgroundColor: accent }} />
         {slide.title && (
-          <h2 className="text-5xl font-bold text-neutral-900 leading-tight mb-4 px-16">
+          <h2 className="text-5xl leading-tight mb-4 px-16" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, textAlign: 'center', fontFamily: tokens.fontTitle }}>
             {slide.title}
           </h2>
         )}
         {slide.subtitle && (
-          <p className="text-xl text-neutral-600 max-w-2xl px-16">{slide.subtitle}</p>
+          <p className="text-xl max-w-2xl px-16" style={{ color: tokens.textSecondary }}>{slide.subtitle}</p>
         )}
         {slide.body && !slide.subtitle && (
-          <p className="text-xl text-neutral-600 max-w-2xl px-16">{slide.body}</p>
+          <p className="text-xl max-w-2xl px-16" style={{ color: tokens.textSecondary }}>{slide.body}</p>
         )}
         <div className="w-24 h-1 rounded-full mt-8" style={{ backgroundColor: accent }} />
       </div>
@@ -311,13 +342,12 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
     return (
       <div
         className="w-full h-full flex flex-col items-center justify-center text-center px-12 relative overflow-hidden"
-        style={{ backgroundColor: accent }}
+        style={{ backgroundColor: accent, fontFamily: tokens.fontBody }}
       >
         {slide.title && (
           <h1
-            className={`font-black text-white leading-tight ${
-              isFullscreen ? 'text-6xl' : 'text-5xl'
-            }`}
+            className={`font-black text-white leading-tight ${isFullscreen ? 'text-6xl' : 'text-5xl'}`}
+            style={{ fontFamily: tokens.fontTitle }}
           >
             {slide.title}
           </h1>
@@ -332,19 +362,18 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
   // ── NANO NUMBER ────────────────────────────────────────────────────────────
   if (slide.layout === 'nano_number') {
     return (
-      <div className="w-full h-full bg-white flex flex-col items-center justify-center text-center relative overflow-hidden px-12">
-        {/* Thin accent line above the number */}
+      <div className="w-full h-full flex flex-col items-center justify-center text-center relative overflow-hidden px-12" style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
         <div className="w-24 h-1 rounded-full mb-8" style={{ backgroundColor: accent }} />
         {slide.title && (
           <span
             className={`font-black leading-none ${isFullscreen ? 'text-9xl' : 'text-8xl'}`}
-            style={{ color: accent }}
+            style={{ color: accent, fontFamily: tokens.fontTitle }}
           >
             {slide.title}
           </span>
         )}
         {slide.subtitle && (
-          <p className="text-neutral-400 text-lg uppercase tracking-widest mt-6">
+          <p className="text-lg uppercase tracking-widest mt-6" style={{ color: tokens.textSecondary }}>
             {slide.subtitle}
           </p>
         )}
@@ -358,10 +387,10 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
       <div
         className="w-full h-full flex flex-col items-center justify-center text-center px-16 relative overflow-hidden"
         style={{
-          background: `linear-gradient(to top, rgba(${rgb}, 0.10) 0%, transparent 60%)`,
+          background: `linear-gradient(to top, rgba(${rgb}, 0.10) 0%, transparent 60%), ${tokens.background}`,
+          fontFamily: tokens.fontBody,
         }}
       >
-        {/* Large decorative quotation mark */}
         <span
           className="text-[12rem] font-serif leading-none select-none absolute top-0 left-4 opacity-[0.15] pointer-events-none"
           style={{ color: accent }}
@@ -370,9 +399,8 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
         </span>
         {slide.title && (
           <h1
-            className={`font-bold italic text-neutral-900 leading-tight relative z-10 ${
-              isFullscreen ? 'text-6xl' : 'text-5xl'
-            }`}
+            className={`font-bold italic leading-tight relative z-10 ${isFullscreen ? 'text-6xl' : 'text-5xl'}`}
+            style={{ color: tokens.textPrimary, fontFamily: tokens.fontTitle }}
           >
             {slide.title}
           </h1>
@@ -384,21 +412,19 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
   // ── NANO QUOTE ─────────────────────────────────────────────────────────────
   if (slide.layout === 'nano_quote') {
     return (
-      <div className="w-full h-full bg-white flex overflow-hidden">
-        {/* Left accent border */}
+      <div className="w-full h-full flex overflow-hidden" style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
         <div className="w-2 flex-shrink-0" style={{ backgroundColor: accent }} />
         <div className="flex-1 flex flex-col justify-center px-12 py-12">
           {slide.title && (
             <p
-              className={`font-semibold italic text-neutral-800 leading-snug ${
-                isFullscreen ? 'text-5xl' : 'text-4xl'
-              }`}
+              className={`font-semibold italic leading-snug ${isFullscreen ? 'text-5xl' : 'text-4xl'}`}
+              style={{ color: tokens.textPrimary, fontFamily: tokens.fontTitle }}
             >
               {slide.title}
             </p>
           )}
           {slide.subtitle && (
-            <p className="text-neutral-400 text-base mt-6">&mdash; {slide.subtitle}</p>
+            <p className="text-base mt-6" style={{ color: tokens.textSecondary }}>&mdash; {slide.subtitle}</p>
           )}
         </div>
       </div>
@@ -409,7 +435,7 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
   if (slide.layout === 'exec_summary') {
     const bullets = slide.bullets ?? [];
     return (
-      <div className="w-full h-full bg-white flex flex-col overflow-hidden">
+      <div className="w-full h-full flex flex-col overflow-hidden" style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
         {/* Top accent rule */}
         <div className="h-[3px] w-full flex-shrink-0" style={{ backgroundColor: accent }} />
         <div className={`flex-1 flex flex-col ${pad} pt-8`}>
@@ -433,8 +459,8 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
                     style={{ width: 8, height: 8, backgroundColor: accent }}
                   />
                   <span className="text-base leading-relaxed">
-                    <span className="font-bold text-neutral-900">{keyTerm}:</span>
-                    {rest && <span className="font-normal text-neutral-600"> {rest}</span>}
+                    <span className="font-bold" style={{ color: tokens.textPrimary }}>{keyTerm}:</span>
+                    {rest && <span className="font-normal" style={{ color: tokens.textSecondary }}> {rest}</span>}
                   </span>
                 </li>
               );
@@ -447,11 +473,11 @@ export function SlideRenderer({ slide, isFullscreen }: SlideRendererProps) {
 
   // ── FALLBACK ───────────────────────────────────────────────────────────────
   return (
-    <div className={`w-full h-full bg-white flex flex-col ${pad}`}>
+    <div className={`w-full h-full flex flex-col ${pad}`} style={{ background: tokens.background, fontFamily: tokens.fontBody }}>
       {slide.title && (
-        <h2 className="text-3xl font-bold text-neutral-900 mb-4">{slide.title}</h2>
+        <h2 className="text-3xl mb-4" style={{ color: tokens.textPrimary, fontWeight: tokens.titleWeight, fontFamily: tokens.fontTitle }}>{slide.title}</h2>
       )}
-      {slide.body && <p className="text-lg text-neutral-700 leading-relaxed">{slide.body}</p>}
+      {slide.body && <p className="text-lg leading-relaxed" style={{ color: tokens.textSecondary }}>{slide.body}</p>}
     </div>
   );
 }

@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { CheckCircle, X } from 'lucide-react';
 import { SlideRenderer } from './SlideRenderer';
+import { SlideMaster } from './SlideMaster';
+import { getAllTemplates, getTemplate } from '@/lib/presentation-templates';
+import type { PresentationTemplate, TemplateId } from '@/lib/presentation-templates';
 import type { Slide } from './SlideRenderer';
 
 interface SlideGrade {
@@ -28,6 +31,7 @@ export interface Presentation {
   status: string;
   thumbnail_url: string | null;
   created_at: string;
+  template_id?: string | null;
 }
 
 interface PresentationViewerProps {
@@ -47,6 +51,11 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
   const [grades, setGrades] = useState<SlideGrade[] | null>(null);
   const [showGrader, setShowGrader] = useState(false);
   const [isGrading, setIsGrading] = useState(false);
+  const [activeTemplate, setActiveTemplate] = useState<PresentationTemplate>(
+    () => getTemplate((initialPresentation.template_id ?? 'pitch') as TemplateId)
+  );
+  const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const allTemplates = getAllTemplates();
 
   const slidesRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -283,7 +292,18 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
             height: 'min(100vh, calc(100vw * 9 / 16))',
           }}
         >
-          {slide && <SlideRenderer slide={slide} isFullscreen={true} />}
+          {slide && (
+            <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+              <SlideRenderer slide={slide} isFullscreen={true} template={activeTemplate} />
+              <SlideMaster
+                template={activeTemplate}
+                slideNumber={currentSlide + 1}
+                totalSlides={total}
+                businessName={presentation.title}
+                isFullscreen={true}
+              />
+            </div>
+          )}
         </div>
 
         {/* Bottom controls */}
@@ -391,6 +411,37 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
               </>
             )}
           </button>
+          {/* Template switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setShowTemplatePicker((v) => !v)}
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
+                showTemplatePicker
+                  ? 'bg-indigo-50 border-indigo-200 text-indigo-700'
+                  : 'bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50'
+              }`}
+            >
+              Template: {activeTemplate.name}
+            </button>
+            {showTemplatePicker && (
+              <div className="absolute right-0 top-full mt-1 w-56 bg-white rounded-xl border border-neutral-200 shadow-xl z-30 p-2">
+                {allTemplates.map((tmpl) => (
+                  <button
+                    key={tmpl.id}
+                    onClick={() => { setActiveTemplate(tmpl); setShowTemplatePicker(false); }}
+                    className={`w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      activeTemplate.id === tmpl.id
+                        ? 'bg-indigo-50 text-indigo-700 font-medium'
+                        : 'text-neutral-700 hover:bg-neutral-50'
+                    }`}
+                  >
+                    <span className="text-xs text-neutral-400 font-normal">{tmpl.vibe}</span>
+                    {tmpl.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             onClick={() => setIsFullscreen(true)}
             className="px-3 py-1.5 text-xs font-medium rounded-lg border bg-white border-neutral-200 text-neutral-600 hover:bg-neutral-50 transition-colors"
@@ -431,7 +482,7 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
                 style={{ aspectRatio: '16/9' }}
               >
                 <div className="w-full h-full" style={{ transform: 'scale(0.35)', transformOrigin: 'top left', width: '285%', height: '285%', pointerEvents: 'none' }}>
-                  <SlideRenderer slide={s} isFullscreen={false} />
+                  <SlideRenderer slide={s} isFullscreen={false} template={activeTemplate} />
                 </div>
                 <span className="absolute bottom-1 right-1 text-[9px] font-medium text-neutral-400 bg-white/80 rounded px-1">
                   {i + 1}
@@ -455,7 +506,16 @@ export function PresentationViewer({ presentation: initialPresentation, isGenera
               }}
             >
               {slide ? (
-                <SlideRenderer slide={slide} isFullscreen={false} />
+                <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                  <SlideRenderer slide={slide} isFullscreen={false} template={activeTemplate} />
+                  <SlideMaster
+                    template={activeTemplate}
+                    slideNumber={currentSlide + 1}
+                    totalSlides={total}
+                    businessName={presentation.title}
+                    isFullscreen={false}
+                  />
+                </div>
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-neutral-400">
                   No slides available

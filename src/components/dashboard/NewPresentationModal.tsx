@@ -144,7 +144,9 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
 
   const atLimit = presentationsUsed >= presentationsLimit;
   const allTemplates = getAllTemplates();
-  const allNarrativeFrameworks = narrativeFrameworks;
+  const allNarrativeFrameworks = (Object.entries(narrativeFrameworks) as [NarrativeFramework, { name: string; description: string; slideFlow: string }][]).map(
+    ([id, val]) => ({ id, ...val })
+  );
   const allDeckModes = getAllDeckModes();
 
   function handleClose() {
@@ -231,7 +233,8 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
   // Helper to find deck mode label for review
   const selectedDeckModeCard = DECK_MODE_CARDS.find((c) => c.value === deckMode);
   const selectedTemplate = allTemplates.find((t) => t.id === templateId);
-  const selectedNarrative = allNarrativeFrameworks.find((f) => f.id === narrativeFramework);
+  const selectedNarrativeEntry = narrativeFrameworks[narrativeFramework];
+  const selectedNarrativeName = selectedNarrativeEntry?.name ?? narrativeFramework;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -770,7 +773,7 @@ export function NewPresentationModal({ open, onClose, presentationsUsed, present
                   {/* Narrative */}
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wide w-20 flex-shrink-0">Narrative</span>
-                    <span className="text-sm text-neutral-800">{selectedNarrative?.name ?? narrativeFramework}</span>
+                    <span className="text-sm text-neutral-800">{selectedNarrativeName}</span>
                   </div>
                   {/* Deck mode */}
                   <div className="flex items-center gap-3">
