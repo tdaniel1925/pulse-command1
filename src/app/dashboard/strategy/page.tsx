@@ -82,8 +82,36 @@ export default function StrategyPage() {
 
   async function handleDownloadPDF() {
     if (!strategy) return;
-    // TODO: Generate PDF from strategy
-    alert("PDF download coming soon!");
+    try {
+      const res = await fetch('/api/strategy/export-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ format: 'html' }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error);
+
+      // Load html2pdf library and convert
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+      script.onload = () => {
+        const element = document.createElement('div');
+        element.innerHTML = data.html;
+        const opt = {
+          margin: 0,
+          filename: data.filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' },
+        };
+        (window as any).html2pdf().set(opt).from(element).save();
+      };
+      document.head.appendChild(script);
+    } catch (err) {
+      setError('Failed to generate PDF');
+      console.error(err);
+    }
   }
 
   if (loading) {
