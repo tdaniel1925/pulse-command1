@@ -15,9 +15,15 @@ async function scanWebsite(website: string) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ url: website }),
     })
-    const data = await res.json()
+    const text = await res.text()
+    if (!res.ok || text.includes('<!DOCTYPE') || text.includes('<html')) {
+      console.error('scan-website failed:', text.slice(0, 500))
+      return null
+    }
+    const data = JSON.parse(text)
     return data.data ?? null
-  } catch {
+  } catch (err) {
+    console.error('scanWebsite error:', err)
     return null
   }
 }
@@ -63,7 +69,12 @@ Return ONLY valid JSON array:
   })
   const raw = message.content[0].type === 'text' ? message.content[0].text : '[]'
   const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/i, '').trim()
-  return JSON.parse(jsonStr)
+  try {
+    return JSON.parse(jsonStr)
+  } catch (err) {
+    console.error('generateSocialPosts JSON parse error:', err, 'Raw:', raw.slice(0, 300))
+    return []
+  }
 }
 
 async function generateScripts(brandContext: string) {
@@ -97,7 +108,12 @@ Return ONLY valid JSON:
   })
   const raw = message.content[0].type === 'text' ? message.content[0].text : '{}'
   const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/i, '').trim()
-  return JSON.parse(jsonStr)
+  try {
+    return JSON.parse(jsonStr)
+  } catch (err) {
+    console.error('generateScripts JSON parse error:', err, 'Raw:', raw.slice(0, 300))
+    return { audioScript: '', videoScript: '' }
+  }
 }
 
 async function renderAudio(script: string, demoId: string): Promise<string | null> {

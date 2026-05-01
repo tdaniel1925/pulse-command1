@@ -158,7 +158,13 @@ Return ONLY valid JSON with ALL of these fields (be specific and detailed — av
 
     const raw = message.content[0].type === 'text' ? message.content[0].text : '{}'
     const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/i, '').trim()
-    const extracted = JSON.parse(jsonStr)
+    let extracted
+    try {
+      extracted = JSON.parse(jsonStr)
+    } catch (parseErr) {
+      console.error('JSON parse error:', parseErr, 'Raw response:', raw.slice(0, 500))
+      throw new Error(`Invalid JSON response from Claude: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`)
+    }
 
     return NextResponse.json({
       success: true,
@@ -173,7 +179,7 @@ Return ONLY valid JSON with ALL of these fields (be specific and detailed — av
     })
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    console.error('scan-website error:', message)
+    console.error('scan-website error:', message, err)
     return NextResponse.json({ error: `Scan failed: ${message}` }, { status: 500 })
   }
 }

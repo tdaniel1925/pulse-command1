@@ -121,6 +121,22 @@ export default function InterviewPage() {
       <main className="py-12 px-4 sm:px-6 lg:px-8 bg-neutral-50">
         <div className="max-w-3xl mx-auto space-y-6">
 
+          {/* Missing phone state */}
+          {!loading && !phone && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Phone className="w-8 h-8 text-red-600" />
+              </div>
+              <h2 className="text-xl font-bold text-red-900 mb-2">Phone Number Required</h2>
+              <p className="text-red-700 text-sm mb-6">
+                You need a phone number to complete the brand interview call. Please go back and add your phone number.
+              </p>
+              <Link href="/onboarding/welcome" className="inline-flex items-center gap-2 px-6 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors">
+                Back to Welcome <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          )}
+
           {/* Call complete state */}
           {callDone && (
             <div className="bg-green-50 border border-green-200 rounded-2xl p-8 text-center">
@@ -138,7 +154,7 @@ export default function InterviewPage() {
             </div>
           )}
 
-          {!callDone && (
+          {!callDone && phone && (
             <>
               {/* Main call card */}
               <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">

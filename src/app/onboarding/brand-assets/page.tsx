@@ -170,7 +170,7 @@ export default function BrandAssetsPage() {
         setSaving(false)
         return
       }
-      router.push('/onboarding/record-video')
+      router.push('/onboarding/choose-avatar')
     } catch {
       setSaveError('Something went wrong. Please try again.')
       setSaving(false)

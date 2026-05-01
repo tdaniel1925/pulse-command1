@@ -32,10 +32,13 @@ export async function createAyrshareProfile(params: {
 // ─── Generate JWT link for client to connect their social accounts ────────────
 
 export async function generateAyrshareJWT(profileKey: string): Promise<string> {
-  const privateKey = process.env.AYRSHARE_PRIVATE_KEY;
+  let privateKey = process.env.AYRSHARE_PRIVATE_KEY;
   if (!privateKey) {
     throw new Error('AYRSHARE_PRIVATE_KEY environment variable not set');
   }
+
+  // Convert escaped newlines to actual newlines
+  privateKey = privateKey.replace(/\\n/g, '\n');
 
   const res = await fetch(`${BASE}/profiles/generateJWT`, {
     method: 'POST',
