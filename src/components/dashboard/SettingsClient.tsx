@@ -510,15 +510,26 @@ function SocialTab({
   async function handleConnect() {
     setConnecting(true);
     try {
+      // First, ensure Ayrshare profile exists
+      const initRes = await fetch("/api/ayrshare/init", { method: "POST" });
+      if (!initRes.ok) {
+        const initError = await initRes.json();
+        throw new Error(initError.error || "Failed to initialize Ayrshare profile");
+      }
+
+      // Then get the connection URL
       const res = await fetch("/api/ayrshare/connect");
       const data = await res.json();
       if (data.url) {
         window.open(data.url, "_blank");
       } else {
-        throw new Error("No URL returned");
+        throw new Error(data.error || "No URL returned");
       }
-    } catch {
-      onToast({ message: "Failed to generate connection link", type: "error" });
+    } catch (error) {
+      onToast({
+        message: error instanceof Error ? error.message : "Failed to generate connection link",
+        type: "error"
+      });
     } finally {
       setConnecting(false);
     }
