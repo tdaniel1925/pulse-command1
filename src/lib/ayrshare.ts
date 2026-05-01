@@ -37,9 +37,7 @@ export async function generateAyrshareJWT(profileKey: string): Promise<string> {
     headers: headers(),
     body: JSON.stringify({
       profileKey,
-      domain: 'localhost',
-      email: 'support@bundledcontent.com',
-      expiresIn: 3600,
+      domain: typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000',
     }),
   });
   if (!res.ok) {
