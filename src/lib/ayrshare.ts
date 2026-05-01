@@ -35,7 +35,12 @@ export async function generateAyrshareJWT(profileKey: string): Promise<string> {
   const res = await fetch(`${BASE}/profiles/generateJWT`, {
     method: 'POST',
     headers: headers(),
-    body: JSON.stringify({ profileKey }),
+    body: JSON.stringify({
+      profileKey,
+      domain: 'localhost',
+      email: 'support@bundledcontent.com',
+      expiresIn: 3600,
+    }),
   });
   if (!res.ok) {
     const err = await res.text();
