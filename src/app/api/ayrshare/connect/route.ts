@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { generateAyrshareJWT } from '@/lib/ayrshare';
+import { generateAyrshareJWT, createAyrshareProfile } from '@/lib/ayrshare';
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,15 +13,31 @@ export async function GET(request: NextRequest) {
 
     const { data: client } = await supabase
       .from('clients')
-      .select('ayrshare_profile_key')
+      .select('id, ayrshare_profile_key, business_name, email')
       .eq('user_id', user.id)
       .single();
 
-    if (!client?.ayrshare_profile_key) {
-      return NextResponse.json({ error: 'No Ayrshare profile found' }, { status: 404 });
+    if (!client) {
+      return NextResponse.json({ error: 'Client not found' }, { status: 404 });
     }
 
-    const url = await generateAyrshareJWT(client.ayrshare_profile_key);
+    // If no profile key exists, create one
+    let profileKey = client.ayrshare_profile_key;
+    if (!profileKey) {
+      const { profileKey: newProfileKey } = await createAyrshareProfile({
+        title: client.business_name || 'BundledContent Client',
+        email: client.email || undefined,
+      });
+      profileKey = newProfileKey;
+
+      // Save the profile key to database
+      await supabase
+        .from('clients')
+        .update({ ayrshare_profile_key: profileKey })
+        .eq('id', client.id);
+    }
+
+    const url = await generateAyrshareJWT(profileKey);
     return NextResponse.json({ url });
   } catch (error) {
     console.error('[/api/ayrshare/connect]', error);
