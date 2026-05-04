@@ -14,27 +14,43 @@ export async function POST(request: NextRequest) {
 
     const admin = createAdminClient()
 
-    const { data: demo, error } = await admin
+    const row: Record<string, unknown> = {
+      name,
+      email: email.toLowerCase().trim(),
+      phone: phone || null,
+      website,
+      status: 'pending',
+    }
+    // Optional columns — only include if they exist in the schema
+    if (topService) row.top_service = topService
+    if (idealCustomer) row.ideal_customer = idealCustomer
+    if (differentiator) row.differentiator = differentiator
+    if (ip) row.ip_address = ip
+
+    // Try with all columns first, fall back without optional ones
+    let { data: demo, error } = await admin
       .from('demo_requests')
-      .insert({
-        name,
-        email: email.toLowerCase().trim(),
-        phone: phone || null,
-        website,
-        top_service: topService || null,
-        ideal_customer: idealCustomer || null,
-        differentiator: differentiator || null,
-        ip_address: ip,
-        status: 'pending',
-      })
+      .insert(row)
       .select()
       .single()
+
+    if (error?.message?.includes('column')) {
+      // Retry without optional columns that may not exist
+      const { data: d2, error: e2 } = await admin
+        .from('demo_requests')
+        .insert({ name, email: email.toLowerCase().trim(), phone: phone || null, website, status: 'pending' })
+        .select()
+        .single()
+      demo = d2
+      error = e2
+    }
 
     if (error) throw error
 
     // Fire pipeline in background — don't await
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
-    fetch(`${baseUrl}/api/demo/generate`, {
+    // Use request origin for internal calls (avoids port mismatch in dev)
+    const origin = request.headers.get('origin') || request.headers.get('host') ? `http://${request.headers.get('host')}` : process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
+    fetch(`${origin}/api/demo/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ demoId: demo.id }),
