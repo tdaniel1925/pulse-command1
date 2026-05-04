@@ -168,30 +168,47 @@ const reportMetrics = [
 
 /* ─── Page ────────────────────────────────────────────── */
 
+const SESSION_LIMIT = 2;
+
 export default function SamplesPage() {
   const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
+  const [generatedContent, setGeneratedContent] = useState<any>(null);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState("");
+  const [sessionCount, setSessionCount] = useState(0);
 
-  // Check for cached generated images on mount
+  // Check for cached data on mount
   useEffect(() => {
-    const cached = localStorage.getItem("sample_images");
+    const cached = localStorage.getItem("sample_data");
     if (cached) {
-      try { setGeneratedImages(JSON.parse(cached)); } catch {}
+      try {
+        const parsed = JSON.parse(cached);
+        if (parsed.images) setGeneratedImages(parsed.images);
+        if (parsed.content) setGeneratedContent(parsed.content);
+      } catch {}
     }
   }, []);
 
-  async function handleGenerateImages() {
+  async function handleGenerate() {
+    if (sessionCount >= SESSION_LIMIT) {
+      setGenError("You've used both generations for this session. Refresh the page to reset.");
+      return;
+    }
     setGenerating(true);
     setGenError("");
     try {
       const res = await fetch("/api/samples/generate-images", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Generation failed");
-      setGeneratedImages(data.images);
-      localStorage.setItem("sample_images", JSON.stringify(data.images));
+      setGeneratedImages(data.images ?? {});
+      if (data.content) setGeneratedContent(data.content);
+      setSessionCount(prev => prev + 1);
+      localStorage.setItem("sample_data", JSON.stringify({
+        images: data.images ?? {},
+        content: data.content ?? null,
+      }));
     } catch (err) {
-      setGenError(err instanceof Error ? err.message : "Failed to generate images");
+      setGenError(err instanceof Error ? err.message : "Failed to generate content");
     } finally {
       setGenerating(false);
     }
@@ -201,7 +218,16 @@ export default function SamplesPage() {
     return generatedImages[key] || FALLBACK_IMAGES[key] || "";
   }
 
-  const hasGeneratedImages = Object.keys(generatedImages).length > 0;
+  function getPostContent(platform: string): { content: string; hashtags: string } | null {
+    return generatedContent?.posts?.[platform.toLowerCase()] ?? null;
+  }
+
+  function getReelCaption(key: string): string | null {
+    const reelKey = key.replace('reel_', '');
+    return generatedContent?.reels?.[reelKey] ?? null;
+  }
+
+  const remaining = SESSION_LIMIT - sessionCount;
 
   return (
     <>
@@ -246,41 +272,79 @@ export default function SamplesPage() {
         </div>
       </section>
 
-      {/* ── Section: Social Posts ── */}
+      {/* ── Combined Section: Social Content ── */}
       <section className="py-20 bg-neutral-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader
             icon={<Share2 className="w-5 h-5 text-primary-600" />}
             iconBg="bg-primary-100"
-            label="Social Posts"
-            title="Platform-Perfect Content, Every Month"
-            desc="We write differently for every platform — LinkedIn sounds professional, Instagram is visual and punchy, Facebook drives local engagement. All branded to you."
-            count="Up to 150 posts/mo"
+            label="AI-Generated Social Content"
+            title="Platform-Perfect Posts & Videos, Every Month"
+            desc="We write differently for every platform — LinkedIn sounds professional, Instagram is visual and punchy, Facebook drives local engagement. Plus vertical videos for Reels, TikTok, and Shorts."
+            count="Up to 150 posts + 4 videos/mo"
             countColor="bg-primary-50 text-primary-700 border-primary-200"
           />
 
           {/* Generate button */}
-          <div className="flex justify-center mt-8">
+          <div className="flex flex-col items-center mt-8 gap-2">
             <button
-              onClick={handleGenerateImages}
-              disabled={generating}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              onClick={handleGenerate}
+              disabled={generating || sessionCount >= SESSION_LIMIT}
+              className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg text-base"
             >
               {generating ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Generating New Content…</>
+                <><Loader2 className="w-5 h-5 animate-spin" /> Generating New Content…</>
               ) : (
-                <><Sparkles className="w-4 h-4" /> Generate New Social Content</>
+                <><Sparkles className="w-5 h-5" /> Generate New Social Content</>
               )}
             </button>
-            {genError && <p className="text-red-500 text-sm mt-2 ml-4 self-center">{genError}</p>}
+            {remaining > 0 && !generating && (
+              <p className="text-neutral-400 text-xs">{remaining} generation{remaining !== 1 ? 's' : ''} remaining this session</p>
+            )}
+            {sessionCount >= SESSION_LIMIT && !generating && (
+              <p className="text-amber-600 text-xs font-medium">Session limit reached (2 per session)</p>
+            )}
+            {genError && <p className="text-red-500 text-sm font-medium">{genError}</p>}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-            {socialPostsData.map((post) => (
-              <div key={post.platform} className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden flex flex-col">
-                {/* Platform bar */}
+          <style>{`
+            @keyframes shimmer {
+              0% { background-position: -200% 0; }
+              100% { background-position: 200% 0; }
+            }
+            .skeleton {
+              background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+              background-size: 200% 100%;
+              animation: shimmer 1.5s ease-in-out infinite;
+            }
+            @keyframes kenburns {
+              0% { transform: scale(1) translate(0, 0); }
+              25% { transform: scale(1.15) translate(-2%, -1%); }
+              50% { transform: scale(1.1) translate(1%, -2%); }
+              75% { transform: scale(1.2) translate(-1%, 1%); }
+              100% { transform: scale(1) translate(0, 0); }
+            }
+            .reel-animate { animation: kenburns 8s ease-in-out infinite; }
+            .reel-paused { animation-play-state: paused; }
+            .reel-playing { animation-play-state: running; }
+          `}</style>
+
+          {/* Social Posts */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
+            {socialPostsData.map((post) => {
+              const dynamic = getPostContent(post.platform);
+              return (
+              <div key={post.platform} className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden flex flex-col relative">
+                {generating && (
+                  <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 rounded-2xl">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                    <p className="text-sm font-semibold text-primary-600">Generating content…</p>
+                    <div className="w-32 h-1.5 rounded-full overflow-hidden bg-neutral-200">
+                      <div className="h-full bg-primary-500 rounded-full skeleton" style={{ width: '60%' }} />
+                    </div>
+                  </div>
+                )}
                 <div className={`h-1.5 bg-gradient-to-r ${post.gradient}`} />
-                {/* Post image */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={getImageUrl(post.imageKey)} alt={post.imageAlt} className="w-full h-48 object-cover" />
                 <div className="p-5 flex-1 flex flex-col">
@@ -294,8 +358,8 @@ export default function SamplesPage() {
                     </div>
                     <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full border ${post.iconColor} bg-neutral-50 border-neutral-200`}>{post.platform}</span>
                   </div>
-                  <p className="text-neutral-700 text-sm leading-relaxed flex-1">{post.content}</p>
-                  <p className="text-primary-500 text-xs mt-3 leading-relaxed">{post.hashtags}</p>
+                  <p className="text-neutral-700 text-sm leading-relaxed flex-1">{dynamic?.content ?? post.content}</p>
+                  <p className="text-primary-500 text-xs mt-3 leading-relaxed">{dynamic?.hashtags ?? post.hashtags}</p>
                   <div className="flex items-center gap-4 mt-4 pt-4 border-t border-neutral-100 text-xs text-neutral-400">
                     <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> {post.likes}</span>
                     <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" /> {post.comments}</span>
@@ -303,47 +367,33 @@ export default function SamplesPage() {
                   </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
-      </section>
 
-      {/* ── Section: Short Reels / TikToks ── */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <SectionHeader
-            icon={<Smartphone className="w-5 h-5 text-accent-500" />}
-            iconBg="bg-accent-100"
-            label="Short Reels & TikToks"
-            title="Vertical Videos Built for the Scroll"
-            desc="15–60 second AI presenter videos in 9:16 format — ready to post on Instagram Reels, TikTok, and YouTube Shorts. No camera. No editing. No studio."
-            count="Up to 4 videos/mo"
-            countColor="bg-accent-50 text-accent-700 border-accent-200"
-          />
+          {/* Short Reels — same section */}
+          <div className="mt-12">
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <div className="inline-flex items-center gap-2 w-10 h-10 bg-accent-100 rounded-xl justify-center">
+                <Smartphone className="w-5 h-5 text-accent-500" />
+              </div>
+              <span className="text-sm font-bold text-neutral-500 uppercase tracking-wide">Short Reels & TikToks</span>
+              <span className="text-xs font-bold px-3 py-1 rounded-full border bg-accent-50 text-accent-700 border-accent-200">Up to 4 videos/mo</span>
+            </div>
+          </div>
 
-          <style>{`
-            @keyframes kenburns {
-              0% { transform: scale(1) translate(0, 0); }
-              25% { transform: scale(1.15) translate(-2%, -1%); }
-              50% { transform: scale(1.1) translate(1%, -2%); }
-              75% { transform: scale(1.2) translate(-1%, 1%); }
-              100% { transform: scale(1) translate(0, 0); }
-            }
-            .reel-animate { animation: kenburns 8s ease-in-out infinite; }
-            .reel-paused { animation-play-state: paused; }
-            .reel-playing { animation-play-state: running; }
-          `}</style>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mt-12">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-5">
             {reelsData.map((reel) => {
               const reelImage = getImageUrl(reel.imageKey);
               const fallbackGradient = REEL_FALLBACK_GRADIENTS[reel.imageKey];
+              const dynamicCaption = getReelCaption(reel.imageKey);
               return (
               <ReelCard
                 key={reel.label}
-                reel={reel}
+                reel={{ ...reel, caption: dynamicCaption ?? reel.caption }}
                 reelImage={reelImage}
                 fallbackGradient={fallbackGradient}
+                generating={generating}
               />
               );
             })}
@@ -632,10 +682,11 @@ export default function SamplesPage() {
 
 /* ─── Reel card with inline playback ────────────────────── */
 
-function ReelCard({ reel, reelImage, fallbackGradient }: {
-  reel: typeof reelsData[number];
+function ReelCard({ reel, reelImage, fallbackGradient, generating }: {
+  reel: { label: string; caption: string; duration: string; imageKey: string; views: string };
   reelImage: string;
   fallbackGradient: string;
+  generating?: boolean;
 }) {
   const [playing, setPlaying] = useState(false);
 
@@ -644,9 +695,17 @@ function ReelCard({ reel, reelImage, fallbackGradient }: {
       {/* Phone frame */}
       <div
         className="relative mx-auto w-full max-w-[180px] cursor-pointer group"
-        onClick={() => setPlaying(!playing)}
+        onClick={() => !generating && setPlaying(!playing)}
       >
         <div className="rounded-3xl border-4 border-neutral-900 overflow-hidden shadow-2xl bg-neutral-900 aspect-[9/16] relative">
+          {/* Loading overlay */}
+          {generating && (
+            <div className="absolute inset-0 z-10 bg-neutral-900/80 flex flex-col items-center justify-center gap-2">
+              <Loader2 className="w-6 h-6 animate-spin text-white" />
+              <p className="text-white text-xs font-medium">Generating…</p>
+            </div>
+          )}
+
           {reelImage ? (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
@@ -658,39 +717,31 @@ function ReelCard({ reel, reelImage, fallbackGradient }: {
             <div className={`absolute inset-0 bg-gradient-to-b ${fallbackGradient} opacity-90`} />
           )}
 
-          {/* Dark overlay when not playing */}
-          {!playing && (
+          {!playing && !generating && (
             <div className="absolute inset-0 bg-black/20" />
           )}
 
-          {/* Play/Pause button */}
           <div className="absolute inset-0 flex items-center justify-center">
-            {!playing && (
+            {!playing && !generating && (
               <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/40 group-hover:scale-110 transition-transform">
                 <Play className="w-6 h-6 text-white fill-white ml-1" />
               </div>
             )}
           </div>
 
-          {/* Playing indicator */}
-          {playing && (
+          {playing && !generating && (
             <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
               <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
               LIVE
             </div>
           )}
 
-          {/* Duration */}
           <div className="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full font-medium">
             {reel.duration}
           </div>
-
-          {/* Views */}
           <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full font-medium">
             <Eye className="w-3 h-3" /> {reel.views}
           </div>
-
-          {/* Notch */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-neutral-900 rounded-b-xl" />
         </div>
       </div>
