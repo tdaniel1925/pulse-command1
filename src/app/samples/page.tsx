@@ -37,9 +37,13 @@ import Footer from "@/components/Footer";
 /* ─── Sample data ─────────────────────────────────────── */
 
 const FALLBACK_IMAGES: Record<string, string> = {
-  instagram_roofing: "https://images.unsplash.com/photo-1632159723950-e60fb1a2336f?auto=format&fit=crop&w=800&q=80",
-  linkedin_commercial: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80",
-  facebook_inspection: "https://images.unsplash.com/photo-1570129477492-45c003dc71b8?auto=format&fit=crop&w=800&q=80",
+  instagram_roofing: "/samples/set1-instagram.jpg",
+  linkedin_commercial: "/samples/set1-linkedin.jpg",
+  facebook_inspection: "/samples/set1-facebook.jpg",
+  reel_brand_story: "/samples/set1-reel-brand.jpg",
+  reel_process: "/samples/set1-reel-process.jpg",
+  reel_tips: "/samples/set1-reel-tips.jpg",
+  reel_testimonial: "/samples/set1-reel-testimonial.jpg",
 };
 
 const socialPostsData = [
@@ -170,10 +174,19 @@ const reportMetrics = [
 
 const SESSION_LIMIT = 2;
 
+// All 4 image sets — images swap instantly, no API call needed
+const IMAGE_SETS: Record<string, string>[] = [
+  { instagram_roofing: '/samples/set1-instagram.jpg', linkedin_commercial: '/samples/set1-linkedin.jpg', facebook_inspection: '/samples/set1-facebook.jpg', reel_brand_story: '/samples/set1-reel-brand.jpg', reel_process: '/samples/set1-reel-process.jpg', reel_tips: '/samples/set1-reel-tips.jpg', reel_testimonial: '/samples/set1-reel-testimonial.jpg' },
+  { instagram_roofing: '/samples/set2-instagram.jpg', linkedin_commercial: '/samples/set2-linkedin.jpg', facebook_inspection: '/samples/set2-facebook.jpg', reel_brand_story: '/samples/set2-reel-brand.jpg', reel_process: '/samples/set2-reel-process.jpg', reel_tips: '/samples/set2-reel-tips.jpg', reel_testimonial: '/samples/set2-reel-testimonial.jpg' },
+  { instagram_roofing: '/samples/set3-instagram.jpg', linkedin_commercial: '/samples/set3-linkedin.jpg', facebook_inspection: '/samples/set3-facebook.jpg', reel_brand_story: '/samples/set3-reel-brand.jpg', reel_process: '/samples/set3-reel-process.jpg', reel_tips: '/samples/set3-reel-tips.jpg', reel_testimonial: '/samples/set3-reel-testimonial.jpg' },
+  { instagram_roofing: '/samples/set4-instagram.jpg', linkedin_commercial: '/samples/set4-linkedin.jpg', facebook_inspection: '/samples/set4-facebook.jpg', reel_brand_story: '/samples/set4-reel-brand.jpg', reel_process: '/samples/set4-reel-process.jpg', reel_tips: '/samples/set4-reel-tips.jpg', reel_testimonial: '/samples/set4-reel-testimonial.jpg' },
+];
+
 export default function SamplesPage() {
-  const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
+  const [currentSet, setCurrentSet] = useState(0);
+  const [generatedImages, setGeneratedImages] = useState<Record<string, string>>(IMAGE_SETS[0]);
   const [generatedContent, setGeneratedContent] = useState<any>(null);
-  const [generating, setGenerating] = useState(false);
+  const [generatingText, setGeneratingText] = useState(false);
   const [genError, setGenError] = useState("");
   const [sessionCount, setSessionCount] = useState(0);
 
@@ -183,7 +196,10 @@ export default function SamplesPage() {
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
-        if (parsed.images) setGeneratedImages(parsed.images);
+        if (parsed.setIndex != null) {
+          setCurrentSet(parsed.setIndex);
+          setGeneratedImages(IMAGE_SETS[parsed.setIndex] ?? IMAGE_SETS[0]);
+        }
         if (parsed.content) setGeneratedContent(parsed.content);
       } catch {}
     }
@@ -194,23 +210,32 @@ export default function SamplesPage() {
       setGenError("You've used both generations for this session. Refresh the page to reset.");
       return;
     }
-    setGenerating(true);
     setGenError("");
+
+    // 1. Instantly swap to next image set (no API call)
+    const nextSet = (currentSet + 1) % IMAGE_SETS.length;
+    setCurrentSet(nextSet);
+    setGeneratedImages(IMAGE_SETS[nextSet]);
+
+    // 2. Clear old text and show skeleton while Claude generates new text
+    setGeneratedContent(null);
+    setGeneratingText(true);
+    setSessionCount(prev => prev + 1);
+
+    // 3. Fetch fresh text from Claude in background
     try {
       const res = await fetch("/api/samples/generate-images", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Generation failed");
-      setGeneratedImages(data.images ?? {});
       if (data.content) setGeneratedContent(data.content);
-      setSessionCount(prev => prev + 1);
       localStorage.setItem("sample_data", JSON.stringify({
-        images: data.images ?? {},
+        setIndex: nextSet,
         content: data.content ?? null,
       }));
     } catch (err) {
-      setGenError(err instanceof Error ? err.message : "Failed to generate content");
+      setGenError(err instanceof Error ? err.message : "Failed to generate captions");
     } finally {
-      setGenerating(false);
+      setGeneratingText(false);
     }
   }
 
@@ -289,19 +314,19 @@ export default function SamplesPage() {
           <div className="flex flex-col items-center mt-8 gap-2">
             <button
               onClick={handleGenerate}
-              disabled={generating || sessionCount >= SESSION_LIMIT}
+              disabled={generatingText || sessionCount >= SESSION_LIMIT}
               className="inline-flex items-center gap-2 px-8 py-3.5 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg text-base"
             >
-              {generating ? (
+              {generatingText ? (
                 <><Loader2 className="w-5 h-5 animate-spin" /> Generating New Content…</>
               ) : (
                 <><Sparkles className="w-5 h-5" /> Generate New Social Content</>
               )}
             </button>
-            {remaining > 0 && !generating && (
+            {remaining > 0 && !generatingText && (
               <p className="text-neutral-400 text-xs">{remaining} generation{remaining !== 1 ? 's' : ''} remaining this session</p>
             )}
-            {sessionCount >= SESSION_LIMIT && !generating && (
+            {sessionCount >= SESSION_LIMIT && !generatingText && (
               <p className="text-amber-600 text-xs font-medium">Session limit reached (2 per session)</p>
             )}
             {genError && <p className="text-red-500 text-sm font-medium">{genError}</p>}
@@ -336,18 +361,8 @@ export default function SamplesPage() {
               return (
               <div key={post.platform} className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden flex flex-col">
                 <div className={`h-1.5 bg-gradient-to-r ${post.gradient}`} />
-                {/* Image or skeleton */}
-                {generating ? (
-                  <div className="w-full h-48 skeleton relative flex items-center justify-center">
-                    <div className="flex items-center gap-2 bg-white/70 backdrop-blur-sm px-3 py-1.5 rounded-full">
-                      <Loader2 className="w-4 h-4 animate-spin text-primary-500" />
-                      <span className="text-xs font-semibold text-primary-600">Generating image…</span>
-                    </div>
-                  </div>
-                ) : (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img src={getImageUrl(post.imageKey)} alt={post.imageAlt} className="w-full h-48 object-cover" />
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={getImageUrl(post.imageKey)} alt={post.imageAlt} className="w-full h-48 object-cover" />
                 <div className="p-5 flex-1 flex flex-col">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center">
@@ -360,7 +375,7 @@ export default function SamplesPage() {
                     <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full border ${post.iconColor} bg-neutral-50 border-neutral-200`}>{post.platform}</span>
                   </div>
                   {/* Text or skeleton */}
-                  {generating ? (
+                  {generatingText ? (
                     <div className="flex-1 space-y-2">
                       <div className="h-3.5 skeleton rounded w-full" />
                       <div className="h-3.5 skeleton rounded w-11/12" />
@@ -406,7 +421,7 @@ export default function SamplesPage() {
                 reel={{ ...reel, caption: dynamicCaption ?? reel.caption }}
                 reelImage={reelImage}
                 fallbackGradient={fallbackGradient}
-                generating={generating}
+                generating={generatingText}
               />
               );
             })}
