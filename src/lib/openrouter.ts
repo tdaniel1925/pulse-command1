@@ -12,17 +12,15 @@
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 
 export type OpenRouterModel =
-  | 'meta-llama/llama-4-maverick:free'
-  | 'meta-llama/llama-4-scout:free'
-  | 'google/gemini-2.0-flash-exp:free'
-  | 'mistralai/mistral-small-3.1-24b-instruct:free'
-  | 'qwen/qwen3-235b-a22b:free';
+  | 'google/gemma-4-31b-it:free'
+  | 'minimax/minimax-m2.5:free'
+  | 'nvidia/nemotron-3-super-120b-a12b:free';
 
-// Default model — Llama 4 Maverick is strong at structured JSON output and content generation
-export const DEFAULT_MODEL: OpenRouterModel = 'meta-llama/llama-4-maverick:free';
+// Default model — Gemma 4 31B is strong at structured JSON output and content generation
+export const DEFAULT_MODEL: OpenRouterModel = 'google/gemma-4-31b-it:free';
 
 // Lighter model for simpler tasks (grading, short scripts, classification)
-export const LIGHT_MODEL: OpenRouterModel = 'meta-llama/llama-4-scout:free';
+export const LIGHT_MODEL: OpenRouterModel = 'minimax/minimax-m2.5:free';
 
 interface OpenRouterMessage {
   role: 'system' | 'user' | 'assistant';
@@ -69,6 +67,34 @@ export async function generateText(params: {
 
   if (!response.ok) {
     const errorText = await response.text();
+    // Retry once with fallback model on rate limit or 404
+    if ((response.status === 429 || response.status === 404) && (params.model ?? DEFAULT_MODEL) !== LIGHT_MODEL) {
+      console.warn(`OpenRouter ${response.status}, retrying with fallback model...`);
+      await new Promise(r => setTimeout(r, 1500));
+      return generateText({ ...params, model: LIGHT_MODEL });
+    }
+    // Final fallback: try Anthropic if available
+    const anthropicKey = process.env.ANTHROPIC_API_KEY;
+    if (anthropicKey && (response.status === 429 || response.status === 404)) {
+      console.warn('OpenRouter exhausted, falling back to Anthropic...');
+      const anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': anthropicKey,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: params.maxTokens ?? 2048,
+          messages: params.messages.map(m => ({ role: m.role === 'system' ? 'user' : m.role, content: m.content })),
+        }),
+      });
+      if (anthropicRes.ok) {
+        const data = await anthropicRes.json();
+        return data.content?.[0]?.text ?? '';
+      }
+    }
     throw new Error(`OpenRouter API error (${response.status}): ${errorText}`);
   }
 
