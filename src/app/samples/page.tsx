@@ -6,7 +6,7 @@ import {
   Share2, Mic, Video, BarChart3, Mail, FileText,
   MapPin, Play, Download, ExternalLink, ArrowRight,
   Smartphone, Star, TrendingUp, Users, Eye, Heart, MessageCircle,
-  Loader2, ImageIcon
+  Loader2, ImageIcon, Sparkles
 } from "lucide-react";
 
 // Brand icons not in this version of lucide-react
@@ -259,7 +259,7 @@ export default function SamplesPage() {
             countColor="bg-primary-50 text-primary-700 border-primary-200"
           />
 
-          {/* Generate AI Images button */}
+          {/* Generate button */}
           <div className="flex justify-center mt-8">
             <button
               onClick={handleGenerateImages}
@@ -267,11 +267,9 @@ export default function SamplesPage() {
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
             >
               {generating ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Generating AI Images…</>
-              ) : hasGeneratedImages ? (
-                <><ImageIcon className="w-4 h-4" /> Regenerate AI Images</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> Generating New Content…</>
               ) : (
-                <><ImageIcon className="w-4 h-4" /> Generate AI Images</>
+                <><Sparkles className="w-4 h-4" /> Generate New Social Content</>
               )}
             </button>
             {genError && <p className="text-red-500 text-sm mt-2 ml-4 self-center">{genError}</p>}
@@ -323,44 +321,30 @@ export default function SamplesPage() {
             countColor="bg-accent-50 text-accent-700 border-accent-200"
           />
 
+          <style>{`
+            @keyframes kenburns {
+              0% { transform: scale(1) translate(0, 0); }
+              25% { transform: scale(1.15) translate(-2%, -1%); }
+              50% { transform: scale(1.1) translate(1%, -2%); }
+              75% { transform: scale(1.2) translate(-1%, 1%); }
+              100% { transform: scale(1) translate(0, 0); }
+            }
+            .reel-animate { animation: kenburns 8s ease-in-out infinite; }
+            .reel-paused { animation-play-state: paused; }
+            .reel-playing { animation-play-state: running; }
+          `}</style>
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mt-12">
             {reelsData.map((reel) => {
               const reelImage = getImageUrl(reel.imageKey);
               const fallbackGradient = REEL_FALLBACK_GRADIENTS[reel.imageKey];
               return (
-              <div key={reel.label} className="flex flex-col gap-3">
-                {/* Phone frame — clickable */}
-                <a href={reel.link} target="_blank" rel="noopener noreferrer" className="relative mx-auto w-full max-w-[180px] group">
-                  <div className="rounded-3xl border-4 border-neutral-900 overflow-hidden shadow-2xl bg-neutral-900 aspect-[9/16] relative">
-                    {reelImage ? (
-                      /* eslint-disable-next-line @next/next/no-img-element */
-                      <img src={reelImage} alt={reel.label} className="absolute inset-0 w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
-                    ) : (
-                      <div className={`absolute inset-0 bg-gradient-to-b ${fallbackGradient} opacity-90 group-hover:opacity-75 transition-opacity`} />
-                    )}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/40 group-hover:scale-110 transition-transform">
-                        <Play className="w-6 h-6 text-white fill-white ml-1" />
-                      </div>
-                    </div>
-                    <div className="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full font-medium">
-                      {reel.duration}
-                    </div>
-                    <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full font-medium">
-                      <Eye className="w-3 h-3" /> {reel.views}
-                    </div>
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-neutral-900 rounded-b-xl" />
-                  </div>
-                </a>
-                <div className="text-center">
-                  <span className="text-xs font-bold text-neutral-500 uppercase tracking-wide">{reel.label}</span>
-                  <p className="text-xs text-neutral-600 mt-1 leading-relaxed line-clamp-3">{reel.caption}</p>
-                  <a href={reel.link} target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-xs text-primary-600 font-semibold mt-2 hover:underline">
-                    <ExternalLink className="w-3 h-3" /> Watch Sample
-                  </a>
-                </div>
-              </div>
+              <ReelCard
+                key={reel.label}
+                reel={reel}
+                reelImage={reelImage}
+                fallbackGradient={fallbackGradient}
+              />
               );
             })}
           </div>
@@ -643,6 +627,78 @@ export default function SamplesPage() {
 
       <Footer />
     </>
+  );
+}
+
+/* ─── Reel card with inline playback ────────────────────── */
+
+function ReelCard({ reel, reelImage, fallbackGradient }: {
+  reel: typeof reelsData[number];
+  reelImage: string;
+  fallbackGradient: string;
+}) {
+  const [playing, setPlaying] = useState(false);
+
+  return (
+    <div className="flex flex-col gap-3">
+      {/* Phone frame */}
+      <div
+        className="relative mx-auto w-full max-w-[180px] cursor-pointer group"
+        onClick={() => setPlaying(!playing)}
+      >
+        <div className="rounded-3xl border-4 border-neutral-900 overflow-hidden shadow-2xl bg-neutral-900 aspect-[9/16] relative">
+          {reelImage ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={reelImage}
+              alt={reel.label}
+              className={`absolute inset-0 w-full h-full object-cover reel-animate ${playing ? 'reel-playing' : 'reel-paused'}`}
+            />
+          ) : (
+            <div className={`absolute inset-0 bg-gradient-to-b ${fallbackGradient} opacity-90`} />
+          )}
+
+          {/* Dark overlay when not playing */}
+          {!playing && (
+            <div className="absolute inset-0 bg-black/20" />
+          )}
+
+          {/* Play/Pause button */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            {!playing && (
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/40 group-hover:scale-110 transition-transform">
+                <Play className="w-6 h-6 text-white fill-white ml-1" />
+              </div>
+            )}
+          </div>
+
+          {/* Playing indicator */}
+          {playing && (
+            <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold">
+              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+              LIVE
+            </div>
+          )}
+
+          {/* Duration */}
+          <div className="absolute top-3 right-3 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+            {reel.duration}
+          </div>
+
+          {/* Views */}
+          <div className="absolute bottom-3 left-3 flex items-center gap-1 bg-black/60 text-white text-xs px-2 py-0.5 rounded-full font-medium">
+            <Eye className="w-3 h-3" /> {reel.views}
+          </div>
+
+          {/* Notch */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-neutral-900 rounded-b-xl" />
+        </div>
+      </div>
+      <div className="text-center">
+        <span className="text-xs font-bold text-neutral-500 uppercase tracking-wide">{reel.label}</span>
+        <p className="text-xs text-neutral-600 mt-1 leading-relaxed line-clamp-3">{reel.caption}</p>
+      </div>
+    </div>
   );
 }
 
