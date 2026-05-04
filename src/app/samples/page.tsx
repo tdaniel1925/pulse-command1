@@ -334,19 +334,20 @@ export default function SamplesPage() {
             {socialPostsData.map((post) => {
               const dynamic = getPostContent(post.platform);
               return (
-              <div key={post.platform} className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden flex flex-col relative">
-                {generating && (
-                  <div className="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 rounded-2xl">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
-                    <p className="text-sm font-semibold text-primary-600">Generating content…</p>
-                    <div className="w-32 h-1.5 rounded-full overflow-hidden bg-neutral-200">
-                      <div className="h-full bg-primary-500 rounded-full skeleton" style={{ width: '60%' }} />
+              <div key={post.platform} className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden flex flex-col">
+                <div className={`h-1.5 bg-gradient-to-r ${post.gradient}`} />
+                {/* Image or skeleton */}
+                {generating ? (
+                  <div className="w-full h-48 skeleton relative flex items-center justify-center">
+                    <div className="flex items-center gap-2 bg-white/70 backdrop-blur-sm px-3 py-1.5 rounded-full">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary-500" />
+                      <span className="text-xs font-semibold text-primary-600">Generating image…</span>
                     </div>
                   </div>
+                ) : (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img src={getImageUrl(post.imageKey)} alt={post.imageAlt} className="w-full h-48 object-cover" />
                 )}
-                <div className={`h-1.5 bg-gradient-to-r ${post.gradient}`} />
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={getImageUrl(post.imageKey)} alt={post.imageAlt} className="w-full h-48 object-cover" />
                 <div className="p-5 flex-1 flex flex-col">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center">
@@ -358,8 +359,20 @@ export default function SamplesPage() {
                     </div>
                     <span className={`ml-auto text-xs font-semibold px-2 py-0.5 rounded-full border ${post.iconColor} bg-neutral-50 border-neutral-200`}>{post.platform}</span>
                   </div>
-                  <p className="text-neutral-700 text-sm leading-relaxed flex-1">{dynamic?.content ?? post.content}</p>
-                  <p className="text-primary-500 text-xs mt-3 leading-relaxed">{dynamic?.hashtags ?? post.hashtags}</p>
+                  {/* Text or skeleton */}
+                  {generating ? (
+                    <div className="flex-1 space-y-2">
+                      <div className="h-3.5 skeleton rounded w-full" />
+                      <div className="h-3.5 skeleton rounded w-11/12" />
+                      <div className="h-3.5 skeleton rounded w-9/12" />
+                      <div className="mt-3 h-3 skeleton rounded w-7/12" />
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-neutral-700 text-sm leading-relaxed flex-1">{dynamic?.content ?? post.content}</p>
+                      <p className="text-primary-500 text-xs mt-3 leading-relaxed">{dynamic?.hashtags ?? post.hashtags}</p>
+                    </>
+                  )}
                   <div className="flex items-center gap-4 mt-4 pt-4 border-t border-neutral-100 text-xs text-neutral-400">
                     <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" /> {post.likes}</span>
                     <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" /> {post.comments}</span>
@@ -698,11 +711,12 @@ function ReelCard({ reel, reelImage, fallbackGradient, generating }: {
         onClick={() => !generating && setPlaying(!playing)}
       >
         <div className="rounded-3xl border-4 border-neutral-900 overflow-hidden shadow-2xl bg-neutral-900 aspect-[9/16] relative">
-          {/* Loading overlay */}
+          {/* Loading overlay — translucent so thumbnail still visible */}
           {generating && (
-            <div className="absolute inset-0 z-10 bg-neutral-900/80 flex flex-col items-center justify-center gap-2">
-              <Loader2 className="w-6 h-6 animate-spin text-white" />
-              <p className="text-white text-xs font-medium">Generating…</p>
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-2">
+              <div className="absolute inset-0 skeleton opacity-30" />
+              <Loader2 className="w-6 h-6 animate-spin text-white relative z-10" />
+              <p className="text-white text-xs font-medium relative z-10">Generating…</p>
             </div>
           )}
 
@@ -747,7 +761,14 @@ function ReelCard({ reel, reelImage, fallbackGradient, generating }: {
       </div>
       <div className="text-center">
         <span className="text-xs font-bold text-neutral-500 uppercase tracking-wide">{reel.label}</span>
-        <p className="text-xs text-neutral-600 mt-1 leading-relaxed line-clamp-3">{reel.caption}</p>
+        {generating ? (
+          <div className="mt-1 space-y-1.5 flex flex-col items-center">
+            <div className="h-2.5 skeleton rounded w-4/5" />
+            <div className="h-2.5 skeleton rounded w-3/5" />
+          </div>
+        ) : (
+          <p className="text-xs text-neutral-600 mt-1 leading-relaxed line-clamp-3">{reel.caption}</p>
+        )}
       </div>
     </div>
   );
