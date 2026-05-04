@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import Anthropic from '@anthropic-ai/sdk';
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+import { generateJSON, LIGHT_MODEL } from '@/lib/openrouter';
 
 export interface SlideGrade {
   index: number;
@@ -41,12 +39,10 @@ export async function POST(
   }
 
   try {
-    const gradeResponse = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 2000,
-      messages: [{
-        role: 'user',
-        content: `You are a presentation design expert. Grade each slide of this presentation.
+    const grades = await generateJSON<SlideGrade[]>({
+      model: LIGHT_MODEL,
+      maxTokens: 2000,
+      prompt: `You are a presentation design expert. Grade each slide of this presentation.
 
 For each slide, evaluate:
 1. Clarity (is the message immediately clear?)
@@ -75,16 +71,7 @@ Return ONLY valid JSON array, one object per slide:
 flag options: null | "too_much_text" | "too_vague" | "no_visual" | "weak_title" | "missing_cta"
 score: 1-10 (7+ is good, 5-6 needs improvement, below 5 needs attention)
 suggestion: specific actionable fix, or null if score >= 7`,
-      }],
     });
-
-    const rawText = gradeResponse.content[0].type === 'text' ? gradeResponse.content[0].text : '[]';
-    const cleanText = rawText
-      .replace(/^```(?:json)?\s*/i, '')
-      .replace(/\s*```$/i, '')
-      .trim();
-
-    const grades: SlideGrade[] = JSON.parse(cleanText);
 
     return NextResponse.json({ grades });
   } catch (err: unknown) {

@@ -1,14 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import Anthropic from '@anthropic-ai/sdk'
-
-const getAnthropic = () => {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
-    throw new Error('ANTHROPIC_API_KEY environment variable is not set')
-  }
-  return new Anthropic({ apiKey })
-}
+import { generateJSON, DEFAULT_MODEL } from '@/lib/openrouter'
 
 const DEMO_AVATAR_ID = 'Abigail_expressive_2024112501'
 const DEMO_VOICE_ID = '21m00Tcm4TlvDq8ikWAM' // Rachel
@@ -54,12 +46,11 @@ DIRECT FROM OWNER:
 }
 
 async function generateSocialPosts(brandContext: string) {
-  const message = await getAnthropic().messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2500,
-    messages: [{
-      role: 'user',
-      content: `You are an elite social media strategist. Write 5 highly specific, engaging social media posts for this business. Use their actual business name, services, and differentiators — NOT generic marketing language. Each post must feel like it was written by someone who deeply knows this business.
+  try {
+    return await generateJSON({
+      model: DEFAULT_MODEL,
+      maxTokens: 2500,
+      prompt: `You are an elite social media strategist. Write 5 highly specific, engaging social media posts for this business. Use their actual business name, services, and differentiators — NOT generic marketing language. Each post must feel like it was written by someone who deeply knows this business.
 
 ${brandContext}
 
@@ -71,25 +62,19 @@ Return ONLY valid JSON array:
   { "platform": "X", "content": "punchy, scroll-stopping post under 240 chars" },
   { "platform": "General", "content": "versatile post that works across all platforms" }
 ]`,
-    }],
-  })
-  const raw = message.content[0].type === 'text' ? message.content[0].text : '[]'
-  const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/i, '').trim()
-  try {
-    return JSON.parse(jsonStr)
+    });
   } catch (err) {
-    console.error('generateSocialPosts JSON parse error:', err, 'Raw:', raw.slice(0, 300))
+    console.error('generateSocialPosts error:', err)
     return []
   }
 }
 
 async function generateScripts(brandContext: string) {
-  const message = await getAnthropic().messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2500,
-    messages: [{
-      role: 'user',
-      content: `You are a top-tier content writer. Create two scripts for this business — both must use specific details about their business, not generic filler.
+  try {
+    return await generateJSON<{ audioScript: string; videoScript: string }>({
+      model: DEFAULT_MODEL,
+      maxTokens: 2500,
+      prompt: `You are a top-tier content writer. Create two scripts for this business — both must use specific details about their business, not generic filler.
 
 ${brandContext}
 
@@ -107,17 +92,12 @@ ${brandContext}
 
 Return ONLY valid JSON:
 {
-  "audioScript": "full podcast script — conversational, natural speech patterns",
+  "audioScript": "full podcast script ��� conversational, natural speech patterns",
   "videoScript": "full video script — concise, punchy, made for camera"
 }`,
-    }],
-  })
-  const raw = message.content[0].type === 'text' ? message.content[0].text : '{}'
-  const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/i, '').trim()
-  try {
-    return JSON.parse(jsonStr)
+    });
   } catch (err) {
-    console.error('generateScripts JSON parse error:', err, 'Raw:', raw.slice(0, 300))
+    console.error('generateScripts error:', err)
     return { audioScript: '', videoScript: '' }
   }
 }

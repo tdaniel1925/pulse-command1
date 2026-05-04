@@ -1,20 +1,16 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { generate, DEFAULT_MODEL } from '@/lib/openrouter';
 import { createAdminClient } from '@/lib/supabase/admin';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
-async function generateWithClaude(prompt: string): Promise<string> {
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-5',
-    max_tokens: 4096,
+async function generateWithAI(prompt: string): Promise<string> {
+  return generate({
     system: 'You are an expert content marketer. Generate high-quality, engaging content exactly as requested. Return only the content itself with no preamble.',
-    messages: [{ role: 'user', content: prompt }],
+    prompt,
+    model: DEFAULT_MODEL,
+    maxTokens: 4096,
   });
-  const block = message.content[0];
-  return block.type === 'text' ? block.text : '';
 }
 
 async function generateElevenLabsAudio(script: string, voiceId: string): Promise<Buffer> {
@@ -120,7 +116,7 @@ export async function POST(req: NextRequest) {
   for (let batch = 0; batch < batchCount; batch++) {
     const batchSize = Math.min(10, socialPostCount - batch * 10);
     const platform = platforms[batch % platforms.length];
-    const postsText = await generateWithClaude(
+    const postsText = await generateWithAI(
       `Create ${batchSize} unique social media posts for ${businessName}, a ${industry} business.
 Business description: ${description}
 Target audience: ${audience}
@@ -148,7 +144,7 @@ POST [number]:
   }
 
   // --- Podcast Script + Audio ---
-  const podcastScript = await generateWithClaude(
+  const podcastScript = await generateWithAI(
     `Write a 5-minute podcast script for ${businessName}, a ${industry} business.
 Description: ${description}
 Target audience: ${audience}
@@ -184,7 +180,7 @@ Write it as natural spoken word.`
 
   // --- Short Videos ---
   for (let v = 0; v < videoCount; v++) {
-    const videoScript = await generateWithClaude(
+    const videoScript = await generateWithAI(
       `Write a 30-45 second vertical video script for ${businessName}, a ${industry} business.
 Description: ${description}
 Tone: ${tone}

@@ -1,8 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { generateJSON, LIGHT_MODEL } from '@/lib/openrouter';
 import { BRAND_VIBE_STYLES, IMAGE_ENGINE_CONFIG } from './config';
 import type { ClassificationResult, BrandVibe, ImageType, InfographicStyle, PhotoStyle, LayoutTemplate, CompositionStyle } from './types';
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ─── Simple in-memory cache ──────────────────────────────────────────────────
 
@@ -147,22 +145,25 @@ Return ONLY valid JSON, no markdown:
   "photo_style": "<style or null>"
 }`;
 
-  const response = await anthropic.messages.create({
-    model: IMAGE_ENGINE_CONFIG.classifier.model,
-    max_tokens: 400,
-    messages: [{ role: 'user', content: prompt }],
-  });
-
-  const text = response.content[0].type === 'text' ? response.content[0].text : '';
-
   let result: ClassificationResult;
   try {
-    const cleaned = text.trim().replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '');
-    const parsed = JSON.parse(cleaned);
+    const parsed = await generateJSON<{
+      composition: string;
+      layout: string;
+      primary_type: string;
+      reasoning: string;
+      fallback_type: string;
+      infographic_style?: string;
+      photo_style?: string;
+    }>({
+      model: LIGHT_MODEL,
+      maxTokens: 400,
+      prompt,
+    });
 
     // Validate layout is a known value
     const validLayouts: LayoutTemplate[] = ['hero_bottom_bar', 'vision_board', 'photo_mosaic', 'split_panel', 'quote_card', 'stat_callout', 'single_hero'];
-    const layout: LayoutTemplate = validLayouts.includes(parsed.layout) ? parsed.layout : (
+    const layout: LayoutTemplate = validLayouts.includes(parsed.layout as LayoutTemplate) ? parsed.layout as LayoutTemplate : (
       post.clientId && post.weekSeed !== undefined
         ? getSeededLayout(post.clientId, post.weekSeed)
         : 'hero_bottom_bar'
@@ -174,8 +175,8 @@ Return ONLY valid JSON, no markdown:
       composition: (parsed.composition === 'collage' ? 'collage' : 'single') as CompositionStyle,
       reasoning: parsed.reasoning,
       fallback_type: parsed.fallback_type as ImageType,
-      infographic_style: parsed.infographic_style ?? undefined,
-      photo_style: parsed.photo_style ?? undefined,
+      infographic_style: (parsed.infographic_style ?? undefined) as InfographicStyle | undefined,
+      photo_style: (parsed.photo_style ?? undefined) as PhotoStyle | undefined,
     };
   } catch {
     console.error('[Classifier] Failed to parse JSON, using fallback');

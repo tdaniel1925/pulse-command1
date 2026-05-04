@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import Anthropic from '@anthropic-ai/sdk'
+import { generateJSON, DEFAULT_MODEL } from '@/lib/openrouter'
 
 const MAX_PER_WEEK = 2
-
-const getAnthropic = () => {
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set')
-  return new Anthropic({ apiKey })
-}
 
 // Pre-generated image sets that cycle — no new image generation needed
 const IMAGE_SETS: Record<string, string>[] = [
@@ -51,12 +45,11 @@ const IMAGE_SETS: Record<string, string>[] = [
 ]
 
 async function generateContent() {
-  const message = await getAnthropic().messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 2000,
-    messages: [{
-      role: 'user',
-      content: `You are a social media expert for Oakridge Roofing, a family-owned roofing company with 20+ years of experience. Generate fresh, unique social media content. Every time you are called, produce COMPLETELY DIFFERENT content — different angles, hooks, stories, and messaging.
+  try {
+    return await generateJSON({
+      model: DEFAULT_MODEL,
+      maxTokens: 2000,
+      prompt: `You are a social media expert for Oakridge Roofing, a family-owned roofing company with 20+ years of experience. Generate fresh, unique social media content. Every time you are called, produce COMPLETELY DIFFERENT content — different angles, hooks, stories, and messaging.
 
 Return ONLY valid JSON with this exact structure:
 {
@@ -80,15 +73,10 @@ Return ONLY valid JSON with this exact structure:
     "tips": "short punchy caption for educational tips reel with emojis and hashtags",
     "testimonial": "short punchy caption for customer testimonial reel with emojis and hashtags"
   }
-}`
-    }],
-  })
-  const raw = message.content[0].type === 'text' ? message.content[0].text : '{}'
-  const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/i, '').trim()
-  try {
-    return JSON.parse(jsonStr)
+}`,
+    });
   } catch {
-    console.error('Content generation JSON parse failed:', raw.slice(0, 300))
+    console.error('Content generation failed')
     return null
   }
 }

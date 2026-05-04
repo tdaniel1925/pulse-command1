@@ -1,13 +1,11 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { generateJSON, DEFAULT_MODEL } from '@/lib/openrouter';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { renderToBuffer } from '@react-pdf/renderer';
 import { createElement } from 'react';
 import { LeadMagnetDocument } from '@/components/pdf/LeadMagnetDocument';
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req: NextRequest) {
   const { clientId } = await req.json();
@@ -55,15 +53,23 @@ export async function POST(req: NextRequest) {
   const website: string = client.website ?? '';
   const primaryColor: string = brandProfile?.primary_color ?? '#4F46E5';
 
-  // Generate lead magnet content with Claude
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-5',
-    max_tokens: 4000,
-    system: 'You are an expert copywriter specializing in lead magnets. Generate content in valid JSON format only.',
-    messages: [
-      {
-        role: 'user',
-        content: `Create a high-value lead magnet PDF guide for ${businessName}, a ${industry} business.
+  // Generate lead magnet content with AI
+  let content: {
+    title: string;
+    subtitle: string;
+    intro: string;
+    sections: Array<{ heading: string; body: string; tips: string[] }>;
+    cta_heading: string;
+    cta_body: string;
+    cta_action: string;
+  };
+
+  try {
+    content = await generateJSON({
+      system: 'You are an expert copywriter specializing in lead magnets. Generate content in valid JSON format only.',
+      model: DEFAULT_MODEL,
+      maxTokens: 4000,
+      prompt: `Create a high-value lead magnet PDF guide for ${businessName}, a ${industry} business.
 Business: ${description}
 Ideal customer: ${audience}
 
@@ -85,24 +91,7 @@ Return valid JSON with this exact structure:
   "cta_body": "closing paragraph with offer to help",
   "cta_action": "Contact ${businessName} today"
 }`,
-      },
-    ],
-  });
-
-  const rawText = message.content[0].type === 'text' ? message.content[0].text : '{}';
-  let content: {
-    title: string;
-    subtitle: string;
-    intro: string;
-    sections: Array<{ heading: string; body: string; tips: string[] }>;
-    cta_heading: string;
-    cta_body: string;
-    cta_action: string;
-  };
-
-  try {
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    content = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
+    });
   } catch {
     return NextResponse.json({ error: 'Failed to parse lead magnet content' }, { status: 500 });
   }

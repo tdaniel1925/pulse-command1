@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import Anthropic from '@anthropic-ai/sdk'
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+import { generateJSON, DEFAULT_MODEL } from '@/lib/openrouter'
 
 interface ContentGenRequest {
   clientId: string
@@ -191,14 +189,11 @@ Return JSON:
   "callToAction": "string"
 }`
 
-  const message = await anthropic.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 4000,
-    messages: [{ role: 'user', content: prompt }],
+  return generateJSON({
+    model: DEFAULT_MODEL,
+    maxTokens: 4000,
+    prompt,
   })
-
-  const text = message.content[0].type === 'text' ? message.content[0].text : ''
-  return JSON.parse(text.replace(/```json?\n?/g, '').replace(/\n?```/g, ''))
 }
 
 async function generateArticles(businessName: string, strategy: any): Promise<any[]> {
@@ -219,14 +214,11 @@ For each article, return:
 
 Return a JSON array of 5 articles.`
 
-  const message = await anthropic.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 6000,
-    messages: [{ role: 'user', content: prompt }],
+  return generateJSON({
+    model: DEFAULT_MODEL,
+    maxTokens: 6000,
+    prompt,
   })
-
-  const text = message.content[0].type === 'text' ? message.content[0].text : ''
-  return JSON.parse(text.replace(/```json?\n?/g, '').replace(/\n?```/g, ''))
 }
 
 async function generateTweets(businessName: string, strategy: any): Promise<any[]> {
@@ -243,14 +235,11 @@ Return JSON array where each item is:
   "engagementHook": "string (first tweet to hook readers)"
 }`
 
-  const message = await anthropic.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 4000,
-    messages: [{ role: 'user', content: prompt }],
+  return generateJSON({
+    model: DEFAULT_MODEL,
+    maxTokens: 4000,
+    prompt,
   })
-
-  const text = message.content[0].type === 'text' ? message.content[0].text : ''
-  return JSON.parse(text.replace(/```json?\n?/g, '').replace(/\n?```/g, ''))
 }
 
 async function generateInfographicPrompts(businessName: string, strategy: any): Promise<any[]> {
@@ -271,14 +260,11 @@ Return JSON array:
   }
 ]`
 
-  const message = await anthropic.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 3000,
-    messages: [{ role: 'user', content: prompt }],
+  return generateJSON({
+    model: DEFAULT_MODEL,
+    maxTokens: 3000,
+    prompt,
   })
-
-  const text = message.content[0].type === 'text' ? message.content[0].text : ''
-  return JSON.parse(text.replace(/```json?\n?/g, '').replace(/\n?```/g, ''))
 }
 
 async function generateCaseStudies(businessName: string, strategy: any): Promise<any[]> {
@@ -302,14 +288,11 @@ Each case study:
   "nextSteps": "string"
 }`
 
-  const message = await anthropic.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 2000,
-    messages: [{ role: 'user', content: prompt }],
+  return generateJSON({
+    model: DEFAULT_MODEL,
+    maxTokens: 2000,
+    prompt,
   })
-
-  const text = message.content[0].type === 'text' ? message.content[0].text : ''
-  return JSON.parse(text.replace(/```json?\n?/g, '').replace(/\n?```/g, ''))
 }
 
 async function generateEmailSequences(businessName: string, strategy: any): Promise<any[]> {
@@ -334,14 +317,11 @@ Return:
   }
 ]`
 
-  const message = await anthropic.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 3000,
-    messages: [{ role: 'user', content: prompt }],
+  return generateJSON({
+    model: DEFAULT_MODEL,
+    maxTokens: 3000,
+    prompt,
   })
-
-  const text = message.content[0].type === 'text' ? message.content[0].text : ''
-  return JSON.parse(text.replace(/```json?\n?/g, '').replace(/\n?```/g, ''))
 }
 
 async function generatePodcastScripts(businessName: string, strategy: any): Promise<any[]> {
@@ -367,12 +347,9 @@ Return:
   }
 ]`
 
-  const message = await anthropic.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 3000,
-    messages: [{ role: 'user', content: prompt }],
+  return generateJSON({
+    model: DEFAULT_MODEL,
+    maxTokens: 3000,
+    prompt,
   })
-
-  const text = message.content[0].type === 'text' ? message.content[0].text : ''
-  return JSON.parse(text.replace(/```json?\n?/g, '').replace(/\n?```/g, ''))
 }

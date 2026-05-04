@@ -1,11 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import Anthropic from "@anthropic-ai/sdk";
+import { generateJSON, DEFAULT_MODEL } from "@/lib/openrouter";
 import { generateSocialPostImage } from "@/lib/image-engine/orchestrator";
 import type { BrandContext, BrandVibe, ClientTier } from "@/lib/image-engine/types";
 import { sendPostReadyEmail } from "@/lib/email";
 import { createNotification } from "@/lib/notifications";
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // ─── Weekly topics ─────────────────────────────────────────────────────────────
 
@@ -42,12 +40,11 @@ async function generateCaptions(params: {
   targetAudience: string;
   website: string;
 }): Promise<PlatformCaptions> {
-  const response = await anthropic.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1200,
-    messages: [{
-      role: "user",
-      content: `You are a social media expert. Write platform-specific captions for this business.
+  try {
+    return await generateJSON<PlatformCaptions>({
+      model: DEFAULT_MODEL,
+      maxTokens: 1200,
+      prompt: `You are a social media expert. Write platform-specific captions for this business.
 
 BUSINESS: ${params.businessName}
 WEBSITE: ${params.website}
@@ -70,12 +67,7 @@ Return ONLY valid JSON:
   "facebook": "...",
   "twitter": "..."
 }`,
-    }],
-  });
-
-  const text = response.content[0].type === "text" ? response.content[0].text.trim() : "{}";
-  try {
-    return JSON.parse(text) as PlatformCaptions;
+    });
   } catch {
     const fallback = `${params.topic} — ${params.businessName}. ${params.website}`;
     return { instagram: fallback, linkedin: fallback, facebook: fallback, twitter: fallback };

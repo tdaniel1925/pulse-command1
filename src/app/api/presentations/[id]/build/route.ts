@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createNotification } from '@/lib/notifications';
-import Anthropic from '@anthropic-ai/sdk';
+import { generateJSON, generate, DEFAULT_MODEL, LIGHT_MODEL } from '@/lib/openrouter';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
   getTemplate,
@@ -12,7 +12,6 @@ import {
   type NarrativeFramework,
 } from '@/lib/presentation-templates';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 interface Slide {
@@ -303,23 +302,12 @@ export async function POST(
   const prompt = buildClaudePrompt(presentation as PresentationRow, safeClient);
 
   try {
-    // Generate slides with Claude
-    const claudeResponse = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 4096,
-      messages: [{ role: 'user', content: prompt }],
+    // Generate slides with AI
+    const parsed = await generateJSON<{ title: string; slides: Slide[] }>({
+      model: DEFAULT_MODEL,
+      maxTokens: 4096,
+      prompt,
     });
-
-    const rawText =
-      claudeResponse.content[0].type === 'text' ? claudeResponse.content[0].text : '';
-
-    // Strip markdown code fences if present
-    const jsonText = rawText
-      .replace(/^```(?:json)?\s*/i, '')
-      .replace(/\s*```$/i, '')
-      .trim();
-
-    const parsed = JSON.parse(jsonText) as { title: string; slides: Slide[] };
     const generatedSlides: Slide[] = [];
 
     // Process each slide — generate images where needed
@@ -340,12 +328,10 @@ export async function POST(
     }
 
     // Generate executive summary
-    const execSummaryResponse = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 500,
-      messages: [{
-        role: 'user',
-        content: `You are a senior executive assistant. Read this presentation and write an executive summary.
+    const execBullets = await generateJSON<string[]>({
+      model: LIGHT_MODEL,
+      maxTokens: 500,
+      prompt: `You are a senior executive assistant. Read this presentation and write an executive summary.
 
 Presentation title: ${parsed.title}
 Slides: ${generatedSlides.map(s => `- ${s.title}: ${s.bullets?.join(', ') ?? s.subtitle ?? ''}`).join('\n')}
@@ -357,11 +343,7 @@ Write exactly 4 bullet points. Each bullet:
 
 Return ONLY a JSON array of 4 strings. Example:
 ["MARKET OPPORTUNITY: The $4.2B market is underserved with no dominant player.", "CORE PROBLEM: 73% of SMBs lack access to enterprise-grade marketing tools.", "OUR APPROACH: AI-generated content at 1/10th the cost of traditional agencies.", "NEXT STEP: Pilot program launching Q2 with 50 design-partner clients."]`,
-      }],
     });
-
-    const execSummaryText = execSummaryResponse.content[0].type === 'text' ? execSummaryResponse.content[0].text : '[]';
-    const execBullets: string[] = JSON.parse(execSummaryText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '').trim());
 
     // Create executive summary slide to insert at index 1
     const execSummarySlide: Slide = {

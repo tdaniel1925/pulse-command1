@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import Anthropic from '@anthropic-ai/sdk'
-
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+import { generateJSON, DEFAULT_MODEL } from '@/lib/openrouter'
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,13 +45,16 @@ Keywords: ${(profile.keywords ?? []).join(', ')}
 Priority Channels: ${(profile.priority_channels ?? []).join(', ')}
 `
 
-    const message = await getAnthropic().messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 3000,
-      messages: [
-        {
-          role: 'user',
-          content: `You are a content strategist. Based on this brand profile, create a monthly content brief. Return ONLY valid JSON with these exact keys:
+    const brief = await generateJSON<{
+      socialPostsCopy: string[];
+      videoScript: string;
+      audioScript: string;
+      hashtags: string[];
+      contentPillars: string[];
+    }>({
+      model: DEFAULT_MODEL,
+      maxTokens: 3000,
+      prompt: `You are a content strategist. Based on this brand profile, create a monthly content brief. Return ONLY valid JSON with these exact keys:
 {
   "socialPostsCopy": ["post 1 text", "post 2 text", "post 3 text", "post 4 text", "post 5 text"],
   "videoScript": "Full video script here, 60-90 seconds when read aloud",
@@ -64,13 +65,7 @@ Priority Channels: ${(profile.priority_channels ?? []).join(', ')}
 
 Brand Profile:
 ${businessContext}`,
-        },
-      ],
     })
-
-    const raw = message.content[0].type === 'text' ? message.content[0].text : '{}'
-    const jsonStr = raw.replace(/^```json?\s*/i, '').replace(/```\s*$/i, '').trim()
-    const brief = JSON.parse(jsonStr)
 
     // Save to content_briefs
     const { data: savedBrief } = await admin

@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import Anthropic from '@anthropic-ai/sdk'
-
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+import { generate, DEFAULT_MODEL } from '@/lib/openrouter'
 
 type ContentType = 'social' | 'audio' | 'video'
 
@@ -12,13 +10,12 @@ interface GenerateContentBody {
   type: ContentType
 }
 
-async function claudeText(prompt: string): Promise<string> {
-  const message = await getAnthropic().messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 1024,
-    messages: [{ role: 'user', content: prompt }],
+async function aiText(prompt: string): Promise<string> {
+  return generate({
+    model: DEFAULT_MODEL,
+    maxTokens: 1024,
+    prompt,
   })
-  return message.content[0].type === 'text' ? message.content[0].text : ''
 }
 
 export async function POST(request: NextRequest) {
@@ -162,7 +159,7 @@ export async function POST(request: NextRequest) {
         let status = 'pending'
 
         try {
-          script = await claudeText(
+          script = await aiText(
             `You are a podcast script writer. Write a compelling 3-minute audio episode script (roughly 450 words) in first person for the business owner.
 
 Business: ${brandProfile?.business_description ?? client.business_name}
@@ -190,7 +187,7 @@ Write naturally as if speaking — no stage directions, no headers. Just the spo
           client_id: clientId,
           type: 'audio',
           title: 'Audio episode script generated',
-          description: status === 'script_ready' ? 'Script written by Claude Opus, submitting to ElevenLabs…' : 'Script generation failed',
+          description: status === 'script_ready' ? 'Script written by AI, submitting to ElevenLabs…' : 'Script generation failed',
           created_by: 'system',
         })
 
@@ -211,7 +208,7 @@ Write naturally as if speaking — no stage directions, no headers. Just the spo
         let status = 'pending'
 
         try {
-          script = await claudeText(
+          script = await aiText(
             `You are a video script writer. Write a compelling 2-minute video script (roughly 300 words) in first person for the business owner. Include natural pauses marked with [pause] and emphasis with *word*.
 
 Business: ${brandProfile?.business_description ?? client.business_name}
@@ -239,7 +236,7 @@ Write naturally as if speaking to camera.`
           client_id: clientId,
           type: 'video',
           title: 'Video script generated',
-          description: status === 'script_ready' ? 'Script written by Claude Opus, submitting to HeyGen…' : 'Script generation failed',
+          description: status === 'script_ready' ? 'Script written by AI, submitting to HeyGen…' : 'Script generation failed',
           created_by: 'system',
         })
 

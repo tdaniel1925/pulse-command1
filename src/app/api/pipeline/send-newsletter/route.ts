@@ -1,10 +1,8 @@
 export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { generateJSON, DEFAULT_MODEL } from '@/lib/openrouter';
 import { createAdminClient } from '@/lib/supabase/admin';
-
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(req: NextRequest) {
   const { clientId } = await req.json();
@@ -60,15 +58,22 @@ export async function POST(req: NextRequest) {
 
   const month = new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' });
 
-  // Generate newsletter content with Claude
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-5',
-    max_tokens: 3000,
-    system: 'You are an expert email copywriter. Generate newsletter content in valid JSON format only.',
-    messages: [
-      {
-        role: 'user',
-        content: `Create a monthly email newsletter for ${businessName}, a ${industry} business.
+  // Generate newsletter content with AI
+  let newsletter: {
+    subject: string;
+    preheader: string;
+    tip: { heading: string; body: string };
+    insight: { heading: string; body: string };
+    featured_service: { heading: string; body: string; cta_text: string; cta_url: string };
+    closing: string;
+  };
+
+  try {
+    newsletter = await generateJSON({
+      system: 'You are an expert email copywriter. Generate newsletter content in valid JSON format only.',
+      model: DEFAULT_MODEL,
+      maxTokens: 3000,
+      prompt: `Create a monthly email newsletter for ${businessName}, a ${industry} business.
 Business: ${description}
 Audience: ${audience}
 Tone: ${tone}
@@ -83,23 +88,7 @@ Return valid JSON with this exact structure:
   "featured_service": { "heading": "...", "body": "...", "cta_text": "...", "cta_url": "${website}" },
   "closing": "warm closing paragraph"
 }`,
-      },
-    ],
-  });
-
-  const rawText = message.content[0].type === 'text' ? message.content[0].text : '{}';
-  let newsletter: {
-    subject: string;
-    preheader: string;
-    tip: { heading: string; body: string };
-    insight: { heading: string; body: string };
-    featured_service: { heading: string; body: string; cta_text: string; cta_url: string };
-    closing: string;
-  };
-
-  try {
-    const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    newsletter = JSON.parse(jsonMatch ? jsonMatch[0] : rawText);
+    });
   } catch {
     return NextResponse.json({ error: 'Failed to parse newsletter content' }, { status: 500 });
   }

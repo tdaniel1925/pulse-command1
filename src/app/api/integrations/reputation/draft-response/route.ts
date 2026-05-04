@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import Anthropic from '@anthropic-ai/sdk'
-
-const client = new Anthropic()
+import { generate, LIGHT_MODEL } from '@/lib/openrouter'
 
 export async function POST(request: NextRequest) {
   try {
@@ -60,8 +58,11 @@ export async function POST(request: NextRequest) {
       .eq('client_id', clientData.id)
       .single()
 
-    // Generate AI response using Claude
-    const systemPrompt = `You are a professional business representative for ${clientData.business_name}.
+    // Generate AI response
+    const draftResponse = await generate({
+      model: LIGHT_MODEL,
+      maxTokens: 200,
+      system: `You are a professional business representative for ${clientData.business_name}.
 Your tone is: ${brandProfile?.tone_of_voice || 'professional and friendly'}.
 Your brand personality: ${brandProfile?.brand_personality || 'helpful and courteous'}.
 Your unique value: ${brandProfile?.unique_value_prop || 'quality service and customer satisfaction'}.
@@ -72,25 +73,13 @@ When responding to reviews:
 - For positive reviews: thank them and encourage future business
 - Keep responses concise (2-3 sentences max)
 - Never be defensive or argue with reviewers
-- Include a call to action when appropriate (contact us, visit again, etc.)`
-
-    const message = await client.messages.create({
-      model: 'claude-opus-4-1',
-      max_tokens: 200,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: `Draft a professional response to this ${review.platform} review (${review.rating} stars):
+- Include a call to action when appropriate (contact us, visit again, etc.)`,
+      prompt: `Draft a professional response to this ${review.platform} review (${review.rating} stars):
 
 "${review.text}"
 
 The response should be genuine, acknowledge their feedback, and maintain our brand voice.`,
-        },
-      ],
     })
-
-    const draftResponse = message.content[0].type === 'text' ? message.content[0].text : ''
 
     // Store the draft response
     const { data: responseRecord, error: insertError } = await admin

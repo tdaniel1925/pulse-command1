@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import Anthropic from '@anthropic-ai/sdk';
+import { generateJSON, DEFAULT_MODEL } from '@/lib/openrouter';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
 interface Slide {
@@ -132,20 +131,11 @@ Return ONLY valid JSON for a single slide object (same structure as before):
 }`;
 
   try {
-    const claudeResponse = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      messages: [{ role: 'user', content: prompt }],
+    const newSlide = await generateJSON<Slide>({
+      model: DEFAULT_MODEL,
+      maxTokens: 1024,
+      prompt,
     });
-
-    const rawText =
-      claudeResponse.content[0].type === 'text' ? claudeResponse.content[0].text : '';
-    const jsonText = rawText
-      .replace(/^```(?:json)?\s*/i, '')
-      .replace(/\s*```$/i, '')
-      .trim();
-
-    const newSlide = JSON.parse(jsonText) as Slide;
 
     // Generate image if prompt provided
     if (newSlide.image_prompt) {
