@@ -152,12 +152,16 @@ export async function POST(request: NextRequest) {
       if (r.url) images[r.key] = r.url
     }
 
-    // Log generation for rate limiting
-    await admin.from('sample_generations').insert({
-      ip_address: ip,
-      content_generated: !!content,
-      images_generated: Object.keys(images).length,
-    }).catch(() => {}) // Don't fail if table doesn't exist yet
+    // Log generation for rate limiting (ignore errors if table missing)
+    try {
+      await admin.from('sample_generations').insert({
+        ip_address: ip,
+        content_generated: !!content,
+        images_generated: Object.keys(images).length,
+      })
+    } catch {
+      // Table may not exist yet
+    }
 
     return NextResponse.json({ success: true, images, content })
   } catch (err) {
