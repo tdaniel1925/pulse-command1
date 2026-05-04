@@ -18,6 +18,27 @@ const IMAGE_PROMPTS = [
     prompt: `Beautiful suburban home exterior from curb view, well-maintained landscaping, the focus is on the clean roof with visible quality shingles. Sunny day with a few clouds. The home looks inviting and well-cared-for. Warm, friendly neighborhood feel. No text overlay. Photorealistic, high quality, editorial style photography.`,
     aspectRatio: '16:9' as const,
   },
+  // UGC-style vertical video thumbnails (9:16)
+  {
+    key: 'reel_brand_story',
+    prompt: `UGC style selfie video thumbnail of a confident middle-aged man in a branded polo shirt standing in front of a beautiful home with a new roof. He's speaking directly to camera with a warm smile, holding his phone. Natural lighting, slightly grainy authentic feel like a real TikTok or Instagram Reel. Vertical 9:16 format. No text overlay. Photorealistic.`,
+    aspectRatio: '9:16' as const,
+  },
+  {
+    key: 'reel_process',
+    prompt: `UGC style action shot thumbnail of a roofing crew working on a large commercial roof, shot from a worker's perspective looking across the rooftop. Hard hats, tool belts, partially completed roof visible. Dynamic angle, golden hour lighting, authentic behind-the-scenes feel like a real construction TikTok. Vertical 9:16 format. No text overlay. Photorealistic.`,
+    aspectRatio: '9:16' as const,
+  },
+  {
+    key: 'reel_tips',
+    prompt: `UGC style close-up thumbnail of a roofing expert pointing up at damaged shingles on a residential roof, shot from below looking up. The person is wearing work gloves and a cap. Educational feel, like they're about to explain something important. Natural daylight, authentic smartphone camera quality. Vertical 9:16 format. No text overlay. Photorealistic.`,
+    aspectRatio: '9:16' as const,
+  },
+  {
+    key: 'reel_testimonial',
+    prompt: `UGC style thumbnail of a happy homeowner couple standing in their driveway, smiling at camera with their beautifully roofed home behind them. They look genuinely grateful and excited. Warm afternoon light, casual clothing, authentic selfie-style framing like a real customer testimonial video. Vertical 9:16 format. No text overlay. Photorealistic.`,
+    aspectRatio: '9:16' as const,
+  },
 ]
 
 export async function POST() {

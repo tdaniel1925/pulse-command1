@@ -117,12 +117,19 @@ const podcastEpisodes = [
   },
 ];
 
-const reels = [
+const REEL_FALLBACK_GRADIENTS: Record<string, string> = {
+  reel_brand_story: "from-primary-400 to-primary-700",
+  reel_process: "from-accent-400 to-accent-600",
+  reel_tips: "from-purple-400 to-purple-700",
+  reel_testimonial: "from-green-400 to-teal-600",
+};
+
+const reelsData = [
   {
     label: "Brand Story",
     caption: "20 years. One family. Thousands of roofs. Here's why we do what we do. 🏠 #BrandStory #OakridgeRoofing",
     duration: "0:28",
-    thumbnail: "from-primary-400 to-primary-700",
+    imageKey: "reel_brand_story",
     views: "12.4K",
     link: "https://www.youtube.com/shorts/wBnHqQXGBos",
   },
@@ -130,7 +137,7 @@ const reels = [
     label: "Process Reel",
     caption: "Watch us transform this commercial roof in under 60 seconds ⚡ #TimeLapse #Roofing #CommercialConstruction",
     duration: "0:45",
-    thumbnail: "from-accent-400 to-accent-600",
+    imageKey: "reel_process",
     views: "8.1K",
     link: "https://www.youtube.com/shorts/wBnHqQXGBos",
   },
@@ -138,7 +145,7 @@ const reels = [
     label: "Tip / Value",
     caption: "3 signs your roof needs attention RIGHT NOW 👆 Save this post! #RoofingTips #HomeOwner #DIY",
     duration: "0:31",
-    thumbnail: "from-purple-400 to-purple-700",
+    imageKey: "reel_tips",
     views: "21.7K",
     link: "https://www.youtube.com/shorts/wBnHqQXGBos",
   },
@@ -146,7 +153,7 @@ const reels = [
     label: "Testimonial",
     caption: "\"They were done in one day and cleaned up everything\" — Sarah M. ⭐⭐⭐⭐⭐ #CustomerLove #Roofing",
     duration: "0:22",
-    thumbnail: "from-green-400 to-teal-600",
+    imageKey: "reel_testimonial",
     views: "5.3K",
     link: "https://www.youtube.com/shorts/wBnHqQXGBos",
   },
@@ -317,12 +324,20 @@ export default function SamplesPage() {
           />
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-5 mt-12">
-            {reels.map((reel) => (
+            {reelsData.map((reel) => {
+              const reelImage = getImageUrl(reel.imageKey);
+              const fallbackGradient = REEL_FALLBACK_GRADIENTS[reel.imageKey];
+              return (
               <div key={reel.label} className="flex flex-col gap-3">
                 {/* Phone frame — clickable */}
                 <a href={reel.link} target="_blank" rel="noopener noreferrer" className="relative mx-auto w-full max-w-[180px] group">
                   <div className="rounded-3xl border-4 border-neutral-900 overflow-hidden shadow-2xl bg-neutral-900 aspect-[9/16] relative">
-                    <div className={`absolute inset-0 bg-gradient-to-b ${reel.thumbnail} opacity-90 group-hover:opacity-75 transition-opacity`} />
+                    {reelImage ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={reelImage} alt={reel.label} className="absolute inset-0 w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
+                    ) : (
+                      <div className={`absolute inset-0 bg-gradient-to-b ${fallbackGradient} opacity-90 group-hover:opacity-75 transition-opacity`} />
+                    )}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/40 group-hover:scale-110 transition-transform">
                         <Play className="w-6 h-6 text-white fill-white ml-1" />
@@ -346,7 +361,8 @@ export default function SamplesPage() {
                   </a>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
 
           <p className="text-center text-neutral-400 text-sm mt-10">
