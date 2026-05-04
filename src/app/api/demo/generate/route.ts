@@ -2,7 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import Anthropic from '@anthropic-ai/sdk'
 
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const getAnthropic = () => {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY environment variable is not set')
+  }
+  return new Anthropic({ apiKey })
+}
 
 const DEMO_AVATAR_ID = 'Abigail_expressive_2024112501'
 const DEMO_VOICE_ID = '21m00Tcm4TlvDq8ikWAM' // Rachel

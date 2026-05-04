@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 
-const getAnthropic = () => new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const getAnthropic = () => {
+  const apiKey = process.env.ANTHROPIC_API_KEY
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY environment variable is not set')
+  }
+  return new Anthropic({ apiKey })
+}
 
 function resolveUrl(src: string, base: string): string {
   try { return new URL(src, base).href } catch { return src }

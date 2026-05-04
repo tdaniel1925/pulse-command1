@@ -1,8 +1,12 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Share2, Mic, Video, BarChart3, Mail, FileText,
   MapPin, Play, Download, ExternalLink, ArrowRight,
-  Smartphone, Star, TrendingUp, Users, Eye, Heart, MessageCircle
+  Smartphone, Star, TrendingUp, Users, Eye, Heart, MessageCircle,
+  Loader2, ImageIcon
 } from "lucide-react";
 
 // Brand icons not in this version of lucide-react
@@ -32,7 +36,13 @@ import Footer from "@/components/Footer";
 
 /* ─── Sample data ─────────────────────────────────────── */
 
-const socialPosts = [
+const FALLBACK_IMAGES: Record<string, string> = {
+  instagram_roofing: "https://images.unsplash.com/photo-1632159723950-e60fb1a2336f?auto=format&fit=crop&w=800&q=80",
+  linkedin_commercial: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80",
+  facebook_inspection: "https://images.unsplash.com/photo-1570129477492-45c003dc71b8?auto=format&fit=crop&w=800&q=80",
+};
+
+const socialPostsData = [
   {
     platform: "Instagram",
     handle: "@oakridge_roofing",
@@ -40,7 +50,7 @@ const socialPosts = [
     iconColor: "text-pink-500",
     gradient: "from-pink-500 via-rose-500 to-orange-400",
     time: "2h ago",
-    image: "https://images.unsplash.com/photo-1632159723950-e60fb1a2336f?auto=format&fit=crop&w=800&q=80",
+    imageKey: "instagram_roofing",
     imageAlt: "Residential roof being replaced",
     content: "Your roof is working harder than you think. Extreme heat, heavy rain, and UV exposure take a toll year-round. Our 48-hour inspection service gives you peace of mind — before small issues become expensive problems. 🏠✅",
     hashtags: "#roofing #homemaintenance #protectyourhome #commercialroofing #OakRidgeRoofing",
@@ -55,7 +65,7 @@ const socialPosts = [
     iconColor: "text-blue-600",
     gradient: "from-blue-600 to-blue-700",
     time: "1d ago",
-    image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=800&q=80",
+    imageKey: "linkedin_commercial",
     imageAlt: "Construction crew on a commercial roof",
     content: "We recently completed a 22,000 sq ft commercial re-roof for a regional distribution center in under 6 days — without interrupting operations. How? Pre-fabricated sections, night crews, and 20 years of commercial experience. If your facility needs a roof upgrade, let's talk.",
     hashtags: "#commercialroofing #facilitymanagement #constructionmanagement #B2B",
@@ -70,7 +80,7 @@ const socialPosts = [
     iconColor: "text-blue-500",
     gradient: "from-blue-500 to-blue-600",
     time: "3d ago",
-    image: "https://images.unsplash.com/photo-1570129477492-45c003dc71b8?auto=format&fit=crop&w=800&q=80",
+    imageKey: "facebook_inspection",
     imageAlt: "Beautiful home exterior",
     content: "Did you know most roof leaks start 6–12 months before they're visible inside your home? Our thermal imaging inspection finds moisture intrusion before water damage begins. Book a free inspection this week — spots are limited! 👇",
     hashtags: "#roofrepair #homeowners #freeInspection #roofingexperts",
@@ -152,6 +162,40 @@ const reportMetrics = [
 /* ─── Page ────────────────────────────────────────────── */
 
 export default function SamplesPage() {
+  const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
+  const [generating, setGenerating] = useState(false);
+  const [genError, setGenError] = useState("");
+
+  // Check for cached generated images on mount
+  useEffect(() => {
+    const cached = localStorage.getItem("sample_images");
+    if (cached) {
+      try { setGeneratedImages(JSON.parse(cached)); } catch {}
+    }
+  }, []);
+
+  async function handleGenerateImages() {
+    setGenerating(true);
+    setGenError("");
+    try {
+      const res = await fetch("/api/samples/generate-images", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Generation failed");
+      setGeneratedImages(data.images);
+      localStorage.setItem("sample_images", JSON.stringify(data.images));
+    } catch (err) {
+      setGenError(err instanceof Error ? err.message : "Failed to generate images");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  function getImageUrl(key: string): string {
+    return generatedImages[key] || FALLBACK_IMAGES[key] || "";
+  }
+
+  const hasGeneratedImages = Object.keys(generatedImages).length > 0;
+
   return (
     <>
       <Navbar />
@@ -208,14 +252,32 @@ export default function SamplesPage() {
             countColor="bg-primary-50 text-primary-700 border-primary-200"
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-            {socialPosts.map((post) => (
+          {/* Generate AI Images button */}
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={handleGenerateImages}
+              disabled={generating}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              {generating ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Generating AI Images…</>
+              ) : hasGeneratedImages ? (
+                <><ImageIcon className="w-4 h-4" /> Regenerate AI Images</>
+              ) : (
+                <><ImageIcon className="w-4 h-4" /> Generate AI Images</>
+              )}
+            </button>
+            {genError && <p className="text-red-500 text-sm mt-2 ml-4 self-center">{genError}</p>}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            {socialPostsData.map((post) => (
               <div key={post.platform} className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden flex flex-col">
                 {/* Platform bar */}
                 <div className={`h-1.5 bg-gradient-to-r ${post.gradient}`} />
                 {/* Post image */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={post.image} alt={post.imageAlt} className="w-full h-48 object-cover" />
+                <img src={getImageUrl(post.imageKey)} alt={post.imageAlt} className="w-full h-48 object-cover" />
                 <div className="p-5 flex-1 flex flex-col">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-neutral-100 flex items-center justify-center">
