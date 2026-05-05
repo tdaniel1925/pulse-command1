@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createVideoShort, pollUntilDone } from '@/lib/autocontent'
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,72 +18,58 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Video not found' }, { status: 404 })
     }
 
+    if (!process.env.AUTOCONTENT_API_KEY) {
+      console.error('AUTOCONTENT_API_KEY not set')
+      await admin.from('videos').update({ status: 'failed' }).eq('id', videoId)
+      return NextResponse.json({ error: 'AutoContent API not configured' }, { status: 400 })
+    }
+
     const { data: brandProfile } = await admin
       .from('brand_profiles')
-      .select('heygen_avatar_id, elevenlabs_voice_id')
+      .select('heygen_avatar_id')
       .eq('client_id', clientId)
       .single()
 
-    const avatarId = brandProfile?.heygen_avatar_id ?? process.env.HEYGEN_DEFAULT_AVATAR_ID ?? ''
-    const voiceId = brandProfile?.elevenlabs_voice_id ?? process.env.HEYGEN_DEFAULT_VOICE_ID ?? ''
+    // Use client's avatar preference or default to avatar 1
+    const avatarId = brandProfile?.heygen_avatar_id ?? '1'
 
-    if (!avatarId) {
-      console.error('No HeyGen avatar ID for client:', clientId)
-      await admin.from('videos').update({ status: 'failed' }).eq('id', videoId)
-      return NextResponse.json({ error: 'No avatar ID configured' }, { status: 400 })
-    }
+    await admin.from('videos').update({ status: 'rendering' }).eq('id', videoId)
 
-    const heygenRes = await fetch('https://api.heygen.com/v2/video/generate', {
-      method: 'POST',
-      headers: {
-        'X-Api-Key': process.env.HEYGEN_API_KEY ?? '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        video_inputs: [{
-          character: {
-            type: 'avatar',
-            avatar_id: avatarId,
-            avatar_style: 'normal',
-          },
-          voice: {
-            type: 'text',
-            input_text: video.script ?? '',
-            voice_id: voiceId,
-          },
-        }],
-        dimension: { width: 1280, height: 720 },
-        aspect_ratio: '16:9',
-        test: false,
-      }),
+    // Create video short via AutoContent
+    const req = await createVideoShort({
+      text: video.script ?? '',
+      avatar1: avatarId,
+      subtitles: true,
+      prompt: 'Create a professional, engaging short video for social media',
     })
 
-    if (!heygenRes.ok) {
-      const errText = await heygenRes.text()
-      console.error('HeyGen API error:', errText)
+    // Poll until done (max 5 min)
+    const result = await pollUntilDone(req.request_id, {
+      maxWaitMs: 300_000,
+      intervalMs: 10_000,
+    })
+
+    if (!result.videoUrl) {
       await admin.from('videos').update({ status: 'failed' }).eq('id', videoId)
-      return NextResponse.json({ error: 'HeyGen API error', detail: errText }, { status: 502 })
+      return NextResponse.json({ error: 'No video URL returned' }, { status: 502 })
     }
 
-    const heygenData = await heygenRes.json()
-    const heygenVideoId = heygenData.data?.video_id ?? heygenData.video_id
-
     await admin.from('videos').update({
-      heygen_video_id: heygenVideoId,
-      status: 'rendering',
+      status: 'ready',
+      url: result.videoUrl,
     }).eq('id', videoId)
 
     await admin.from('activities').insert({
       client_id: clientId,
       type: 'video',
-      title: 'Video submitted to HeyGen',
-      description: `Rendering started. HeyGen ID: ${heygenVideoId}. Will update when complete.`,
+      title: 'Video short ready',
+      description: 'AI presenter video generated via AutoContent. Available in your dashboard.',
       created_by: 'system',
     })
 
-    return NextResponse.json({ success: true, heygenVideoId })
+    return NextResponse.json({ success: true, videoUrl: result.videoUrl, shareUrl: result.shareUrl })
   } catch (err) {
-    console.error('submit-heygen error:', err)
+    console.error('submit-video error:', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }
