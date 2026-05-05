@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { generateJSON, DEFAULT_MODEL } from '@/lib/openrouter'
-
-const DEMO_AVATAR_ID = 'Abigail_expressive_2024112501'
-const DEMO_VOICE_ID = '21m00Tcm4TlvDq8ikWAM' // Rachel
+import { createPodcast, createVideoShort, pollUntilDone, getStatus } from '@/lib/autocontent'
 
 async function scanWebsite(website: string) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
@@ -102,54 +100,43 @@ Return ONLY valid JSON:
   }
 }
 
-async function renderAudio(script: string, demoId: string): Promise<string | null> {
-  const key = process.env.ELEVENLABS_API_KEY
-  if (!key) return null
+async function renderPodcast(script: string): Promise<{ audioUrl: string | null; shareUrl: string | null }> {
+  if (!process.env.AUTOCONTENT_API_KEY) return { audioUrl: null, shareUrl: null }
   try {
-    const res = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${DEMO_VOICE_ID}`, {
-      method: 'POST',
-      headers: { 'xi-api-key': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text: script,
-        model_id: 'eleven_monolingual_v1',
-        voice_settings: { stability: 0.5, similarity_boost: 0.75 },
-      }),
+    const req = await createPodcast({
+      text: script,
+      duration: 'short',
     })
-    if (!res.ok) return null
-    const buf = await res.arrayBuffer()
-    const admin = createAdminClient()
-    const path = `demos/${demoId}/podcast.mp3`
-    const { error } = await admin.storage.from('content').upload(path, Buffer.from(buf), { contentType: 'audio/mpeg', upsert: true })
-    if (error) return null
-    const { data: { publicUrl } } = admin.storage.from('content').getPublicUrl(path)
-    return publicUrl
-  } catch {
-    return null
+    // Poll for completion (max 3 min for demo)
+    const result = await pollUntilDone(req.request_id, { maxWaitMs: 180_000, intervalMs: 8_000 })
+    return {
+      audioUrl: result.audioUrl ?? null,
+      shareUrl: result.shareUrl ?? null,
+    }
+  } catch (err) {
+    console.error('AutoContent podcast error:', err)
+    return { audioUrl: null, shareUrl: null }
   }
 }
 
-async function submitHeyGenVideo(script: string): Promise<string | null> {
-  const key = process.env.HEYGEN_API_KEY
-  if (!key) return null
+async function renderVideoShort(script: string, avatarId?: string): Promise<{ videoUrl: string | null; shareUrl: string | null }> {
+  if (!process.env.AUTOCONTENT_API_KEY) return { videoUrl: null, shareUrl: null }
   try {
-    const res = await fetch('https://api.heygen.com/v2/video/generate', {
-      method: 'POST',
-      headers: { 'X-Api-Key': key, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        video_inputs: [{
-          character: { type: 'avatar', avatar_id: DEMO_AVATAR_ID, avatar_style: 'normal' },
-          voice: { type: 'text', input_text: script, voice_id: DEMO_VOICE_ID },
-          background: { type: 'color', value: '#f8fafc' },
-        }],
-        dimension: { width: 1280, height: 720 },
-        caption: false,
-      }),
+    const req = await createVideoShort({
+      text: script,
+      avatar1: avatarId ?? '1',
+      subtitles: true,
+      prompt: 'Create a professional, engaging short video for social media',
     })
-    if (!res.ok) return null
-    const data = await res.json()
-    return data.data?.video_id ?? null
-  } catch {
-    return null
+    // Poll for completion (max 5 min for video)
+    const result = await pollUntilDone(req.request_id, { maxWaitMs: 300_000, intervalMs: 10_000 })
+    return {
+      videoUrl: result.videoUrl ?? null,
+      shareUrl: result.shareUrl ?? null,
+    }
+  } catch (err) {
+    console.error('AutoContent video error:', err)
+    return { videoUrl: null, shareUrl: null }
   }
 }
 
@@ -314,17 +301,21 @@ export async function POST(request: NextRequest) {
       generateScripts(brandContext),
     ])
 
-    // 4. Render audio only — HeyGen video is triggered after email verification
-    const audioUrl = await renderAudio(scripts.audioScript, demoId)
+    // 4. Render podcast + video via AutoContent (parallel)
+    const [podcast, video] = await Promise.all([
+      renderPodcast(scripts.audioScript),
+      renderVideoShort(scripts.videoScript),
+    ])
 
-    // 5. Save everything (no HeyGen yet — unlocked by email verify)
+    // 5. Save everything
     await admin.from('demo_requests').update({
       status: 'done',
       brand_data: brandData,
       social_posts: socialPosts,
       audio_script: scripts.audioScript,
-      audio_url: audioUrl,
+      audio_url: podcast.audioUrl,
       video_script: scripts.videoScript,
+      video_url: video.videoUrl,
     }).eq('id', demoId)
 
     // 6. Send immediate notification
