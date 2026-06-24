@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { resolveKit } from '@/components/studio/kits/registry'
+import { CanvasPage } from '@/components/studio/CanvasPage'
 import { normalizeKitContent } from '@/lib/studio/kit-schema'
 import type { ThemeProps } from '@/lib/studio/theme'
 import type { Metadata } from 'next'
@@ -15,6 +15,7 @@ interface StudioPage {
   content: unknown
   theme: ThemeProps
   kit: string | null
+  layout: unknown
 }
 interface LegacyPage {
   source: 'legacy'
@@ -28,14 +29,24 @@ async function getPage(slug: string): Promise<PageRow | null> {
   const admin = createAdminClient()
 
   // Prefer studio_pages (the AI builder); fall back to legacy landing_pages.
+  // Select * so it works whether or not the `layout` column migration has run.
   const { data: studio } = await admin
     .from('studio_pages')
-    .select('id, title, content, theme, kit, status')
+    .select('*')
     .eq('slug', slug)
     .eq('status', 'live')
     .maybeSingle()
   if (studio) {
-    return { source: 'studio', id: studio.id, title: studio.title, content: studio.content, theme: (studio.theme ?? {}) as ThemeProps, kit: studio.kit ?? null }
+    const sp = studio as Record<string, unknown>
+    return {
+      source: 'studio',
+      id: sp.id as string,
+      title: (sp.title as string | null) ?? null,
+      content: sp.content,
+      theme: (sp.theme ?? {}) as ThemeProps,
+      kit: (sp.kit as string | null) ?? null,
+      layout: sp.layout ?? null,
+    }
   }
 
   const { data: legacy } = await admin
@@ -81,11 +92,10 @@ export default async function PublicLandingPage(
     // Render the page's chosen kit directly — Server Components may render React
     // (no react-dom/server, which the route handlers can't import).
     const content = normalizeKitContent(page.content, page.title ?? 'Your Business')
-    const KitComponent = resolveKit(page.kit).Component
     return (
       <>
         <link rel="stylesheet" href={FONTS_HREF} />
-        <KitComponent content={content} theme={page.theme} />
+        <CanvasPage content={content} theme={page.theme} layout={page.layout} />
       </>
     )
   }

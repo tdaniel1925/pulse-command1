@@ -7,6 +7,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { generateJSON, DEFAULT_MODEL } from '@/lib/openrouter'
 import { normalizeKitContent, KIT_LIMITS, type KitContent } from '@/lib/studio/kit-schema'
 import { deriveThemeFromBrand, type ThemeProps } from '@/lib/studio/theme'
+import { composeLayout } from '@/components/studio/blocks/registry'
 
 /**
  * Studio AI fill — turns a plain-language goal + the client's brand into a fully
@@ -101,7 +102,11 @@ JSON shape (optional sections may be omitted/null when they don't fit the busine
     // 3. Derive the theme deterministically from the brand color (always valid).
     const theme: ThemeProps = deriveThemeFromBrand({ accent: bp?.primary_color ?? null })
 
-    return NextResponse.json({ content, theme })
+    // 4. Compose the page layout from the content the AI actually produced —
+    //    different brands get different (but always valid) block orders.
+    const layout = composeLayout(content)
+
+    return NextResponse.json({ content, theme, layout })
   } catch (err) {
     console.error('[studio/generate]', err)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

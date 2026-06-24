@@ -2,8 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Sparkles, Loader2, Globe, ArrowRight, Check } from "lucide-react";
-import { resolveKit, KIT_LIST, DEFAULT_KIT, type KitId } from "@/components/studio/kits/registry";
+import { KIT_LIST, DEFAULT_KIT, type KitId } from "@/components/studio/kits/registry";
 import { StudioEditor } from "@/components/studio/StudioEditor";
+import { CanvasPage } from "@/components/studio/CanvasPage";
+import { LayoutEditor } from "@/components/studio/LayoutEditor";
+import { DEFAULT_LAYOUT, normalizeLayout, type BlockType } from "@/components/studio/blocks/registry";
 import type { KitContent } from "@/lib/studio/kit-schema";
 import type { ThemeProps } from "@/lib/studio/theme";
 
@@ -15,14 +18,15 @@ export default function StudioNewPage() {
   const [phase, setPhase] = useState<Phase>("input");
   const [content, setContent] = useState<KitContent | null>(null);
   const [theme, setTheme] = useState<ThemeProps>({});
+  const [layout, setLayout] = useState<BlockType[]>(DEFAULT_LAYOUT);
   const [pageId, setPageId] = useState<string | null>(null);
   const [liveUrl, setLiveUrl] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [savingDraft, setSavingDraft] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Debounced autosave: persist content/theme edits ~800ms after the last change.
-  const scheduleSave = useCallback((c: KitContent, t: ThemeProps, id: string | null) => {
+  // Debounced autosave: persist content/theme/layout edits ~800ms after the last change.
+  const scheduleSave = useCallback((c: KitContent, t: ThemeProps, l: BlockType[], id: string | null) => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(async () => {
       setSavingDraft(true);
@@ -30,7 +34,7 @@ export default function StudioNewPage() {
         const res = await fetch("/api/studio/save", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pageId: id, goal, content: c, theme: t, kit }),
+          body: JSON.stringify({ pageId: id, goal, content: c, theme: t, kit, layout: l }),
         });
         const data = await res.json();
         if (res.ok && data.id && !id) setPageId(data.id);
@@ -44,11 +48,16 @@ export default function StudioNewPage() {
 
   function updateContent(next: KitContent) {
     setContent(next);
-    scheduleSave(next, theme, pageId);
+    scheduleSave(next, theme, layout, pageId);
   }
   function updateTheme(next: ThemeProps) {
     setTheme(next);
-    if (content) scheduleSave(content, next, pageId);
+    if (content) scheduleSave(content, next, layout, pageId);
+  }
+  function updateLayout(next: BlockType[]) {
+    const safe = normalizeLayout(next);
+    setLayout(safe);
+    if (content) scheduleSave(content, theme, safe, pageId);
   }
 
   async function handleGenerate() {
@@ -68,12 +77,14 @@ export default function StudioNewPage() {
       if (!res.ok) throw new Error(data.error ?? "Generation failed");
       setContent(data.content);
       setTheme(data.theme ?? {});
+      const composedLayout = normalizeLayout(data.layout);
+      setLayout(composedLayout);
 
       // Save a draft immediately so we have a page id to publish.
       const saveRes = await fetch("/api/studio/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal, content: data.content, theme: data.theme, kit }),
+        body: JSON.stringify({ goal, content: data.content, theme: data.theme, kit, layout: composedLayout }),
       });
       const saved = await saveRes.json();
       if (saveRes.ok) setPageId(saved.id);
@@ -176,14 +187,16 @@ export default function StudioNewPage() {
         {error && <div className="flex-shrink-0 bg-red-50 text-red-700 text-sm px-4 py-2">{error}</div>}
 
         <div className="flex-1 flex min-h-0">
-          {/* Editor pane */}
-          <aside className="w-80 flex-shrink-0 bg-white border-r border-neutral-200 overflow-y-auto p-5">
+          {/* Editor pane: sections (layout) + design + copy */}
+          <aside className="w-80 flex-shrink-0 bg-white border-r border-neutral-200 overflow-y-auto p-5 space-y-6">
+            <LayoutEditor content={content} layout={layout} onLayoutChange={updateLayout} />
+            <div className="border-t border-neutral-100" />
             <StudioEditor content={content} theme={theme} onContentChange={updateContent} onThemeChange={updateTheme} />
           </aside>
 
-          {/* Live preview — full-bleed, exactly as it will publish (no box) */}
+          {/* Live preview — the canvas, full-bleed, exactly as it will publish */}
           <main className="flex-1 overflow-y-auto bg-white">
-            {(() => { const K = resolveKit(kit).Component; return <K content={content} theme={theme} />; })()}
+            <CanvasPage content={content} theme={theme} layout={layout} />
           </main>
         </div>
       </div>
