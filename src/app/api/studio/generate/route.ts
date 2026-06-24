@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
     try {
       raw = await generateJSON({
         model: DEFAULT_MODEL,
-        maxTokens: 1600,
+        maxTokens: 3500, // full page (stats/pricing/faq/team) needs room or JSON truncates
         prompt: `You are an expert conversion copywriter. Write the CONTENT for a single
 landing page. Return ONLY JSON matching this exact shape — no design, no HTML, just text.
 
@@ -63,16 +63,24 @@ Rules:
 - Exactly 3 features, each title <= ${KIT_LIMITS.featureTitle} chars, body <= ${KIT_LIMITS.featureBody} chars.
 - 3 short testimonials (realistic, first-name + last-initial author). Quote <= ${KIT_LIMITS.quote} chars.
 - Punchy CTA button labels <= ${KIT_LIMITS.cta} chars.
-- Write specifically for THIS business and goal — no lorem, no placeholders.
+- 3-4 stats: a short value (e.g. "500+", "24/7", "15 yrs") + a label. Make them believable for this business.
+- 3 pricing tiers (or omit pricing entirely if this business clearly doesn't sell tiered plans). Each: name, price (e.g. "$0", "$49/mo", "Custom"), short blurb, 3-5 feature bullets, a cta label. Mark the middle/best tier "highlighted": true.
+- 4-5 FAQ items: a real question a customer of THIS business would ask + a concise answer (<= ${KIT_LIMITS.faqA} chars).
+- 3-4 team members with realistic name + role (omit team if not relevant).
+- Write specifically for THIS business and goal — no lorem, no placeholders. Omit any optional section that genuinely doesn't fit (return it as null or leave it out).
 
-JSON shape:
+JSON shape (optional sections may be omitted/null when they don't fit the business):
 {
   "brandName": "string",
   "hero": { "eyebrow": "short label", "headline": "string", "subhead": "string", "ctaPrimary": "string", "ctaSecondary": "string", "image": { "alt": "describe an ideal hero image" } },
   "features": { "heading": "string", "subhead": "string", "items": [ { "title": "string", "body": "string" } ] },
   "showcase": { "heading": "string", "body": "string", "image": { "alt": "describe an ideal showcase image" } },
   "testimonials": { "heading": "string", "items": [ { "quote": "string", "author": "string" } ] },
-  "cta": { "headline": "string", "subhead": "string", "button": "string" }
+  "cta": { "headline": "string", "subhead": "string", "button": "string" },
+  "stats": [ { "value": "string", "label": "string" } ],
+  "pricing": { "heading": "string", "subhead": "string", "tiers": [ { "name": "string", "price": "string", "blurb": "string", "features": ["string"], "cta": "string", "highlighted": false } ] },
+  "faq": { "heading": "string", "items": [ { "q": "string", "a": "string" } ] },
+  "team": { "heading": "string", "members": [ { "name": "string", "role": "string" } ] }
 }`,
       })
     } catch (err) {

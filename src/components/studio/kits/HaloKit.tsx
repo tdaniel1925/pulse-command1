@@ -4,18 +4,22 @@ import { tokenStyle, type ThemeProps } from '@/lib/studio/theme'
 import type { KitContent } from '@/lib/studio/kit-schema'
 
 /**
- * Atlas kit — a byte-exact port of reference/kits/atlas.dc.html.
+ * Halo kit — a byte-exact port of reference/kits/halo.dc.html.
  *
- * Every inline style string is copied verbatim from the source HTML and converted
- * to a React style object (camelCase keys, identical string values). All 14 design
- * sections are reproduced in order, minus the editor-only KIT RIBBON.
+ * The Halo source is a studio editor shell whose canvas renders the imported
+ * "Atlas Landing Kit". Per the port rules, all editor chrome (the Halo Studio
+ * top bar, design panel, device toggles, browser-frame mock and KIT RIBBON) is
+ * removed — only the actual page content remains, which is the imported kit's
+ * 14 design sections, reproduced in order.
  *
- * Text that maps to KitContent is wired to props; sections without a schema yet
- * (stats, gallery, pricing, FAQ, team, social proof, newsletter) keep the original
- * hardcoded copy exactly. SSR-safe and presentational.
+ * Every inline style string is copied verbatim and converted to a React style
+ * object (camelCase keys, identical string values). Text that maps to KitContent
+ * is wired to props; sections without a schema yet (logos, stats, gallery,
+ * pricing, FAQ, team, newsletter) keep the original hardcoded copy exactly.
+ * SSR-safe and presentational.
  */
 
-export function AtlasKit({ content, theme }: { content: KitContent; theme: ThemeProps }) {
+export function HaloKit({ content, theme }: { content: KitContent; theme: ThemeProps }) {
   const root: CSSProperties = {
     ...tokenStyle(theme),
     width: '100%',
@@ -155,12 +159,6 @@ export function AtlasKit({ content, theme }: { content: KitContent; theme: Theme
       <section style={{ padding: 'calc(var(--pad-scale,1) * 30px) 0' }}>
         <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
           <div style={{ background: 'var(--fg,#2A2018)', color: 'var(--bg,#FBF6EF)', borderRadius: 'var(--radius,16px)', padding: '46px 40px', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
-            {content.stats ? content.stats.map((st, i) => (
-              <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{ fontFamily: "var(--font-display,'Sora')", fontWeight: 800, fontSize: 'clamp(34px,4vw,48px)', letterSpacing: '-.02em', color: 'var(--accent-2,#E7A14C)' }}>{st.value}</div>
-                <div style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: '14.5px', opacity: 0.75, marginTop: 4 }}>{st.label}</div>
-              </div>
-            )) : (<>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontFamily: "var(--font-display,'Sora')", fontWeight: 800, fontSize: 'clamp(34px,4vw,48px)', letterSpacing: '-.02em', color: 'var(--accent-2,#E7A14C)' }}>12k+</div>
               <div style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: '14.5px', opacity: 0.75, marginTop: 4 }}>Pages published</div>
@@ -177,7 +175,6 @@ export function AtlasKit({ content, theme }: { content: KitContent; theme: Theme
               <div style={{ fontFamily: "var(--font-display,'Sora')", fontWeight: 800, fontSize: 'clamp(34px,4vw,48px)', letterSpacing: '-.02em', color: 'var(--accent-2,#E7A14C)' }}>4.9/5</div>
               <div style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: '14.5px', opacity: 0.75, marginTop: 4 }}>Customer rating</div>
             </div>
-            </>)}
           </div>
         </div>
       </section>
@@ -271,26 +268,10 @@ export function AtlasKit({ content, theme }: { content: KitContent; theme: Theme
             <span style={{ height: 1, flex: 1, background: 'var(--border,#EADFD2)' }}></span>
           </div>
           <div style={{ textAlign: 'center', maxWidth: '34em', margin: '0 auto 44px' }}>
-            <h2 style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 800, fontSize: 'clamp(30px,4vw,46px)', lineHeight: 1.05, letterSpacing: '-.02em', margin: '0 0 12px' }}>{content.pricing?.heading ?? 'Simple, honest pricing'}</h2>
-            <p style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 18, lineHeight: 1.6, color: 'var(--muted,#8A7B6B)', margin: 0 }}>{content.pricing?.subhead ?? <>Start free. Upgrade when you&apos;re ready to go live.</>}</p>
+            <h2 style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 800, fontSize: 'clamp(30px,4vw,46px)', lineHeight: 1.05, letterSpacing: '-.02em', margin: '0 0 12px' }}>Simple, honest pricing</h2>
+            <p style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 18, lineHeight: 1.6, color: 'var(--muted,#8A7B6B)', margin: 0 }}>Start free. Upgrade when you&apos;re ready to go live.</p>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(240px,1fr))', gap: 20, alignItems: 'start' }}>
-            {content.pricing ? content.pricing.tiers.map((tier, i) => (
-              <div key={i} style={tier.highlighted
-                ? { background: 'var(--surface,#fff)', border: '2px solid var(--accent,#E0603A)', borderRadius: 'var(--radius,16px)', padding: 32, boxShadow: 'var(--shadow,0 20px 50px rgba(90,55,30,.14))', position: 'relative' }
-                : { background: 'var(--surface,#fff)', border: 'var(--border-w,1px) solid var(--border,#EADFD2)', borderRadius: 'var(--radius,16px)', padding: 32 }}>
-                {tier.highlighted && <span style={{ position: 'absolute', top: -13, left: '50%', transform: 'translateX(-50%)', background: 'var(--accent,#E0603A)', color: 'var(--accent-fg,#fff)', fontFamily: "var(--font-body,'Manrope')", fontWeight: 700, fontSize: 12, letterSpacing: '.06em', textTransform: 'uppercase', padding: '5px 14px', borderRadius: 999 }}>Most popular</span>}
-                <div style={{ fontFamily: "var(--font-display,'Sora')", fontWeight: 700, fontSize: 18 }}>{tier.name}</div>
-                <div style={{ margin: '14px 0 6px', fontFamily: "var(--font-display,'Sora')", fontWeight: 800, fontSize: 46, letterSpacing: '-.03em' }}>{tier.price}</div>
-                <div style={{ fontFamily: "var(--font-body,'Manrope')", color: 'var(--muted,#8A7B6B)', fontSize: '14.5px', marginBottom: 22 }}>{tier.blurb ?? 'per month'}</div>
-                <a href="#" style={tier.highlighted
-                  ? { display: 'block', textAlign: 'center', padding: 13, background: 'var(--btn-bg,#E0603A)', color: 'var(--btn-fg,#fff)', border: '2px solid var(--btn-border,transparent)', boxShadow: 'var(--btn-shadow,none)', borderRadius: 'var(--btn-radius,12px)', fontFamily: "var(--font-body,'Manrope')", fontWeight: 700, fontSize: 15, textDecoration: 'none', marginBottom: 24 }
-                  : { display: 'block', textAlign: 'center', padding: 13, background: 'transparent', color: 'var(--fg)', border: '2px solid var(--border,#EADFD2)', borderRadius: 'var(--btn-radius,12px)', fontFamily: "var(--font-body,'Manrope')", fontWeight: 700, fontSize: 15, textDecoration: 'none', marginBottom: 24 }}>{tier.cta}</a>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12, fontFamily: "var(--font-body,'Manrope')", fontSize: 15, color: 'var(--muted,#8A7B6B)' }}>
-                  {tier.features.map((ft, j) => <li key={j}>{ft}</li>)}
-                </ul>
-              </div>
-            )) : (<>
             <div style={{ background: 'var(--surface,#fff)', border: 'var(--border-w,1px) solid var(--border,#EADFD2)', borderRadius: 'var(--radius,16px)', padding: 32 }}>
               <div style={{ fontFamily: "var(--font-display,'Sora')", fontWeight: 700, fontSize: 18 }}>Starter</div>
               <div style={{ margin: '14px 0 6px', fontFamily: "var(--font-display,'Sora')", fontWeight: 800, fontSize: 46, letterSpacing: '-.03em' }}>$0</div>
@@ -319,7 +300,6 @@ export function AtlasKit({ content, theme }: { content: KitContent; theme: Theme
                 <li>Everything in Pro</li><li>Team workspaces</li><li>A/B testing</li><li>Priority support</li>
               </ul>
             </div>
-            </>)}
           </div>
         </div>
       </section>
@@ -331,14 +311,8 @@ export function AtlasKit({ content, theme }: { content: KitContent; theme: Theme
             <span style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 12, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--accent,#E0603A)' }}>10 / FAQ</span>
             <span style={{ height: 1, flex: 1, background: 'var(--border,#EADFD2)' }}></span>
           </div>
-          <h2 style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 800, fontSize: 'clamp(28px,3.6vw,42px)', lineHeight: 1.05, letterSpacing: '-.02em', margin: '0 0 30px', textAlign: 'center' }}>{content.faq?.heading ?? 'Questions, answered'}</h2>
+          <h2 style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 800, fontSize: 'clamp(28px,3.6vw,42px)', lineHeight: 1.05, letterSpacing: '-.02em', margin: '0 0 30px', textAlign: 'center' }}>Questions, answered</h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {content.faq ? content.faq.items.map((item, i) => (
-              <details key={i} style={{ background: 'var(--surface,#fff)', border: 'var(--border-w,1px) solid var(--border,#EADFD2)', borderRadius: 'var(--radius,16px)', padding: '20px 24px' }} open={i === 0}>
-                <summary style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: "var(--font-display,'Sora')", fontWeight: 700, fontSize: '17.5px' }}>{item.q}<span style={{ color: 'var(--accent,#E0603A)', fontSize: 22, fontWeight: 400 }}>＋</span></summary>
-                <p style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 16, lineHeight: 1.6, color: 'var(--muted,#8A7B6B)', margin: '14px 0 0' }}>{item.a}</p>
-              </details>
-            )) : (<>
             <details style={{ background: 'var(--surface,#fff)', border: 'var(--border-w,1px) solid var(--border,#EADFD2)', borderRadius: 'var(--radius,16px)', padding: '20px 24px' }} open>
               <summary style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: "var(--font-display,'Sora')", fontWeight: 700, fontSize: '17.5px' }}>Do I need to know how to code?<span style={{ color: 'var(--accent,#E0603A)', fontSize: 22, fontWeight: 400 }}>＋</span></summary>
               <p style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 16, lineHeight: 1.6, color: 'var(--muted,#8A7B6B)', margin: '14px 0 0' }}>Not at all. You describe what you want in plain words, drop in your photos, and Halo handles the design for you.</p>
@@ -355,7 +329,6 @@ export function AtlasKit({ content, theme }: { content: KitContent; theme: Theme
               <summary style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: "var(--font-display,'Sora')", fontWeight: 700, fontSize: '17.5px' }}>What if I want to change the look later?<span style={{ color: 'var(--accent,#E0603A)', fontSize: 22, fontWeight: 400 }}>＋</span></summary>
               <p style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 16, lineHeight: 1.6, color: 'var(--muted,#8A7B6B)', margin: '14px 0 0' }}>Switch themes any time. Colors, fonts and shapes update across your whole page instantly — your content stays put.</p>
             </details>
-            </>)}
           </div>
         </div>
       </section>
@@ -367,15 +340,8 @@ export function AtlasKit({ content, theme }: { content: KitContent; theme: Theme
             <span style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 12, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--accent,#E0603A)' }}>11 / Team</span>
             <span style={{ height: 1, flex: 1, background: 'var(--border,#EADFD2)' }}></span>
           </div>
-          <h2 style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 800, fontSize: 'clamp(28px,3.6vw,42px)', lineHeight: 1.05, letterSpacing: '-.02em', margin: '0 0 36px' }}>{content.team?.heading ?? 'The people behind Halo'}</h2>
+          <h2 style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 800, fontSize: 'clamp(28px,3.6vw,42px)', lineHeight: 1.05, letterSpacing: '-.02em', margin: '0 0 36px' }}>The people behind Halo</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
-            {content.team ? content.team.members.map((m, i) => (
-              <div key={i} style={{ textAlign: 'center' }}>
-                <Slot variant="circle" src={null} placeholder="Photo" style={{ width: '100%', aspectRatio: '1', display: 'block', borderRadius: '50%', marginBottom: 16 }} />
-                <div style={{ fontFamily: "var(--font-display,'Sora')", fontWeight: 700, fontSize: 17 }}>{m.name}</div>
-                <div style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 14, color: 'var(--muted,#8A7B6B)' }}>{m.role}</div>
-              </div>
-            )) : (<>
             <div style={{ textAlign: 'center' }}>
               <Slot variant="circle" src={null} placeholder="Photo" style={{ width: '100%', aspectRatio: '1', display: 'block', borderRadius: '50%', marginBottom: 16 }} />
               <div style={{ fontFamily: "var(--font-display,'Sora')", fontWeight: 700, fontSize: 17 }}>Sofia Lindqvist</div>
@@ -396,7 +362,6 @@ export function AtlasKit({ content, theme }: { content: KitContent; theme: Theme
               <div style={{ fontFamily: "var(--font-display,'Sora')", fontWeight: 700, fontSize: 17 }}>Tom Becker</div>
               <div style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 14, color: 'var(--muted,#8A7B6B)' }}>Head of Growth</div>
             </div>
-            </>)}
           </div>
         </div>
       </section>

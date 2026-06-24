@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Original kit source files kept for byte-exact porting reference — not app code.
+    "reference/**",
   ]),
 ]);
 

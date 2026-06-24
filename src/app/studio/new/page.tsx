@@ -180,11 +180,9 @@ export default function StudioNewPage() {
             <StudioEditor content={content} theme={theme} onContentChange={updateContent} onThemeChange={updateTheme} />
           </aside>
 
-          {/* Live preview */}
-          <main className="flex-1 overflow-y-auto p-6">
-            <div className="max-w-4xl mx-auto bg-white rounded-xl overflow-hidden shadow-lg border border-neutral-200">
-              <AtlasKit content={content} theme={theme} />
-            </div>
+          {/* Live preview — full-bleed, exactly as it will publish (no box) */}
+          <main className="flex-1 overflow-y-auto bg-white">
+            <AtlasKit content={content} theme={theme} />
           </main>
         </div>
       </div>

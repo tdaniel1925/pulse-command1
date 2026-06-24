@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  .scroll::-webkit-scrollbar{width:10px;height:10px}
+  .scroll::-webkit-scrollbar-thumb{background:#cfc6ba;border-radius:6px;border:2px solid transparent;background-clip:content-box}
+  .scroll::-webkit-scrollbar-track{background:transparent}
+  input[type=range]{-webkit-appearance:none;appearance:none;height:5px;border-radius:3px;background:#E3DBCF;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:#1A1714;cursor:pointer;border:3px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+</style>
+</helmet>
+
+<div style="height:100vh;display:flex;flex-direction:column;background:#E8E2D9;font-family:'Manrope',system-ui,sans-serif;color:#1A1714;overflow:hidden">
+
+  <!-- TOP BAR -->
+  <header style="flex:none;height:58px;background:#fff;border-bottom:1px solid #E6DFD4;display:flex;align-items:center;padding:0 18px;gap:18px;z-index:10">
+    <div style="display:flex;align-items:center;gap:10px;font-family:'Sora';font-weight:800;font-size:18px;letter-spacing:-.02em">
+      <span style="width:28px;height:28px;border-radius:8px;background:#E0603A;display:inline-flex;align-items:center;justify-content:center">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 6 6 .9-4.5 4.3L17.8 20 12 16.8 6.2 20l1.3-6.8L3 8.9 9 8z"/></svg>
+      </span>
+      Halo Studio
+    </div>
+    <div style="height:24px;width:1px;background:#E6DFD4"></div>
+    <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#6B6157;font-weight:600">
+      <span style="color:#1A1714">Untitled landing page</span>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>
+    </div>
+
+    <div style="margin:0 auto;display:flex;align-items:center;gap:4px;background:#F4EFE8;border:1px solid #E6DFD4;border-radius:11px;padding:4px">
+      <sc-for list="{{ devices }}" as="d" hint-placeholder-count="3">
+        <button onClick="{{ d.onClick }}" title="{{ d.name }}" style="{{ d.style }}">
+          <span style="display:inline-flex" innerHTML="{{ d.icon }}"></span>
+        </button>
+      </sc-for>
+    </div>
+
+    <button style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:#fff;color:#1A1714;border:1px solid #E0D7C9;border-radius:10px;font-family:'Manrope';font-weight:700;font-size:14px;cursor:pointer">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-9-9"/><path d="M21 3v6h-6"/></svg>
+      Preview
+    </button>
+    <button style="display:inline-flex;align-items:center;gap:7px;padding:10px 20px;background:#1A1714;color:#fff;border:none;border-radius:10px;font-family:'Manrope';font-weight:700;font-size:14px;cursor:pointer">
+      Publish
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+    </button>
+  </header>
+
+  <div style="flex:1;display:flex;min-height:0">
+
+    <!-- DESIGN PANEL -->
+    <aside class="scroll" style="flex:none;width:332px;background:#FBF9F5;border-right:1px solid #E6DFD4;overflow-y:auto;overflow-x:hidden">
+      <div style="padding:20px 20px 8px">
+        <div style="font-family:'Sora';font-weight:800;font-size:15px;letter-spacing:-.01em">Design</div>
+        <div style="font-size:12.5px;color:#8A7B6B;margin-top:2px;line-height:1.4">Pick a style, then fine-tune. Everything updates together.</div>
+      </div>
+
+      <!-- STYLE PRESETS -->
+      <div style="padding:18px 20px;border-top:1px solid #EFE8DD">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9A8C7B;margin-bottom:13px">Style preset</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <sc-for list="{{ presets }}" as="p" hint-placeholder-count="4">
+            <button onClick="{{ p.onClick }}" style="{{ p.style }}">
+              <div style="display:flex;gap:5px;margin-bottom:9px">
+                <span style="width:20px;height:20px;border-radius:6px;border:1px solid rgba(0,0,0,.08);background:{{ p.bg }}"></span>
+                <span style="width:20px;height:20px;border-radius:6px;background:{{ p.accent }}"></span>
+                <span style="width:20px;height:20px;border-radius:6px;background:{{ p.fg }}"></span>
+              </div>
+              <div style="font-family:'Sora';font-weight:700;font-size:13px;text-align:left;color:#1A1714">{{ p.name }}</div>
+              <div style="font-size:11px;color:#9A8C7B;text-align:left;margin-top:1px">{{ p.sub }}</div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- BRAND COLOR -->
+      <div style="padding:18px 20px;border-top:1px solid #EFE8DD">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9A8C7B;margin-bottom:13px">Brand color</div>
+        <div style="display:flex;flex-wrap:wrap;gap:10px">
+          <sc-for list="{{ colors }}" as="c" hint-placeholder-count="6">
+            <button onClick="{{ c.onClick }}" style="{{ c.style }}"></button>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- TYPOGRAPHY -->
+      <div style="padding:18px 20px;border-top:1px solid #EFE8DD">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9A8C7B;margin-bottom:13px">Typography</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+          <sc-for list="{{ typos }}" as="t" hint-placeholder-count="3">
+            <button onClick="{{ t.onClick }}" style="{{ t.style }}">
+              <div style="font-size:26px;font-weight:700;line-height:1;color:#1A1714;font-family:{{ t.font }}">Ag</div>
+              <div style="font-size:11px;color:#9A8C7B;margin-top:7px">{{ t.name }}</div>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- CORNERS -->
+      <div style="padding:18px 20px;border-top:1px solid #EFE8DD">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:13px">
+          <span style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9A8C7B">Corners</span>
+          <span style="font-size:12px;font-weight:700;color:#1A1714">{{ radiusLabel }}</span>
+        </div>
+        <input type="range" min="0" max="28" step="1" value="{{ radius }}" onChange="{{ setRadius }}" onInput="{{ setRadius }}" style="width:100%">
+      </div>
+
+      <!-- DENSITY -->
+      <div style="padding:18px 20px;border-top:1px solid #EFE8DD">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9A8C7B;margin-bottom:13px">Spacing</div>
+        <div style="display:flex;background:#F1EAE0;border-radius:10px;padding:4px;gap:4px">
+          <sc-for list="{{ densities }}" as="d" hint-placeholder-count="3">
+            <button onClick="{{ d.onClick }}" style="{{ d.style }}">{{ d.name }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- BUTTONS -->
+      <div style="padding:18px 20px;border-top:1px solid #EFE8DD">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9A8C7B;margin-bottom:13px">Buttons</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <sc-for list="{{ buttons }}" as="b" hint-placeholder-count="4">
+            <button onClick="{{ b.onClick }}" style="{{ b.cardStyle }}">
+              <span style="{{ b.btnStyle }}">{{ b.name }}</span>
+            </button>
+          </sc-for>
+        </div>
+      </div>
+
+      <!-- IMAGES -->
+      <div style="padding:18px 20px;border-top:1px solid #EFE8DD">
+        <div style="font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#9A8C7B;margin-bottom:13px">Image style</div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <sc-for list="{{ images }}" as="i" hint-placeholder-count="5">
+            <button onClick="{{ i.onClick }}" style="{{ i.style }}">{{ i.name }}</button>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="padding:18px 20px 28px;border-top:1px solid #EFE8DD">
+        <button onClick="{{ shuffle }}" style="width:100%;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px;background:#fff;color:#1A1714;border:1px solid #E0D7C9;border-radius:10px;font-family:'Manrope';font-weight:700;font-size:13.5px;cursor:pointer">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg>
+          Surprise me
+        </button>
+      </div>
+    </aside>
+
+    <!-- CANVAS -->
+    <main class="scroll" style="flex:1;overflow:auto;padding:34px;display:flex;justify-content:center;align-items:flex-start">
+      <div style="{{ frameStyle }}">
+        <div style="height:40px;background:#fff;border-bottom:1px solid #EEE7DC;display:flex;align-items:center;gap:7px;padding:0 16px;flex:none">
+          <span style="width:11px;height:11px;border-radius:50%;background:#FF5F57"></span>
+          <span style="width:11px;height:11px;border-radius:50%;background:#FEBC2E"></span>
+          <span style="width:11px;height:11px;border-radius:50%;background:#28C840"></span>
+          <span style="margin-left:12px;flex:1;height:22px;background:#F4EFE8;border-radius:6px;display:flex;align-items:center;padding:0 12px;font-size:12px;color:#9A8C7B;font-family:'Manrope'">halo.site/your-page</span>
+        </div>
+        <div style="flex:1;overflow:hidden">
+          <dc-import name="Atlas Landing Kit" theme="{{ theme }}" accent="{{ accent }}" radius="{{ radius }}" density="{{ density }}" font-pair="{{ fontPair }}" button-style="{{ buttonStyle }}" image-treatment="{{ imageTreatment }}" hint-size="100%,3400px" style="display:block;width:100%"></dc-import>
+        </div>
+      </div>
+    </main>
+
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    theme: 'Sunset', accent: '#E0603A', radius: 18, density: 'Cozy',
+    fontPair: 'Geometric', buttonStyle: 'Solid', imageTreatment: 'Lift',
+    device: 'Desktop'
+  };
+
+  set = (patch) => this.setState(patch);
+
+  PRESETS = [
+    { name:'Warm Minimal', sub:'Soft & calm',   bg:'#FBF6EF', accent:'#E0603A', fg:'#2A2018', vals:{ theme:'Sunset',   accent:'#E0603A', fontPair:'Geometric', radius:18, buttonStyle:'Solid',   imageTreatment:'Lift',    density:'Cozy' } },
+    { name:'Bold Studio',  sub:'Loud & graphic', bg:'#FFFFFF', accent:'#FF4D17', fg:'#17120D', vals:{ theme:'Bold',     accent:'#FF4D17', fontPair:'Grotesque', radius:6,  buttonStyle:'Hard',    imageTreatment:'Outline', density:'Cozy' } },
+    { name:'Midnight',     sub:'Dark & techy',   bg:'#15110C', accent:'#FF7A3D', fg:'#F6EEE2', vals:{ theme:'Midnight', accent:'#FF7A3D', fontPair:'Rounded',   radius:20, buttonStyle:'Pill',    imageTreatment:'Lift',    density:'Spacious' } },
+    { name:'Coastal',      sub:'Fresh & airy',   bg:'#FBF6EF', accent:'#2E7D6B', fg:'#22302C', vals:{ theme:'Sunset',   accent:'#2E7D6B', fontPair:'Geometric', radius:14, buttonStyle:'Outline', imageTreatment:'Frame',   density:'Spacious' } }
+  ];
+  COLORS = ['#E0603A','#FF4D17','#2E7D6B','#3B5BDB','#9B5DE5','#E84393'];
+  TYPOS = [ {name:'Geometric', font:"'Sora'"}, {name:'Grotesque', font:"'Space Grotesk'"}, {name:'Rounded', font:"'Outfit'"} ];
+  DENSITIES = ['Compact','Cozy','Spacious'];
+  BTNS = ['Solid','Outline','Pill','Hard'];
+  IMGS = ['Clean','Lift','Frame','Duotone','Outline'];
+  DEVICES = [
+    { name:'Desktop', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>' },
+    { name:'Tablet',  icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg>' },
+    { name:'Mobile',  icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M12 18h.01"/></svg>' }
+  ];
+
+  applyPreset(p){ this.setState({ ...p.vals }); }
+  shuffle = () => {
+    const r = (a)=>a[Math.floor(Math.random()*a.length)];
+    this.setState({
+      theme: r(['Sunset','Bold','Midnight']),
+      accent: r(this.COLORS),
+      fontPair: r(['Geometric','Grotesque','Rounded']),
+      radius: r([2,8,14,18,24,28]),
+      buttonStyle: r(this.BTNS),
+      imageTreatment: r(this.IMGS),
+      density: r(this.DENSITIES)
+    });
+  };
+
+  renderVals() {
+    const s = this.state;
+    const ring = (on) => on ? '0 0 0 2px #1A1714' : '0 0 0 1px #E6DFD4';
+
+    const presets = this.PRESETS.map(p => {
+      const active = s.theme === p.vals.theme && s.accent === p.vals.accent && s.fontPair === p.vals.fontPair;
+      return { ...p, onClick: () => this.applyPreset(p),
+        style: { background:'#fff', border:'none', borderRadius:'12px', padding:'12px', cursor:'pointer', textAlign:'left', boxShadow: ring(active), transition:'box-shadow .15s ease' } };
+    });
+
+    const colors = this.COLORS.map(hex => ({ onClick: () => this.set({ accent: hex }),
+      style: { width:'30px', height:'30px', borderRadius:'50%', background:hex, cursor:'pointer', padding:0,
+        border: s.accent === hex ? '3px solid #1A1714' : '3px solid transparent', boxShadow:'inset 0 0 0 1px rgba(0,0,0,.12)' } }));
+
+    const typos = this.TYPOS.map(t => ({ name:t.name, font:t.font, onClick: () => this.set({ fontPair: t.name }),
+      style: { background:'#fff', border:'none', borderRadius:'11px', padding:'12px 8px', cursor:'pointer', boxShadow: ring(s.fontPair === t.name) } }));
+
+    const densities = this.DENSITIES.map(d => {
+      const on = s.density === d;
+      return { name:d, onClick: () => this.set({ density: d }),
+        style: { flex:1, padding:'9px 0', border:'none', borderRadius:'7px', cursor:'pointer', fontFamily:'Manrope', fontWeight:700, fontSize:'12.5px',
+          background: on ? '#fff' : 'transparent', color: on ? '#1A1714' : '#9A8C7B', boxShadow: on ? '0 1px 3px rgba(0,0,0,.12)' : 'none' } };
+    });
+
+    const mkBtn = (kind) => {
+      const a = s.accent, base = { display:'inline-flex', padding:'7px 14px', fontFamily:'Manrope', fontWeight:700, fontSize:'12px', borderRadius:'8px' };
+      if (kind==='Outline') return { ...base, background:'transparent', color:a, border:'2px solid '+a };
+      if (kind==='Pill') return { ...base, background:a, color:'#fff', borderRadius:'999px' };
+      if (kind==='Hard') return { ...base, background:a, color:'#fff', border:'2px solid #1A1714', boxShadow:'3px 3px 0 #1A1714', borderRadius:'5px' };
+      return { ...base, background:a, color:'#fff' };
+    };
+    const buttons = this.BTNS.map(k => ({ name:k, onClick: () => this.set({ buttonStyle: k }),
+      cardStyle: { display:'flex', alignItems:'center', justifyContent:'center', minHeight:'52px', background:'#fff', border:'none', borderRadius:'11px', cursor:'pointer', boxShadow: ring(s.buttonStyle === k) },
+      btnStyle: mkBtn(k) }));
+
+    const images = this.IMGS.map(i => {
+      const on = s.imageTreatment === i;
+      return { name:i, onClick: () => this.set({ imageTreatment: i }),
+        style: { padding:'8px 14px', borderRadius:'9px', cursor:'pointer', fontFamily:'Manrope', fontWeight:700, fontSize:'13px', border:'none',
+          background: on ? '#1A1714' : '#fff', color: on ? '#fff' : '#6B6157', boxShadow: on ? 'none' : '0 0 0 1px #E6DFD4' } };
+    });
+
+    const devices = this.DEVICES.map(d => {
+      const on = s.device === d.name;
+      return { name:d.name, icon:d.icon, onClick: () => this.set({ device: d.name }),
+        style: { display:'inline-flex', alignItems:'center', justifyContent:'center', width:'34px', height:'30px', border:'none', borderRadius:'8px', cursor:'pointer',
+          background: on ? '#1A1714' : 'transparent', color: on ? '#fff' : '#8A7B6B' } };
+    });
+
+    const frameW = { Desktop:'100%', Tablet:'860px', Mobile:'412px' }[s.device] || '100%';
+    const frameStyle = { width:frameW, maxWidth:'100%', minHeight:'600px', background:'#fff', borderRadius:'14px', minWidth:0, flex:'none',
+      boxShadow:'0 24px 70px rgba(60,40,20,.18)', overflow:'hidden', display:'flex', flexDirection:'column', transition:'width .35s cubic-bezier(.4,0,.2,1)' };
+
+    const rLabel = s.radius <= 4 ? 'Sharp' : s.radius >= 22 ? 'Round' : 'Soft';
+
+    return {
+      theme:s.theme, accent:s.accent, radius:s.radius, density:s.density,
+      fontPair:s.fontPair, buttonStyle:s.buttonStyle, imageTreatment:s.imageTreatment,
+      radiusLabel: rLabel + ' · ' + s.radius + 'px',
+      setRadius: (e) => this.set({ radius: Number(e.target.value) }),
+      shuffle: this.shuffle,
+      presets, colors, typos, densities, buttons, images, devices, frameStyle
+    };
+  }
+}
+</script>
+</body>
+</html>
