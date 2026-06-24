@@ -7,7 +7,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { generateJSON, DEFAULT_MODEL } from '@/lib/openrouter'
 import { normalizeKitContent, KIT_LIMITS, type KitContent } from '@/lib/studio/kit-schema'
 import { deriveThemeFromBrand, type ThemeProps } from '@/lib/studio/theme'
-import { generateSlotImage, type StudioBrand } from '@/lib/studio/images'
 
 /**
  * Studio AI fill — turns a plain-language goal + the client's brand into a fully
@@ -83,22 +82,13 @@ JSON shape:
 
     const content: KitContent = normalizeKitContent(raw, businessName)
 
-    // 2. Generate on-brand images for the hero + showcase slots with Gemini.
-    //    Uses each slot's AI-written `alt` as the scene. Best-effort and parallel;
-    //    on failure the hero falls back to the logo and the showcase to a
-    //    themed placeholder, so the page is always renderable.
-    const brand: StudioBrand = {
-      businessName,
-      description: bp?.business_description ?? undefined,
-      primaryColor: bp?.primary_color ?? null,
-      vibe: bp?.tone_of_voice ?? undefined,
-    }
-    const [heroImg, showcaseImg] = await Promise.all([
-      generateSlotImage({ clientId: client.id, pageKey: 'hero', scene: content.hero.image.alt || `${businessName} hero scene`, shape: '4/3', brand }),
-      generateSlotImage({ clientId: client.id, pageKey: 'showcase', scene: content.showcase.image.alt || `${businessName} in action`, shape: '3/2', brand }),
-    ])
-    content.hero.image.src = heroImg ?? bp?.logo_url ?? null
-    content.showcase.image.src = showcaseImg ?? null
+    // 2. Do NOT generate Gemini images inline — each takes ~10-15s and would push
+    //    this request past Vercel's function timeout (10s Hobby / 60s Pro) → 502.
+    //    Seed the hero with the brand logo so the page is renderable immediately,
+    //    and let the client fill images progressively via /api/studio/regenerate-image
+    //    after the preview shows. (The slot `alt` text drives those calls.)
+    content.hero.image.src = bp?.logo_url ?? null
+    content.showcase.image.src = null
 
     // 3. Derive the theme deterministically from the brand color (always valid).
     const theme: ThemeProps = deriveThemeFromBrand({ accent: bp?.primary_color ?? null })

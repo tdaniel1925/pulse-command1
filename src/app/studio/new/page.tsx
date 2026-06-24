@@ -78,9 +78,41 @@ export default function StudioNewPage() {
       if (saveRes.ok) setPageId(saved.id);
 
       setPhase("preview");
+
+      // Fill images progressively AFTER the preview shows — each Gemini render
+      // takes ~10-15s, so doing them here (not in /generate) keeps that request
+      // fast and avoids the Vercel function timeout.
+      void fillImagesInBackground(data.content);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setPhase("input");
+    }
+  }
+
+  // Generate hero + showcase images one at a time and patch them into the live
+  // preview as they arrive. Best-effort — a failure just leaves the placeholder.
+  async function fillImagesInBackground(c: KitContent) {
+    for (const slot of ["hero", "showcase"] as const) {
+      try {
+        const scene = slot === "hero" ? c.hero.image.alt : c.showcase.image.alt;
+        const res = await fetch("/api/studio/regenerate-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slot, scene }),
+        });
+        const data = await res.json();
+        if (res.ok && data.url) {
+          setContent((prev) => {
+            if (!prev) return prev;
+            const next = structuredClone(prev);
+            if (slot === "hero") next.hero.image.src = data.url;
+            else next.showcase.image.src = data.url;
+            return next;
+          });
+        }
+      } catch {
+        // ignore — placeholder/logo stays
+      }
     }
   }
 
