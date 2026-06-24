@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Sparkles, Loader2, Globe, ArrowRight, Check } from "lucide-react";
-import { AtlasKit } from "@/components/studio/kits/AtlasKit";
+import { resolveKit, KIT_LIST, DEFAULT_KIT, type KitId } from "@/components/studio/kits/registry";
 import { StudioEditor } from "@/components/studio/StudioEditor";
 import type { KitContent } from "@/lib/studio/kit-schema";
 import type { ThemeProps } from "@/lib/studio/theme";
@@ -11,6 +11,7 @@ type Phase = "input" | "generating" | "preview" | "publishing" | "published";
 
 export default function StudioNewPage() {
   const [goal, setGoal] = useState("");
+  const [kit, setKit] = useState<KitId>(DEFAULT_KIT);
   const [phase, setPhase] = useState<Phase>("input");
   const [content, setContent] = useState<KitContent | null>(null);
   const [theme, setTheme] = useState<ThemeProps>({});
@@ -29,7 +30,7 @@ export default function StudioNewPage() {
         const res = await fetch("/api/studio/save", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pageId: id, goal, content: c, theme: t, kit: "atlas" }),
+          body: JSON.stringify({ pageId: id, goal, content: c, theme: t, kit }),
         });
         const data = await res.json();
         if (res.ok && data.id && !id) setPageId(data.id);
@@ -37,7 +38,7 @@ export default function StudioNewPage() {
         setSavingDraft(false);
       }
     }, 800);
-  }, [goal]);
+  }, [goal, kit]);
 
   useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current); }, []);
 
@@ -72,7 +73,7 @@ export default function StudioNewPage() {
       const saveRes = await fetch("/api/studio/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal, content: data.content, theme: data.theme, kit: "atlas" }),
+        body: JSON.stringify({ goal, content: data.content, theme: data.theme, kit }),
       });
       const saved = await saveRes.json();
       if (saveRes.ok) setPageId(saved.id);
@@ -182,7 +183,7 @@ export default function StudioNewPage() {
 
           {/* Live preview — full-bleed, exactly as it will publish (no box) */}
           <main className="flex-1 overflow-y-auto bg-white">
-            <AtlasKit content={content} theme={theme} />
+            {(() => { const K = resolveKit(kit).Component; return <K content={content} theme={theme} />; })()}
           </main>
         </div>
       </div>
@@ -211,6 +212,33 @@ export default function StudioNewPage() {
             className="w-full px-4 py-3 border border-neutral-200 rounded-xl text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
           />
           {error && <p className="text-sm text-red-600 mt-2">{error}</p>}
+
+          {/* Kit picker — choose a design style */}
+          <div className="mt-4">
+            <p className="text-xs font-semibold text-neutral-500 mb-2">Choose a style</p>
+            <div className="grid grid-cols-2 gap-2">
+              {KIT_LIST.map((k) => {
+                const active = kit === k.id;
+                return (
+                  <button
+                    key={k.id}
+                    type="button"
+                    onClick={() => setKit(k.id)}
+                    disabled={phase === "generating"}
+                    className={`text-left p-3 rounded-xl border transition-colors ${
+                      active
+                        ? "border-primary-500 bg-primary-50 ring-1 ring-primary-400"
+                        : "border-neutral-200 hover:bg-neutral-50"
+                    }`}
+                  >
+                    <span className="block text-sm font-semibold text-neutral-900">{k.name}</span>
+                    <span className="block text-xs text-neutral-500 mt-0.5 leading-snug">{k.description}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <button
             onClick={handleGenerate}
             disabled={phase === "generating"}

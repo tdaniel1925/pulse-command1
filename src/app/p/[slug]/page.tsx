@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { AtlasKit } from '@/components/studio/kits/AtlasKit'
+import { resolveKit } from '@/components/studio/kits/registry'
 import { normalizeKitContent } from '@/lib/studio/kit-schema'
 import type { ThemeProps } from '@/lib/studio/theme'
 import type { Metadata } from 'next'
@@ -14,6 +14,7 @@ interface StudioPage {
   title: string | null
   content: unknown
   theme: ThemeProps
+  kit: string | null
 }
 interface LegacyPage {
   source: 'legacy'
@@ -29,12 +30,12 @@ async function getPage(slug: string): Promise<PageRow | null> {
   // Prefer studio_pages (the AI builder); fall back to legacy landing_pages.
   const { data: studio } = await admin
     .from('studio_pages')
-    .select('id, title, content, theme, status')
+    .select('id, title, content, theme, kit, status')
     .eq('slug', slug)
     .eq('status', 'live')
     .maybeSingle()
   if (studio) {
-    return { source: 'studio', id: studio.id, title: studio.title, content: studio.content, theme: (studio.theme ?? {}) as ThemeProps }
+    return { source: 'studio', id: studio.id, title: studio.title, content: studio.content, theme: (studio.theme ?? {}) as ThemeProps, kit: studio.kit ?? null }
   }
 
   const { data: legacy } = await admin
@@ -77,13 +78,14 @@ export default async function PublicLandingPage(
   }
 
   if (page.source === 'studio') {
-    // Render the kit directly — Server Components may render React (no
-    // react-dom/server, which the route handlers can't import).
+    // Render the page's chosen kit directly — Server Components may render React
+    // (no react-dom/server, which the route handlers can't import).
     const content = normalizeKitContent(page.content, page.title ?? 'Your Business')
+    const KitComponent = resolveKit(page.kit).Component
     return (
       <>
         <link rel="stylesheet" href={FONTS_HREF} />
-        <AtlasKit content={content} theme={page.theme} />
+        <KitComponent content={content} theme={page.theme} />
       </>
     )
   }
