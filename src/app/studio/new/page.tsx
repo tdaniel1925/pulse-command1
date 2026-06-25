@@ -47,6 +47,28 @@ export default function StudioNewPage() {
 
   useEffect(() => () => { if (saveTimer.current) clearTimeout(saveTimer.current); }, []);
 
+  // Reopen an existing page when ?page=<id> is present (from the dashboard).
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("page");
+    if (!id) return;
+    setPhase("generating");
+    fetch(`/api/studio/page/${id}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.error) { setError("Could not load that page."); setPhase("input"); return; }
+        setContent(d.content);
+        setTheme(d.theme ?? {});
+        setLayout(normalizeLayout(d.layout));
+        setVariants((d.variants && typeof d.variants === "object") ? d.variants : {});
+        setKit((d.kit as KitId) ?? DEFAULT_KIT);
+        setGoal(d.goal ?? "");
+        setPageId(d.id);
+        if (d.status === "live" && d.url) setLiveUrl(d.url);
+        setPhase(d.status === "live" ? "published" : "preview");
+      })
+      .catch(() => { setError("Could not load that page."); setPhase("input"); });
+  }, []);
+
   function updateContent(next: KitContent) {
     setContent(next);
     scheduleSave(next, theme, layout, variants, pageId);

@@ -34,7 +34,7 @@ const navItems: {
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
   { label: "Social Posts", href: "/dashboard/social", icon: Share2 },
   { label: "Landing Pages", href: "/dashboard/pages", icon: Globe },
-  { label: "Page Builder", href: "/studio/new", icon: Sparkles },
+  { label: "Page Builder", href: "/studio", icon: Sparkles },
   { label: "Upload Content", href: "/dashboard/upload", icon: Upload },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
   { label: "Billing", href: "/dashboard/billing", icon: CreditCard },
