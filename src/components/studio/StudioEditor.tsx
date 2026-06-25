@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, RefreshCw, Upload, Palette, Type as TypeIcon, Layout, Square } from "lucide-react";
+import { Loader2, RefreshCw, Upload, Type as TypeIcon, Layout, Square } from "lucide-react";
 import type { KitContent } from "@/lib/studio/kit-schema";
 import { KIT_LIMITS } from "@/lib/studio/kit-schema";
 import type {
-  ThemeProps, ThemeName, Density, ButtonStyle, ImageTreatment, FontPair,
+  ThemeProps, Density, ButtonStyle, ImageTreatment, FontPair,
 } from "@/lib/studio/theme";
+import { LooksPicker } from "@/components/studio/LooksPicker";
 
 /**
  * The taste layer. The user never sees a color picker or a slider — only
@@ -15,11 +16,6 @@ import type {
  */
 
 // ── Curated option sets (only in-bible choices are offered) ──────────────────
-const MOODS: { value: ThemeName; label: string }[] = [
-  { value: "Sunset", label: "Warm" },
-  { value: "Bold", label: "Bold" },
-  { value: "Midnight", label: "Dark" },
-];
 const DENSITIES: { value: Density; label: string }[] = [
   { value: "Compact", label: "Tight" },
   { value: "Cozy", label: "Balanced" },
@@ -30,6 +26,7 @@ const BUTTONS: { value: ButtonStyle; label: string }[] = [
   { value: "Pill", label: "Pill" },
   { value: "Outline", label: "Outline" },
   { value: "Hard", label: "Hard" },
+  { value: "Gradient", label: "Gradient" },
 ];
 const IMAGE_TREATMENTS: { value: ImageTreatment; label: string }[] = [
   { value: "Soft", label: "Soft" },
@@ -37,10 +34,12 @@ const IMAGE_TREATMENTS: { value: ImageTreatment; label: string }[] = [
   { value: "Duotone", label: "Duotone" },
   { value: "Clean", label: "Clean" },
 ];
-const FONTS: { value: FontPair; label: string }[] = [
-  { value: "Geometric", label: "Geometric" },
-  { value: "Grotesque", label: "Grotesque" },
-  { value: "Rounded", label: "Rounded" },
+// Real typeface previews — show the actual font, not jargon labels.
+const FONTS: { value: FontPair; label: string; family: string }[] = [
+  { value: "Geometric", label: "Modern", family: "'Sora'" },
+  { value: "Grotesque", label: "Neutral", family: "'Space Grotesk'" },
+  { value: "Rounded", label: "Friendly", family: "'Outfit'" },
+  { value: "Serif", label: "Editorial", family: "'Fraunces'" },
 ];
 
 function Pills<T extends string>({
@@ -107,6 +106,30 @@ function CappedField({
   );
 }
 
+/** Visual font picker — each option renders in its actual typeface. */
+function FontPicker({ value, onChange }: { value: FontPair | undefined; onChange: (v: FontPair) => void }) {
+  return (
+    <div className="grid grid-cols-2 gap-1.5">
+      {FONTS.map((f) => {
+        const active = (value ?? "Geometric") === f.value;
+        return (
+          <button
+            key={f.value}
+            type="button"
+            onClick={() => onChange(f.value)}
+            className={`text-left px-2.5 py-2 rounded-lg border transition-colors ${
+              active ? "border-primary-500 bg-primary-50 ring-1 ring-primary-300" : "border-neutral-200 hover:bg-neutral-50"
+            }`}
+          >
+            <span style={{ fontFamily: `${f.family}, system-ui, sans-serif`, fontSize: 18, fontWeight: 700, color: "#1f2937", display: "block", lineHeight: 1 }}>Ag</span>
+            <span className="text-[11px] text-neutral-500">{f.label}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /** Inline "rewrite this section" button shown next to a section's heading. */
 function RegenButton({ busy, onClick }: { busy: boolean; onClick: () => void }) {
   return (
@@ -132,6 +155,7 @@ export function StudioEditor({
   onContentChange: (next: KitContent) => void;
   onThemeChange: (next: ThemeProps) => void;
 }) {
+  const accent = theme.accent;
   const [regen, setRegen] = useState<"hero" | "showcase" | null>(null);
   const [regenSection, setRegenSection] = useState<string | null>(null);
   const [uploading, setUploading] = useState<"hero" | "showcase" | null>(null);
@@ -214,21 +238,21 @@ export function StudioEditor({
 
   return (
     <div className="space-y-6">
-      {/* ── DESIGN (curated, can't-go-wrong) ─────────────────────────────── */}
-      <Group icon={<Palette className="w-3.5 h-3.5" />} title="Mood">
-        <Pills options={MOODS} value={theme.theme ?? "Sunset"} onChange={(v) => setTheme({ theme: v })} />
-      </Group>
-      <Group icon={<Layout className="w-3.5 h-3.5" />} title="Spacing">
-        <Pills options={DENSITIES} value={theme.density ?? "Cozy"} onChange={(v) => setTheme({ density: v })} />
+      {/* ── LOOK — the primary, visual design control ───────────────────────── */}
+      <LooksPicker theme={theme} accent={accent} onApply={onThemeChange} />
+
+      {/* ── FINE-TUNE — visual, no jargon ───────────────────────────────────── */}
+      <Group icon={<TypeIcon className="w-3.5 h-3.5" />} title="Typeface">
+        <FontPicker value={theme.fontPair} onChange={(v) => setTheme({ fontPair: v })} />
       </Group>
       <Group icon={<Square className="w-3.5 h-3.5" />} title="Buttons">
         <Pills options={BUTTONS} value={theme.buttonStyle ?? "Solid"} onChange={(v) => setTheme({ buttonStyle: v })} />
       </Group>
-      <Group icon={<Square className="w-3.5 h-3.5" />} title="Images">
-        <Pills options={IMAGE_TREATMENTS} value={theme.imageTreatment ?? "Soft"} onChange={(v) => setTheme({ imageTreatment: v })} />
+      <Group icon={<Layout className="w-3.5 h-3.5" />} title="Spacing">
+        <Pills options={DENSITIES} value={theme.density ?? "Cozy"} onChange={(v) => setTheme({ density: v })} />
       </Group>
-      <Group icon={<TypeIcon className="w-3.5 h-3.5" />} title="Type">
-        <Pills options={FONTS} value={theme.fontPair ?? "Geometric"} onChange={(v) => setTheme({ fontPair: v })} />
+      <Group icon={<Square className="w-3.5 h-3.5" />} title="Image style">
+        <Pills options={IMAGE_TREATMENTS} value={theme.imageTreatment ?? "Soft"} onChange={(v) => setTheme({ imageTreatment: v })} />
       </Group>
 
       <div className="border-t border-neutral-100" />
