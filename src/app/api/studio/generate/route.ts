@@ -48,10 +48,10 @@ export async function POST(request: NextRequest) {
     let raw: unknown = {}
     try {
       raw = await generateJSON({
-        model: DEFAULT_MODEL,
-        maxTokens: 3500, // full page (stats/pricing/faq/team) needs room or JSON truncates
-        prompt: `You are an expert conversion copywriter. Write the CONTENT for a single
-landing page. Return ONLY JSON matching this exact shape — no design, no HTML, just text.
+        system: 'You are a senior conversion copywriter for high-end brands. You write specific, confident, benefit-led copy — never generic SaaS filler. Return ONLY valid JSON, no prose, no markdown.',
+        quality: 'high', // one-shot full page — use the stronger model
+        maxTokens: 4096,
+        prompt: `Write the CONTENT for one landing page. Return ONLY JSON in the exact shape below — text only, no design, no HTML.
 
 BUSINESS: ${businessName}
 WHAT THEY DO: ${bp?.business_description ?? ''}
@@ -59,16 +59,29 @@ AUDIENCE: ${bp?.target_audience ?? 'small businesses'}
 TONE: ${tone}
 PAGE GOAL (from the user): ${goal.trim()}
 
-Rules:
+COPY PRINCIPLES (these matter most):
+- Lead with the customer OUTCOME, not the feature. Say what they get, then how.
+- Be specific and concrete. Name the real thing this business does; avoid vague abstractions.
+- Address ${bp?.target_audience ?? 'the reader'} directly with "you/your".
+- One clear promise per headline. Confident, not hypey.
+- BANNED clichés — never use these words/phrases: "unlock", "unleash", "elevate", "empower", "seamless", "seamlessly", "take your X to the next level", "game-changer", "revolutionize", "supercharge", "world-class", "cutting-edge", "best-in-class", "one-stop shop", "and more", "the future of".
+- Vary sentence shape. No two features should start the same way.
+
+EXAMPLE of the QUALITY bar (for a different business — do NOT copy, just match the SPECIFICITY and tone):
+{ "hero": { "headline": "Your roof, inspected free before storm season", "subhead": "We climb up, check every flashing and valley, and send you photos and a clear written report — no obligation, no sales pitch." } }
+(Note: concrete actions, a real promise, plain language — not "Elevate your home's protection".)
+
+LENGTH + STRUCTURE RULES:
 - Headlines <= ${KIT_LIMITS.headline} chars. Subheads <= ${KIT_LIMITS.subhead} chars.
 - Exactly 3 features, each title <= ${KIT_LIMITS.featureTitle} chars, body <= ${KIT_LIMITS.featureBody} chars.
-- 3 short testimonials (realistic, first-name + last-initial author). Quote <= ${KIT_LIMITS.quote} chars.
-- Punchy CTA button labels <= ${KIT_LIMITS.cta} chars.
-- 3-4 stats: a short value (e.g. "500+", "24/7", "15 yrs") + a label. Make them believable for this business.
-- 3 pricing tiers (or omit pricing entirely if this business clearly doesn't sell tiered plans). Each: name, price (e.g. "$0", "$49/mo", "Custom"), short blurb, 3-5 feature bullets, a cta label. Mark the middle/best tier "highlighted": true.
-- 4-5 FAQ items: a real question a customer of THIS business would ask + a concise answer (<= ${KIT_LIMITS.faqA} chars).
-- 3-4 team members with realistic name + role (omit team if not relevant).
-- Write specifically for THIS business and goal — no lorem, no placeholders. Omit any optional section that genuinely doesn't fit (return it as null or leave it out).
+- 3 testimonials (realistic, first-name + last-initial author). Quote <= ${KIT_LIMITS.quote} chars. Make them sound like real customers, specific to this business.
+- Punchy CTA button labels <= ${KIT_LIMITS.cta} chars (verbs: "Start free", "Book a call", "Get a quote").
+- 3-4 stats: a short value + label. IMPORTANT: only use stats that are plausible and generic enough to be true (e.g. "Same-day", "Local", "5★ rated") OR clearly illustrative — do NOT fabricate precise numbers that imply verified data unless they're obviously round/illustrative.
+- 3 pricing tiers ONLY if this business plausibly sells tiered plans (omit entirely otherwise). name, price, short blurb, 3-5 feature bullets, cta. Mark the middle/best tier "highlighted": true.
+- 4-5 FAQ items: a real question THIS business's customers ask + a concise answer (<= ${KIT_LIMITS.faqA} chars).
+- 3-4 team members (omit if not relevant to this business type).
+- Image alt fields: describe a real, on-brand scene a photographer would shoot for THIS business (not abstract).
+- Omit any optional section that genuinely doesn't fit (null or leave out).
 
 JSON shape (optional sections may be omitted/null when they don't fit the business):
 {

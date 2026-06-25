@@ -129,12 +129,18 @@ export async function generateText(params: {
   messages: OpenRouterMessage[];
   maxTokens?: number;
   temperature?: number;
+  /** 'high' uses the stronger Anthropic model (Sonnet) as primary — for the one
+   *  big page-generation call where quality matters more than cost/latency. */
+  quality?: 'standard' | 'high';
 }): Promise<string> {
   const maxTokens = params.maxTokens ?? 2048;
   const temperature = params.temperature ?? 0.7;
+  const primary = params.quality === 'high' ? ANTHROPIC_FALLBACK_MODEL : ANTHROPIC_PRIMARY_MODEL;
+  const secondary = params.quality === 'high' ? ANTHROPIC_PRIMARY_MODEL : ANTHROPIC_FALLBACK_MODEL;
 
-  // Optional free-first mode (background jobs where latency doesn't matter).
-  if (USE_FREE_MODELS_FIRST && process.env.OPENROUTER_API_KEY) {
+  // Optional free-first mode (background jobs where latency doesn't matter, and
+  // only when NOT a high-quality call).
+  if (USE_FREE_MODELS_FIRST && params.quality !== 'high' && process.env.OPENROUTER_API_KEY) {
     for (const model of FREE_FALLBACKS) {
       try {
         return await callOpenRouter(model, params.messages, maxTokens, temperature);
@@ -145,12 +151,12 @@ export async function generateText(params: {
     console.warn('[ai] all free models failed; falling back to Anthropic.');
   }
 
-  // Primary: Anthropic Haiku 4.5, then Sonnet 4.6 on error.
+  // Anthropic primary (Sonnet for high-quality, else Haiku), retry on the other.
   try {
-    return await callAnthropic(ANTHROPIC_PRIMARY_MODEL, params.messages, maxTokens);
+    return await callAnthropic(primary, params.messages, maxTokens);
   } catch (primaryErr) {
-    console.warn(`[ai] ${ANTHROPIC_PRIMARY_MODEL} failed, retrying on ${ANTHROPIC_FALLBACK_MODEL}:`, primaryErr instanceof Error ? primaryErr.message : primaryErr);
-    return await callAnthropic(ANTHROPIC_FALLBACK_MODEL, params.messages, maxTokens);
+    console.warn(`[ai] ${primary} failed, retrying on ${secondary}:`, primaryErr instanceof Error ? primaryErr.message : primaryErr);
+    return await callAnthropic(secondary, params.messages, maxTokens);
   }
 }
 
@@ -162,6 +168,7 @@ export async function generate(params: {
   prompt: string;
   model?: OpenRouterModel;
   maxTokens?: number;
+  quality?: 'standard' | 'high';
 }): Promise<string> {
   const messages: OpenRouterMessage[] = [];
   if (params.system) {
@@ -173,6 +180,7 @@ export async function generate(params: {
     model: params.model,
     messages,
     maxTokens: params.maxTokens,
+    quality: params.quality,
   });
 }
 
@@ -184,6 +192,7 @@ export async function generateJSON<T = unknown>(params: {
   prompt: string;
   model?: OpenRouterModel;
   maxTokens?: number;
+  quality?: 'standard' | 'high';
 }): Promise<T> {
   const raw = await generate(params);
 

@@ -57,14 +57,39 @@ export async function generateSlotImage(params: {
   }
 }
 
+// A fixed set of cohesive photographic styles. Every image on a page uses the
+// SAME style (chosen deterministically from the brand) so they look like one
+// shoot, not random stock — the biggest cross-image cohesion win.
+const PHOTO_STYLES = [
+  'soft natural daylight, shallow depth of field, warm tones, editorial photography, 35mm',
+  'bright clean studio lighting, crisp focus, minimal background, premium product photography',
+  'moody cinematic lighting, rich contrast, atmospheric, shot on film, muted palette',
+  'airy and minimal, lots of negative space, pastel light, modern lifestyle photography',
+  'bold high-contrast lighting, vibrant saturated color, dynamic angle, contemporary editorial',
+]
+
+function hashStr(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+  return h
+}
+
+/** Deterministic per-brand photographic style so all images on a page cohere. */
+export function pageStyleToken(brand: StudioBrand): string {
+  return PHOTO_STYLES[hashStr(brand.businessName || 'brand') % PHOTO_STYLES.length]
+}
+
 function buildPrompt(scene: string, brand: StudioBrand): string {
-  const palette = brand.primaryColor ? ` Use a palette that complements ${brand.primaryColor}.` : ''
-  const ctx = brand.description ? ` The business: ${brand.description}.` : ''
-  const vibe = brand.vibe ? ` Style: ${brand.vibe}.` : ' Style: clean, modern, professional.'
+  const style = pageStyleToken(brand)
+  const palette = brand.primaryColor ? ` Color grade to harmonize with the brand accent ${brand.primaryColor} (subtle, not oversaturated).` : ''
+  const ctx = brand.description ? ` Business context: ${brand.description}.` : ''
+  const tone = brand.vibe ? ` Brand tone: ${brand.vibe}.` : ''
   return (
-    `A high-quality, photorealistic marketing image for the brand "${brand.businessName}". ` +
-    `Depict: ${scene}.${ctx}${vibe}${palette} ` +
-    `No text, no logos, no watermarks. Composed to work as a website hero/feature image.`
+    `Photorealistic marketing photograph for "${brand.businessName}". ` +
+    `Subject: ${scene}.${ctx}${tone} ` +
+    `Photographic style (keep consistent across all images for this brand): ${style}.${palette} ` +
+    `Real-world scene, natural and authentic — not generic stock, no people staring at camera unless natural. ` +
+    `No text, no logos, no watermarks, no UI. Composed as a premium website hero/feature image.`
   )
 }
 
