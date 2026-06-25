@@ -11,7 +11,7 @@ export function TeamBlock({ content }: { content: KitContent; theme: ThemeProps 
           <span style={{ height: 1, flex: 1, background: 'var(--border,#EADFD2)' }}></span>
         </div>
         <h2 style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 800, fontSize: 'clamp(28px,3.6vw,42px)', lineHeight: 1.05, letterSpacing: '-.02em', margin: '0 0 36px' }}>{content.team?.heading ?? 'The people behind Halo'}</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(160px,1fr))', gap: 24 }}>
           {content.team ? content.team.members.map((m, i) => (
             <div key={i} style={{ textAlign: 'center' }}>
               <Slot variant="circle" src={null} placeholder="Photo" style={{ width: '100%', aspectRatio: '1', display: 'block', borderRadius: '50%', marginBottom: 16 }} />

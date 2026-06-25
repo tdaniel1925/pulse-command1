@@ -69,12 +69,12 @@ export const BLOCKS: Record<BlockType, BlockMeta> = {
   header: { type: 'header', label: 'Header', Component: HeaderBlock, pinned: 'top', hint: 'Logo + navigation' },
   hero: { type: 'hero', label: 'Hero', Component: HeroBlock, hint: 'Headline, subhead, primary call-to-action', variants: [{ id: 'split', label: 'Split' }, { id: 'centered', label: 'Centered' }] },
   socialProof: { type: 'socialProof', label: 'Social proof', Component: SocialProofBlock, hint: 'Trusted-by logos' },
-  features: { type: 'features', label: 'Features', Component: FeaturesBlock, hint: 'A trio of key benefits' },
+  features: { type: 'features', label: 'Features', Component: FeaturesBlock, hint: 'A trio of key benefits', variants: [{ id: 'cards', label: 'Cards' }, { id: 'zigzag', label: 'Alternating' }, { id: 'list', label: 'Icon list' }] },
   stats: { type: 'stats', label: 'Stats', Component: StatsBlock, needs: (c) => !!c.stats?.length, hint: 'Headline numbers' },
-  showcase: { type: 'showcase', label: 'Showcase', Component: ShowcaseBlock, hint: 'Image + supporting copy' },
-  gallery: { type: 'gallery', label: 'Gallery', Component: GalleryBlock, hint: 'Image grid — great for visual brands' },
-  testimonials: { type: 'testimonials', label: 'Testimonials', Component: TestimonialsBlock, hint: 'Customer quotes' },
-  pricing: { type: 'pricing', label: 'Pricing', Component: PricingBlock, needs: (c) => !!c.pricing?.tiers?.length, hint: 'Plan tiers' },
+  showcase: { type: 'showcase', label: 'Showcase', Component: ShowcaseBlock, hint: 'Image + supporting copy', variants: [{ id: 'left', label: 'Image left' }, { id: 'right', label: 'Image right' }, { id: 'full', label: 'Full-bleed' }] },
+  gallery: { type: 'gallery', label: 'Gallery', Component: GalleryBlock, hint: 'Image grid — great for visual brands', variants: [{ id: 'grid', label: 'Grid' }, { id: 'bento', label: 'Bento' }] },
+  testimonials: { type: 'testimonials', label: 'Testimonials', Component: TestimonialsBlock, hint: 'Customer quotes', variants: [{ id: 'cards', label: 'Cards' }, { id: 'quote', label: 'Pull quote' }] },
+  pricing: { type: 'pricing', label: 'Pricing', Component: PricingBlock, needs: (c) => !!c.pricing?.tiers?.length, hint: 'Plan tiers', variants: [{ id: 'columns', label: 'Columns' }, { id: 'scaled', label: 'Featured' }] },
   faq: { type: 'faq', label: 'FAQ', Component: FaqBlock, needs: (c) => !!c.faq?.items?.length, hint: 'Common questions' },
   team: { type: 'team', label: 'Team', Component: TeamBlock, needs: (c) => !!c.team?.members?.length, hint: 'The people behind it' },
   newsletter: { type: 'newsletter', label: 'Newsletter', Component: NewsletterBlock, hint: 'Email capture' },
@@ -123,6 +123,36 @@ export function composeLayout(content: KitContent): BlockType[] {
   body.push('cta')
 
   return ['header', ...body, 'footer']
+}
+
+/** Stable per-brand hash so each business gets a consistent-but-varied look. */
+function hashStr(s: string): number {
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+  return h
+}
+
+/**
+ * Auto-pick block VARIANTS per brand so two businesses get structurally different
+ * pages (not just different colors). Deterministic from the brand name — same
+ * brand always gets the same look, different brands diverge. Every choice is a
+ * registered variant, so the result is always valid.
+ */
+export function composeVariants(content: KitContent): Record<string, string> {
+  const seed = hashStr(content.brandName || 'brand')
+  const pick = (type: BlockType, salt: number): string | undefined => {
+    const vs = BLOCKS[type].variants
+    if (!vs || vs.length === 0) return undefined
+    return vs[(seed + salt) % vs.length].id
+  }
+  const out: Record<string, string> = {}
+  for (const [type, salt] of [
+    ['hero', 1], ['features', 2], ['showcase', 3], ['testimonials', 4], ['pricing', 5], ['gallery', 6],
+  ] as const) {
+    const v = pick(type, salt)
+    if (v) out[type] = v
+  }
+  return out
 }
 
 /**

@@ -2,7 +2,66 @@ import { Slot } from '@/components/studio/Slot'
 import type { ThemeProps } from '@/lib/studio/theme'
 import type { KitContent } from '@/lib/studio/kit-schema'
 
-export function ShowcaseBlock({ content }: { content: KitContent; theme: ThemeProps }) {
+const showcaseHeader = (
+  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 34 }}>
+    <span style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 12, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--accent,#E0603A)' }}>06 / Showcase</span>
+    <span style={{ height: 1, flex: 1, background: 'var(--border,#EADFD2)' }}></span>
+  </div>
+)
+
+const showcaseChecks = (
+  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+    {['Smart cropping keeps faces and focal points in frame', 'Filters and frames apply across the whole page in one click', 'Optimized and compressed for fast loading, automatically'].map((txt, i) => (
+      <li key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', fontFamily: "var(--font-body,'Manrope')", fontSize: 16, lineHeight: 1.5 }}><span style={{ flex: 'none', width: 24, height: 24, borderRadius: '50%', background: 'var(--accent,#E0603A)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent-fg,#fff)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg></span>{txt}</li>
+    ))}
+  </ul>
+)
+
+const showcaseText = (content: KitContent) => (
+  <div>
+    <span style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 13, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--accent,#E0603A)' }}>Why Halo</span>
+    <h2 style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 800, fontSize: 'clamp(28px,3.6vw,42px)', lineHeight: 1.08, letterSpacing: '-.02em', margin: '12px 0 18px' }}>{content.showcase.heading}</h2>
+    <p style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 18, lineHeight: 1.65, color: 'var(--muted,#8A7B6B)', margin: '0 0 24px' }}>{content.showcase.body}</p>
+    {showcaseChecks}
+  </div>
+)
+
+export function ShowcaseBlock({ content, variant }: { content: KitContent; theme: ThemeProps; variant?: string }) {
+  if (variant === 'right') {
+    return (
+      <section style={{ padding: 'calc(var(--pad-scale,1) * 80px) 0' }}>
+        <div className="sx-reveal" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
+          {showcaseHeader}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: 48, alignItems: 'center' }}>
+            <div style={{ order: 1 }}>{showcaseText(content)}</div>
+            <div style={{ order: 2, borderRadius: 'var(--img-radius,16px)', overflow: 'hidden', boxShadow: 'var(--img-shadow,0 14px 38px rgba(90,55,30,.10))', border: 'var(--img-border,none)', filter: 'var(--img-filter,none)' }}>
+              <Slot variant="rect" src={content.showcase.image.src} alt={content.showcase.image.alt} placeholder="Drop a photo or video" style={{ width: '100%', aspectRatio: '4/3.4', display: 'block' }} />
+            </div>
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (variant === 'full') {
+    return (
+      <section style={{ padding: 'calc(var(--pad-scale,1) * 80px) 0' }}>
+        <div className="sx-reveal" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
+          {showcaseHeader}
+          <div style={{ textAlign: 'center', maxWidth: 720, margin: '0 auto 44px' }}>
+            <span style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 13, fontWeight: 700, letterSpacing: '.12em', textTransform: 'uppercase', color: 'var(--accent,#E0603A)' }}>Why Halo</span>
+            <h2 style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 800, fontSize: 'clamp(30px,4vw,48px)', lineHeight: 1.06, letterSpacing: '-.02em', margin: '12px 0 18px' }}>{content.showcase.heading}</h2>
+            <p style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 18, lineHeight: 1.65, color: 'var(--muted,#8A7B6B)', margin: '0 auto', maxWidth: '34em' }}>{content.showcase.body}</p>
+          </div>
+          <div style={{ position: 'relative', borderRadius: 'var(--img-radius,16px)', overflow: 'hidden', boxShadow: 'var(--img-shadow,0 24px 60px rgba(90,55,30,.16))', border: 'var(--img-border,none)', filter: 'var(--img-filter,none)' }}>
+            <Slot variant="rect" shape="21/9" src={content.showcase.image.src} alt={content.showcase.image.alt} placeholder="Drop a photo or video" style={{ width: '100%', display: 'block' }} />
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  // Default: image-left layout (original Halo showcase).
   return (
     <section style={{ padding: 'calc(var(--pad-scale,1) * 80px) 0' }}>
       <div className="sx-reveal" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>

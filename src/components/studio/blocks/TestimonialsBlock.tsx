@@ -2,9 +2,39 @@ import { Slot } from '@/components/studio/Slot'
 import type { ThemeProps } from '@/lib/studio/theme'
 import type { KitContent } from '@/lib/studio/kit-schema'
 
-export function TestimonialsBlock({ content }: { content: KitContent; theme: ThemeProps }) {
+export function TestimonialsBlock({ content, variant }: { content: KitContent; theme: ThemeProps; variant?: string }) {
   const testimonials = content.testimonials.items
   const t = (i: number, fallback: { quote: string; author: string }) => testimonials[i] ?? fallback
+
+  if (variant === 'quote') {
+    const first = t(0, { quote: "I launched my bakery's site over lunch. Dropped in my photos and it just looked right.", author: 'Maya Okafor' })
+    return (
+      <section style={{ padding: 'calc(var(--pad-scale,1) * 80px) 0' }}>
+        <div className="sx-reveal" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 34 }}>
+            <span style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 12, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--accent,#E0603A)' }}>08 / Testimonials</span>
+            <span style={{ height: 1, flex: 1, background: 'var(--border,#EADFD2)' }}></span>
+          </div>
+          <figure style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+            <span aria-hidden style={{ display: 'block', fontFamily: "var(--font-display,'Sora'),serif", fontSize: 'clamp(64px,10vw,120px)', lineHeight: 0.7, color: 'var(--accent,#E0603A)', opacity: 0.85, marginBottom: 8 }}>&ldquo;</span>
+            <blockquote style={{ margin: 0 }}>
+              <p style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 700, fontSize: 'clamp(26px,4.2vw,46px)', lineHeight: 1.18, letterSpacing: '-.02em', margin: 0 }}>{first.quote}</p>
+            </blockquote>
+            <div style={{ width: 56, height: 3, borderRadius: 2, background: 'var(--grad-accent,var(--accent,#E0603A))', margin: '32px auto 24px' }}></div>
+            <figcaption style={{ display: 'inline-flex', alignItems: 'center', gap: 14, justifyContent: 'center' }}>
+              <Slot variant="circle" src={null} placeholder="" style={{ width: 52, height: 52, display: 'block', borderRadius: '50%' }} />
+              <div style={{ textAlign: 'left' }}>
+                <div style={{ fontFamily: "var(--font-display,'Sora')", fontWeight: 700, fontSize: 16 }}>{first.author}</div>
+                <div style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: '13.5px', color: 'var(--muted,#8A7B6B)' }}>Owner, Rye &amp; Co.</div>
+              </div>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+    )
+  }
+
+  // Default: cards layout (original 3-col).
   return (
     <section style={{ padding: 'calc(var(--pad-scale,1) * 80px) 0' }}>
       <div className="sx-reveal" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
@@ -13,7 +43,7 @@ export function TestimonialsBlock({ content }: { content: KitContent; theme: The
           <span style={{ height: 1, flex: 1, background: 'var(--border,#EADFD2)' }}></span>
         </div>
         <h2 style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 800, fontSize: 'clamp(28px,3.6vw,42px)', lineHeight: 1.05, letterSpacing: '-.02em', margin: '0 0 36px' }}>{content.testimonials.heading ?? 'People love building with Halo'}</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 20 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: 20 }}>
           <div className="sx-lift" style={{ background: 'var(--surface,#fff)', border: 'var(--border-w,1px) solid var(--border,#EADFD2)', borderRadius: 'var(--radius,16px)', padding: 30, boxShadow: 'var(--shadow,0 14px 38px rgba(90,55,30,.06))' }}>
             <div style={{ color: 'var(--accent-2,#E7A14C)', fontSize: 18, letterSpacing: '2px', marginBottom: 14 }}>★★★★★</div>
             <p style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: '16.5px', lineHeight: 1.6, margin: '0 0 22px' }}>“{t(0, { quote: "I launched my bakery's site over lunch. Dropped in my photos and it just looked right.", author: '' }).quote}”</p>

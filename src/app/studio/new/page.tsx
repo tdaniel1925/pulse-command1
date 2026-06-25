@@ -84,12 +84,14 @@ export default function StudioNewPage() {
       setTheme(data.theme ?? {});
       const composedLayout = normalizeLayout(data.layout);
       setLayout(composedLayout);
+      const composedVariants = (data.variants && typeof data.variants === "object") ? data.variants as Record<string, string> : {};
+      setVariants(composedVariants);
 
       // Save a draft immediately so we have a page id to publish.
       const saveRes = await fetch("/api/studio/save", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ goal, content: data.content, theme: data.theme, kit, layout: composedLayout, variants }),
+        body: JSON.stringify({ goal, content: data.content, theme: data.theme, kit, layout: composedLayout, variants: composedVariants }),
       });
       const saved = await saveRes.json();
       if (saveRes.ok) setPageId(saved.id);

@@ -5,7 +5,7 @@ export function StatsBlock({ content }: { content: KitContent; theme: ThemeProps
   return (
     <section style={{ padding: 'calc(var(--pad-scale,1) * 30px) 0' }}>
       <div className="sx-reveal" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
-        <div className="sx-grain" style={{ background: 'var(--fg,#2A2018)', color: 'var(--bg,#FBF6EF)', borderRadius: 'var(--radius,16px)', padding: '46px 40px', display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 24 }}>
+        <div className="sx-grain" style={{ background: 'var(--fg,#2A2018)', color: 'var(--bg,#FBF6EF)', borderRadius: 'var(--radius,16px)', padding: '46px 40px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(140px,1fr))', gap: 24 }}>
           {content.stats ? content.stats.map((st, i) => (
             <div key={i} style={{ textAlign: 'center' }}>
               <div style={{ fontFamily: "var(--font-display,'Sora')", fontWeight: 800, fontSize: 'clamp(34px,4vw,48px)', letterSpacing: '-.02em', color: 'var(--accent-2,#E7A14C)' }}>{st.value}</div>
