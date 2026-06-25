@@ -6,7 +6,7 @@ export function GalleryBlock(props: { content: KitContent; theme: ThemeProps }) 
   void props; // static block — no content/theme needed
   return (
     <section style={{ padding: 'calc(var(--pad-scale,1) * 80px) 0', background: 'var(--surface-2,#F6EEE3)' }}>
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
+      <div className="sx-reveal" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 34 }}>
           <span style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 12, fontWeight: 700, letterSpacing: '.16em', textTransform: 'uppercase', color: 'var(--accent,#E0603A)' }}>07 / Gallery</span>
           <span style={{ height: 1, flex: 1, background: 'var(--border,#EADFD2)' }}></span>

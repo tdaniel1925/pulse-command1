@@ -17,8 +17,8 @@ const eyebrow = (content: KitContent) => (
 
 const ctas = (content: KitContent, center: boolean) => (
   <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', justifyContent: center ? 'center' : 'flex-start' }}>
-    <a href="#" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '16px 28px', background: 'var(--btn-bg,#E0603A)', color: 'var(--btn-fg,#fff)', border: '2px solid var(--btn-border,transparent)', borderRadius: 'var(--btn-radius,12px)', boxShadow: 'var(--btn-shadow,none)', fontFamily: "var(--font-body,'Manrope')", fontWeight: 700, fontSize: 17, textDecoration: 'none', transition: 'transform .15s ease' }}>{content.hero.ctaPrimary} →</a>
-    <a href="#" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '16px 26px', background: 'transparent', color: 'var(--fg)', border: '2px solid var(--border,#EADFD2)', borderRadius: 'var(--btn-radius,12px)', fontFamily: "var(--font-body,'Manrope')", fontWeight: 600, fontSize: 17, textDecoration: 'none' }}>▶ {content.hero.ctaSecondary ?? 'Watch demo'}</a>
+    <a href="#" className="sx-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '16px 28px', background: 'var(--btn-bg,#E0603A)', color: 'var(--btn-fg,#fff)', border: '2px solid var(--btn-border,transparent)', borderRadius: 'var(--btn-radius,12px)', boxShadow: 'var(--btn-shadow,none)', fontFamily: "var(--font-body,'Manrope')", fontWeight: 700, fontSize: 17, textDecoration: 'none', transition: 'transform .15s ease' }}>{content.hero.ctaPrimary} →</a>
+    <a href="#" className="sx-btn" style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '16px 26px', background: 'transparent', color: 'var(--fg)', border: '2px solid var(--border,#EADFD2)', borderRadius: 'var(--btn-radius,12px)', fontFamily: "var(--font-body,'Manrope')", fontWeight: 600, fontSize: 17, textDecoration: 'none' }}>▶ {content.hero.ctaSecondary ?? 'Watch demo'}</a>
   </div>
 )
 
@@ -33,7 +33,7 @@ export function HeroBlock({ content, variant }: { content: KitContent; theme: Th
   if (variant === 'centered') {
     return (
       <section style={{ padding: 'calc(var(--pad-scale,1) * 88px) 0 calc(var(--pad-scale,1) * 64px)' }}>
-        <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
+        <div className="sx-reveal" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
           {sectionHeader}
           <div style={{ textAlign: 'center', maxWidth: 760, margin: '0 auto' }}>
             {eyebrow(content)}
@@ -52,7 +52,7 @@ export function HeroBlock({ content, variant }: { content: KitContent; theme: Th
   // Default: split layout (original Atlas hero).
   return (
     <section style={{ padding: 'calc(var(--pad-scale,1) * 88px) 0 calc(var(--pad-scale,1) * 64px)' }}>
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
+      <div className="sx-reveal" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
         {sectionHeader}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(320px,1fr))', gap: 48, alignItems: 'stretch' }}>
           <div style={{ alignSelf: 'center' }}>

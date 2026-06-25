@@ -64,7 +64,7 @@ async function getPage(slug: string): Promise<PageRow | null> {
 
 // Google Fonts the theme engine references (Sora / Space Grotesk / Outfit / Manrope).
 const FONTS_HREF =
-  'https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap'
+  'https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Manrope:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&display=swap'
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> },

@@ -5,7 +5,7 @@ export function NewsletterBlock(props: { content: KitContent; theme: ThemeProps 
   void props; // static block — no content/theme needed
   return (
     <section style={{ padding: 'calc(var(--pad-scale,1) * 60px) 0' }}>
-      <div style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
+      <div className="sx-reveal" style={{ maxWidth: 1180, margin: '0 auto', padding: '0 32px' }}>
         <div style={{ background: 'var(--surface,#fff)', border: 'var(--border-w,1px) solid var(--border,#EADFD2)', borderRadius: 'var(--radius,16px)', padding: '48px 40px', textAlign: 'center', boxShadow: 'var(--shadow,0 14px 38px rgba(90,55,30,.06))' }}>
           <h2 style={{ fontFamily: "var(--font-display,'Sora'),sans-serif", fontWeight: 800, fontSize: 'clamp(26px,3.2vw,36px)', letterSpacing: '-.02em', margin: '0 0 10px' }}>Get design tips in your inbox</h2>
           <p style={{ fontFamily: "var(--font-body,'Manrope')", fontSize: 17, color: 'var(--muted,#8A7B6B)', margin: '0 0 26px' }}>One short email a week. No spam, unsubscribe any time.</p>
