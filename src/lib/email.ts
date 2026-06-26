@@ -11,17 +11,16 @@ export async function sendWelcomeEmail({
   to,
   firstName,
   businessName,
-  pin,
 }: {
   to: string
   firstName: string
   businessName: string
-  pin: string
 }) {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://bundledcontent.com'
   return getResend().emails.send({
     from: FROM,
     to,
-    subject: `Welcome to BundledContent, ${firstName}!`,
+    subject: `Welcome to BundledContent, ${firstName}! One quick step to go live`,
     html: `
 <!DOCTYPE html>
 <html>
@@ -33,26 +32,25 @@ export async function sendWelcomeEmail({
     </div>
     <div style="padding: 32px;">
       <h2 style="color: #111827; margin-top: 0;">Welcome, ${firstName}!</h2>
-      <p style="color: #6b7280;">Your account for <strong>${businessName}</strong> is ready. Your content machine starts now.</p>
+      <p style="color: #6b7280;">Your account for <strong>${businessName}</strong> is ready. There's just one quick step before your posts can start going out.</p>
 
-      <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 20px; margin: 24px 0; text-align: center;">
-        <p style="color: #0369a1; font-size: 13px; margin: 0 0 8px 0; font-weight: 600;">YOUR ONBOARDING PIN</p>
-        <p style="color: #0c4a6e; font-size: 36px; font-weight: 800; letter-spacing: 8px; margin: 0;">${pin}</p>
-        <p style="color: #0369a1; font-size: 12px; margin: 8px 0 0 0;">Use this when you call +1 (651) 728-7626 for your brand interview</p>
+      <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 20px; margin: 24px 0;">
+        <p style="color: #92400e; font-size: 15px; margin: 0; font-weight: 700;">👉 Connect your social accounts</p>
+        <p style="color: #b45309; font-size: 13px; margin: 8px 0 0 0;">We can't publish anything until you connect at least one account. It takes about a minute — you'll authorize each platform securely (we never see your passwords).</p>
       </div>
 
-      <h3 style="color: #111827;">What happens next:</h3>
+      <h3 style="color: #111827;">How it works:</h3>
       <ol style="color: #6b7280; line-height: 1.8;">
-        <li>Call <strong>+1 (651) 728-7626</strong> and enter your PIN when prompted</li>
-        <li>Complete your 15-minute brand interview with our AI</li>
-        <li>We'll build your brand profile and start generating content</li>
-        <li>Within 48 hours, your first content batch will be ready</li>
+        <li>Tell us about your business (a quick one-time interview)</li>
+        <li>Connect the social accounts you want us to post to</li>
+        <li>We write on-brand posts with a custom image for each one</li>
+        <li>They publish to your accounts automatically — nothing to manage</li>
       </ol>
 
       <div style="text-align: center; margin-top: 32px;">
-        <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard"
+        <a href="${appUrl}/dashboard/settings?tab=social"
            style="display: inline-block; background: #2563eb; color: white; font-weight: 700; padding: 14px 32px; border-radius: 12px; text-decoration: none; font-size: 16px;">
-          Go to Dashboard →
+          Connect your accounts →
         </a>
       </div>
     </div>

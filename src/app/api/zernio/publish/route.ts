@@ -3,6 +3,22 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { listZernioAccounts, postToZernio, zernioConfigured } from '@/lib/zernio'
 import { sendPostPublishedEmail } from '@/lib/email'
 import { createNotification } from '@/lib/notifications'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+/** Mark a post failed (visible + retryable). Merges the error into metadata
+ *  without clobbering the captions/topic the retry needs. */
+async function markFailed(admin: SupabaseClient, postId: string, error: string) {
+  let metadata: Record<string, unknown> = {}
+  try {
+    const { data } = await admin.from('social_posts').select('metadata').eq('id', postId).single()
+    if (data?.metadata && typeof data.metadata === 'object') metadata = data.metadata as Record<string, unknown>
+  } catch { /* ignore */ }
+  await admin
+    .from('social_posts')
+    .update({ status: 'failed', metadata: { ...metadata, last_error: error.slice(0, 500) } })
+    .eq('id', postId)
+    .then(undefined, () => {})
+}
 
 /**
  * Publish a social_post row to its target platforms via Zernio.
@@ -79,6 +95,8 @@ export async function POST(req: NextRequest) {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       console.error('[zernio/publish] failed:', msg)
+      // Make the failure visible + retryable instead of leaving the post stuck.
+      await markFailed(admin, postId, msg)
       return NextResponse.json({ error: msg }, { status: 502 })
     }
 

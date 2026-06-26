@@ -145,7 +145,6 @@ export async function POST(req: NextRequest) {
       to: email,
       firstName,
       businessName: businessName ?? '',
-      pin,
     }).catch((e) => console.error('[provision] welcome email failed:', e))
 
     // 6) Optionally seed initial draft posts (best-effort, sequential).

@@ -859,7 +859,14 @@ function AccountTab({
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export function SettingsClient({ client, userEmail }: Props) {
-  const [activeTab, setActiveTab] = useState<Tab>("profile");
+  // Deep-link support: /dashboard/settings?tab=social lands on the Social tab
+  // (used by the welcome email + dashboard "Connect Accounts" action).
+  const [activeTab, setActiveTab] = useState<Tab>(() => {
+    if (typeof window === "undefined") return "profile";
+    const t = new URLSearchParams(window.location.search).get("tab");
+    const valid: Tab[] = ["profile", "brand", "social", "notifications", "account"];
+    return valid.includes(t as Tab) ? (t as Tab) : "profile";
+  });
   const [toast, setToast] = useState<Toast>(null);
   const dismissToast = useCallback(() => setToast(null), []);
 

@@ -30,14 +30,12 @@ export async function POST(request: NextRequest) {
 
     const firstName = (client as Record<string, unknown>).first_name as string | null ?? client.business_name ?? "there";
     const businessName = client.business_name ?? "your business";
-    const metadata = (client.metadata as Record<string, unknown>) ?? {};
 
     if (type === "welcome") {
       await sendWelcomeEmail({
         to,
         firstName,
         businessName,
-        pin: (metadata.onboarding_pin as string | null) ?? "0000",
       });
     } else if (type === "report") {
       const now = new Date();

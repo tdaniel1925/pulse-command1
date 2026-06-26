@@ -57,7 +57,8 @@ export async function POST(request: NextRequest) {
     // Use admin client for all DB writes — bypasses RLS since session isn't established yet
     const admin = createAdminClient()
 
-    // Generate 6-digit PIN for VAPI interview
+    // onboarding_pin column may be NOT NULL; keep it populated even though the
+    // phone-interview flow is retired.
     const pin = String(Math.floor(100000 + Math.random() * 900000))
 
     // Insert client record first
@@ -110,21 +111,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Fetch generated onboarding_pin and send welcome email
-    const { data: newClient } = await admin
-      .from('clients')
-      .select('id, onboarding_pin')
-      .eq('user_id', userId)
-      .single()
-
-    if (newClient) {
-      await sendWelcomeEmail({
-        to: email,
-        firstName,
-        businessName: businessName ?? '',
-        pin: newClient.onboarding_pin,
-      }).catch(err => console.error('Welcome email failed:', err))
-    }
+    // Welcome email — points the user to connect their social accounts.
+    await sendWelcomeEmail({
+      to: email,
+      firstName,
+      businessName: businessName ?? '',
+    }).catch(err => console.error('Welcome email failed:', err))
 
     return NextResponse.json({ success: true, userId })
   } catch (error) {

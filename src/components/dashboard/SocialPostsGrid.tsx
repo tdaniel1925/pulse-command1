@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, CheckCircle, Clock, FileEdit, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bell, CheckCircle, Clock, FileEdit, AlertCircle, RotateCw, Loader2 } from "lucide-react";
 import { ApproveButton } from "@/components/dashboard/ApproveButton";
 import { PostModal, type PostModalData } from "@/components/dashboard/PostModal";
 
@@ -43,7 +44,23 @@ interface SocialPostsGridProps {
 }
 
 export function SocialPostsGrid({ posts, failed }: SocialPostsGridProps) {
+  const router = useRouter();
   const [activePost, setActivePost] = useState<PostModalData | null>(null);
+  const [retrying, setRetrying] = useState<string | null>(null);
+
+  async function retry(postId: string) {
+    setRetrying(postId);
+    try {
+      const res = await fetch("/api/dashboard/retry-post", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ postId }),
+      });
+      if (res.ok) router.refresh();
+    } finally {
+      setRetrying(null);
+    }
+  }
 
   const pending = posts.filter((p) => p.status === "pending_approval");
   const rest    = posts.filter((p) => p.status !== "pending_approval");
@@ -125,6 +142,16 @@ export function SocialPostsGrid({ posts, failed }: SocialPostsGridProps) {
                         {cfg.icon}{cfg.label}
                       </span>
                     </div>
+                    {post.status === "failed" && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); retry(post.id); }}
+                        disabled={retrying === post.id}
+                        className="inline-flex items-center justify-center gap-1.5 mt-1 px-3 py-1.5 text-xs font-semibold text-red-700 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 disabled:opacity-60"
+                      >
+                        {retrying === post.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RotateCw className="w-3.5 h-3.5" />}
+                        Retry
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -142,7 +169,7 @@ export function SocialPostsGrid({ posts, failed }: SocialPostsGridProps) {
       )}
 
       {failed > 0 && (
-        <p className="text-xs text-red-500">{failed} post{failed > 1 ? "s" : ""} failed to generate. Contact support.</p>
+        <p className="text-xs text-red-500">{failed} post{failed > 1 ? "s" : ""} failed to publish — use Retry on the post, or email <a href="mailto:support@bundledcontent.com" className="underline">support@bundledcontent.com</a>.</p>
       )}
     </>
   );

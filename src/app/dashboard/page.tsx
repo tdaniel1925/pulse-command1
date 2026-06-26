@@ -37,7 +37,7 @@ const PlatformBadge = ({ platform }: { platform: string }) => {
 
 const quickActions = [
   { label: "View Social Posts", icon: Share2, color: "bg-blue-50 text-blue-700", href: "/dashboard/social" },
-  { label: "Connect Accounts", icon: Sparkles, color: "bg-violet-50 text-violet-700", href: "/dashboard/settings" },
+  { label: "Connect Accounts", icon: Sparkles, color: "bg-violet-50 text-violet-700", href: "/dashboard/settings?tab=social" },
   { label: "Update Profile", icon: Settings, color: "bg-neutral-100 text-neutral-700", href: "/dashboard/settings" },
   { label: "Billing", icon: FileText, color: "bg-green-50 text-green-700", href: "/dashboard/billing" },
 ];
@@ -65,6 +65,12 @@ function formatScheduledDate(dateStr: string | null): string {
  *  helper isn't flagged by the render-purity lint rule. */
 function daysUntil(end: Date): number {
   return Math.ceil((end.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+}
+
+/** Time-of-day greeting (isolated for the render-purity lint rule). */
+function timeGreeting(): string {
+  const h = new Date().getHours();
+  return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
 
 export default async function DashboardPage() {
@@ -159,14 +165,37 @@ export default async function DashboardPage() {
     ? trialEndDate.toLocaleDateString("en-US", { month: "long", day: "numeric" })
     : "";
 
+  const greeting = timeGreeting();
+  const isLive = connectedPlatforms.length > 0;
+
   return (
     <div className="space-y-6">
       <WelcomeBanner />
       {/* Welcome banner */}
       <div className="bg-primary-600 rounded-2xl px-6 py-5 text-white">
-        <p className="text-lg font-bold">Good morning, {firstName}!</p>
-        <p className="text-primary-200 text-sm mt-0.5">Your content machine is running.</p>
+        <p className="text-lg font-bold">{greeting}, {firstName}!</p>
+        <p className="text-primary-200 text-sm mt-0.5">
+          {isLive ? "Your content machine is running." : "Let's get your content machine running."}
+        </p>
       </div>
+
+      {/* ACTIVATION: nothing publishes until at least one account is connected */}
+      {!isLive && (
+        <div className="bg-amber-50 border-2 border-amber-200 rounded-2xl px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <Sparkles className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-amber-900 text-sm">You&apos;re almost live — connect a social account</p>
+              <p className="text-amber-700 text-xs mt-0.5">
+                We can&apos;t publish anything until you connect at least one account. It takes about a minute.
+              </p>
+            </div>
+          </div>
+          <Link href="/dashboard/settings?tab=social" className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors whitespace-nowrap w-full sm:w-auto text-center">
+            Connect accounts →
+          </Link>
+        </div>
+      )}
 
       {/* Trial status card — only when genuinely trialing with time left */}
       {showTrialCard && (
