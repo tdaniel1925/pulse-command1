@@ -81,16 +81,15 @@ const testimonials = [
 const plans = [
   {
     id: "starter",
-    name: "Starter",
-    blurb: "Perfect to get consistent online",
+    name: "Auto Social",
+    blurb: "One interview. We post to your socials automatically.",
     price: "$149",
-    highlight: false,
+    highlight: true,
     features: [
-      { icon: <Share2 className="w-4 h-4 text-primary-500" />, text: "30 social posts/month" },
+      { icon: <Check className="w-4 h-4 text-green-500" />, text: "One quick interview about your business" },
+      { icon: <Share2 className="w-4 h-4 text-primary-500" />, text: "30 on-brand social posts/month" },
       { icon: <ImageIcon className="w-4 h-4 text-accent-400" />, text: "AI image with every post" },
-      { icon: <Send className="w-4 h-4 text-purple-500" />, text: "Auto-publish to your connected accounts" },
-      { icon: <Layout className="w-4 h-4 text-primary-500" />, text: "1 landing page" },
-      { icon: <Check className="w-4 h-4 text-green-500" />, text: "AI onboarding included" },
+      { icon: <Send className="w-4 h-4 text-purple-500" />, text: "Auto-published to your accounts — no approvals" },
     ],
   },
   {

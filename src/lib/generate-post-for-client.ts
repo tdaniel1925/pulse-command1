@@ -93,7 +93,7 @@ export async function generatePostForClient(
     // Step 1: Fetch client row
     const { data: client, error: clientError } = await supabase
       .from("clients")
-      .select("id, business_name, website, brand_vibe, email, auto_approve, ayrshare_profile_key")
+      .select("id, business_name, website, brand_vibe, email, zernio_profile_id")
       .eq("id", clientId)
       .single();
 
@@ -157,9 +157,10 @@ export async function generatePostForClient(
       clientTier: "starter" as ClientTier,
     });
 
-    // Step 6: Determine approval status
-    const autoApprove = client.auto_approve ?? true;
-    const postStatus = autoApprove ? "scheduled" : "pending_approval";
+    // Step 6: Approval is removed from this product — posts are published
+    // automatically once generated. We always auto-approve.
+    const autoApprove = true;
+    const postStatus = "scheduled";
 
     // Step 7: Insert social post row
     const { data: insertedPost } = await supabase.from("social_posts").insert({
@@ -181,20 +182,19 @@ export async function generatePostForClient(
       },
     } as never).select("id").single();
 
-    // Step 8: Auto-publish via Ayrshare if client has profile key and auto_approve is on
-    if (autoApprove && insertedPost?.id) {
-      if (client.ayrshare_profile_key) {
-        try {
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-          await fetch(`${baseUrl}/api/ayrshare/publish`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ postId: insertedPost.id }),
-          });
-        } catch (publishErr: unknown) {
-          const msg = publishErr instanceof Error ? publishErr.message : String(publishErr);
-          console.error(`[generate-post] Ayrshare publish failed for ${client.business_name}:`, msg);
-        }
+    // Step 8: Auto-publish via Zernio. The product posts automatically (no
+    // approval step), so publish whenever the client has connected accounts.
+    if (insertedPost?.id && client.zernio_profile_id) {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+        await fetch(`${baseUrl}/api/zernio/publish`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ postId: insertedPost.id }),
+        });
+      } catch (publishErr: unknown) {
+        const msg = publishErr instanceof Error ? publishErr.message : String(publishErr);
+        console.error(`[generate-post] Zernio publish failed for ${client.business_name}:`, msg);
       }
     }
 

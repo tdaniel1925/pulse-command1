@@ -55,7 +55,7 @@ export default async function AdminDashboardPage() {
     { count: activeCount },
     { count: postsThisMonth },
     { count: publishedThisMonth },
-    { count: noAyrshareCount },
+    { count: noSocialCount },
     { count: pendingCount },
     { data: allClients },
     { data: recentActivities },
@@ -63,11 +63,11 @@ export default async function AdminDashboardPage() {
     supabase.from("clients").select("id", { count: "exact" }).eq("status", "active"),
     supabase.from("social_posts").select("id", { count: "exact" }).gte("created_at", startOfMonth),
     supabase.from("social_posts").select("id", { count: "exact" }).gte("created_at", startOfMonth).eq("status", "published"),
-    supabase.from("clients").select("id", { count: "exact" }).eq("status", "active").is("ayrshare_profile_key", null),
+    supabase.from("clients").select("id", { count: "exact" }).eq("status", "active").is("zernio_profile_id", null),
     supabase.from("social_posts").select("id", { count: "exact" }).eq("status", "pending_approval"),
     supabase
       .from("clients")
-      .select("id, business_name, email, status, created_at, ayrshare_profile_key")
+      .select("id, business_name, email, status, created_at, zernio_profile_id")
       .order("created_at", { ascending: false })
       .limit(50),
     supabase
@@ -102,7 +102,7 @@ export default async function AdminDashboardPage() {
   const needsAttention = clients
     .filter((c) => {
       if (c.status !== "active") return true;
-      if (!c.ayrshare_profile_key) return true;
+      if (!c.zernio_profile_id) return true;
       const lastPost = lastPostMap.get(c.id);
       if (!lastPost || new Date(lastPost).getTime() < fourteenDaysAgo) return true;
       return false;
@@ -143,8 +143,8 @@ export default async function AdminDashboardPage() {
         </div>
         <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
           <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">No Social Linked</p>
-          <p className={`text-3xl font-bold ${(noAyrshareCount ?? 0) > 0 ? "text-amber-500" : "text-neutral-400"}`}>
-            {noAyrshareCount ?? 0}
+          <p className={`text-3xl font-bold ${(noSocialCount ?? 0) > 0 ? "text-amber-500" : "text-neutral-400"}`}>
+            {noSocialCount ?? 0}
           </p>
         </div>
         <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
@@ -169,7 +169,7 @@ export default async function AdminDashboardPage() {
               <tr className="bg-neutral-50 text-neutral-500 text-xs font-semibold uppercase tracking-wide">
                 <th className="text-left px-6 py-3">Business Name</th>
                 <th className="text-left px-6 py-3">Status</th>
-                <th className="text-left px-6 py-3">Ayrshare</th>
+                <th className="text-left px-6 py-3">Social</th>
                 <th className="text-left px-6 py-3">Last Post</th>
                 <th className="text-left px-6 py-3">Action</th>
               </tr>
@@ -198,7 +198,7 @@ export default async function AdminDashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        {c.ayrshare_profile_key ? (
+                        {c.zernio_profile_id ? (
                           <span className="inline-block px-2.5 py-0.5 bg-green-100 text-green-700 text-xs font-semibold rounded-full">
                             Connected
                           </span>

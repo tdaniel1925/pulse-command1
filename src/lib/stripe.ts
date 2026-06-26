@@ -8,29 +8,28 @@ export function getStripe(): Stripe | null {
   })
 }
 
-// Pricing plans — focused product: AI social posts + landing pages.
-// Tiers scale by social posts/month and landing pages. Set real Stripe price IDs
-// via env; placeholders let the app build/run without Stripe configured.
-// `landingPagesPerMonth: -1` means unlimited.
+// Pricing — single product: do one interview, and we post to your social
+// accounts automatically for $149/month. Set the real Stripe price ID via
+// STRIPE_PRICE_STARTER; the placeholder lets the app build without Stripe.
 export const PLANS = {
   starter: {
     id: 'starter',
-    name: 'Starter',
+    name: 'Auto Social',
     price: 149,
     priceId: process.env.STRIPE_PRICE_STARTER ?? 'price_starter_placeholder',
-    description: 'For solo operators getting consistent online',
+    description: 'One interview. We post to your socials automatically.',
     features: [
-      '30 social posts/month',
+      'A quick one-time interview about your business',
+      '30 on-brand social posts/month',
       'AI image with every post',
-      'Auto-publish to your connected accounts',
-      '1 landing page',
+      'Auto-published to your connected accounts — no approvals needed',
     ],
     // Entitlements consumed by the post-generation loop + app gating.
     entitlements: {
       socialPostsPerMonth: 30,
-      landingPagesPerMonth: 1,
+      landingPagesPerMonth: 0,
     },
-    highlight: false,
+    highlight: true,
   },
   growth: {
     id: 'growth',

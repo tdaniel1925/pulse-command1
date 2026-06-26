@@ -3,19 +3,19 @@
 import { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Check, User, Mail, Building2, Shield, Zap, Share2, Image as ImageIcon, Globe, Rocket, AlertCircle, Phone } from "lucide-react";
+import { Check, User, Mail, Building2, Shield, Zap, Share2, Image as ImageIcon, Globe, Rocket, AlertCircle, Phone, Send } from "lucide-react";
 import OnboardingNav from "@/components/OnboardingNav";
 
 const plans = {
   starter: {
-    name: "Starter",
+    name: "Auto Social",
     displayPrice: "$149",
-    tagline: "For solo operators getting consistent online",
+    tagline: "One interview. We post to your socials automatically.",
     items: [
-      { icon: <Share2 className="w-4 h-4 text-primary-500" />, text: "30 social posts/month" },
+      { icon: <Zap className="w-4 h-4 text-amber-500" />, text: "One quick interview about your business" },
+      { icon: <Share2 className="w-4 h-4 text-primary-500" />, text: "30 on-brand social posts/month" },
       { icon: <ImageIcon className="w-4 h-4 text-purple-500" />, text: "AI image with every post" },
-      { icon: <Zap className="w-4 h-4 text-amber-500" />, text: "Auto-publish to connected accounts" },
-      { icon: <Globe className="w-4 h-4 text-teal-500" />, text: "1 landing page" },
+      { icon: <Send className="w-4 h-4 text-teal-500" />, text: "Auto-published — no approvals needed" },
     ],
   },
   growth: {
@@ -50,7 +50,8 @@ const inputWithIconClass = "w-full pl-11 pr-4 py-3 bg-neutral-50 border border-n
 function SignUpForm() {
   const searchParams = useSearchParams();
   const planParam = searchParams.get("plan");
-  const planKey = (planParam === "starter" || planParam === "pro" ? planParam : "growth") as "starter" | "growth" | "pro";
+  // Single product: default everyone to the $149 Auto Social plan (starter).
+  const planKey = (planParam === "growth" || planParam === "pro" ? planParam : "starter") as "starter" | "growth" | "pro";
   const plan = plans[planKey];
 
   const [firstName, setFirstName] = useState("");

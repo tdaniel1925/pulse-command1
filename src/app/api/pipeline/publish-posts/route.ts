@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { listZernioAccounts, postToZernio, zernioConfigured } from '@/lib/zernio'
 
 export async function POST(request: NextRequest) {
   try {
@@ -7,6 +8,10 @@ export async function POST(request: NextRequest) {
 
     if (!postIds?.length || !clientId) {
       return NextResponse.json({ error: 'postIds and clientId required' }, { status: 400 })
+    }
+    if (!zernioConfigured()) {
+      console.error('ZERNIO_API_KEY not set')
+      return NextResponse.json({ error: 'Zernio not configured' }, { status: 503 })
     }
 
     const admin = createAdminClient()
@@ -21,48 +26,58 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No posts found' }, { status: 404 })
     }
 
-    const ayrshareKey = process.env.AYRSHARE_API_KEY
-    if (!ayrshareKey) {
-      console.error('AYRSHARE_API_KEY not set')
-      return NextResponse.json({ error: 'Ayrshare not configured' }, { status: 500 })
+    // Resolve the client's Zernio profile + connected accounts once.
+    let profileId: string | null = null
+    try {
+      const { data: client } = await admin
+        .from('clients')
+        .select('zernio_profile_id')
+        .eq('id', clientId)
+        .single()
+      profileId = (client?.zernio_profile_id as string | null) ?? null
+    } catch {
+      profileId = null
     }
+    if (!profileId) {
+      return NextResponse.json({ error: 'Client has not connected social accounts' }, { status: 400 })
+    }
+    const accounts = (await listZernioAccounts(profileId)).filter((a) => a.isActive)
 
     const results = []
 
     for (const post of posts) {
       try {
-        const platforms: string[] = Array.isArray(post.platforms) ? post.platforms : []
+        const requested: string[] = (Array.isArray(post.platforms) ? post.platforms : []).map((p: string) => p.toLowerCase())
+        const captions = (post.metadata as { captions?: Record<string, string> } | null)?.captions ?? {}
+        const targets = accounts
+          .filter((a) => requested.includes(a.platform.toLowerCase()))
+          .map((a) => ({ platform: a.platform, accountId: a.id, customContent: captions[a.platform] }))
 
-        const ayrshareRes = await fetch('https://api.ayrshare.com/api/post', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${ayrshareKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            post: post.content,
-            platforms: platforms.map((p: string) => p.toLowerCase()),
-            ...(post.scheduled_at ? { scheduleDate: post.scheduled_at } : {}),
-            ...(post.image_url ? { mediaUrls: [post.image_url] } : {}),
-            ...(post.video_url ? { videoUrl: post.video_url } : {}),
-          }),
-        })
-
-        if (!ayrshareRes.ok) {
-          const errText = await ayrshareRes.text()
-          console.error('Ayrshare error for post', post.id, errText)
+        if (!targets.length) {
           await admin.from('social_posts').update({ status: 'failed' }).eq('id', post.id)
-          results.push({ id: post.id, success: false, error: errText })
+          results.push({ id: post.id, success: false, error: 'no matching connected accounts' })
           continue
         }
 
-        const ayrshareData = await ayrshareRes.json()
+        const result = await postToZernio({
+          content: post.content ?? '',
+          targets,
+          mediaUrls: post.image_url ? [post.image_url] : undefined,
+          scheduledFor: post.scheduled_at ?? undefined,
+          publishNow: !post.scheduled_at,
+        })
 
-        await admin.from('social_posts').update({
+        const update = {
           status: post.scheduled_at ? 'scheduled' : 'published',
-          ayrshare_post_id: ayrshareData.id ?? ayrshareData.postId ?? null,
+          zernio_post_id: result.id,
           published_at: post.scheduled_at ? null : new Date().toISOString(),
-        }).eq('id', post.id)
+        }
+        const { error: updErr } = await admin.from('social_posts').update(update).eq('id', post.id)
+        if (updErr) {
+          const fallback: Record<string, unknown> = { ...update }
+          delete fallback.zernio_post_id
+          await admin.from('social_posts').update(fallback).eq('id', post.id)
+        }
 
         results.push({ id: post.id, success: true })
       } catch (err) {
@@ -72,12 +87,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const successCount = results.filter(r => r.success).length
+    const successCount = results.filter((r) => r.success).length
     await admin.from('activities').insert({
       client_id: clientId,
       type: 'post',
-      title: `${successCount} post(s) sent to Ayrshare`,
-      description: `${results.filter(r => !r.success).length} failed.`,
+      title: `${successCount} post(s) published`,
+      description: `${results.filter((r) => !r.success).length} failed.`,
       created_by: 'system',
     })
 

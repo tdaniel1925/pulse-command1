@@ -10,7 +10,7 @@ export default async function ReportsPage() {
     await Promise.all([
       supabase
         .from("clients")
-        .select("id, business_name, ayrshare_profile_key, status, created_at"),
+        .select("id, business_name, zernio_profile_id, status, created_at"),
       supabase
         .from("social_posts")
         .select("id, client_id, status, platforms, published_at, created_at")
@@ -57,7 +57,7 @@ export default async function ReportsPage() {
       return {
         id: client.id as string,
         business_name: client.business_name as string,
-        ayrshare_profile_key: client.ayrshare_profile_key as string | null,
+        zernio_profile_id: client.zernio_profile_id as string | null,
         publishedCount,
         lastPostDate,
       };
@@ -252,7 +252,7 @@ export default async function ReportsPage() {
                 <td className="px-6 py-4 font-medium">{client.business_name}</td>
                 <td className="px-6 py-4">{client.publishedCount}</td>
                 <td className="px-6 py-4">
-                  {client.ayrshare_profile_key ? (
+                  {client.zernio_profile_id ? (
                     <span className="text-green-600">✓ Connected</span>
                   ) : (
                     <span className="text-red-500">✗ Not set</span>

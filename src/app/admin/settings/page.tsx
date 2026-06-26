@@ -20,7 +20,7 @@ const integrations: Integration[] = [
   { name: "Twilio", initial: "T", color: "bg-red-500", connected: true },
   { name: "OpenAI", initial: "O", color: "bg-neutral-800", connected: true },
   { name: "Predis", initial: "P", color: "bg-pink-500", connected: false },
-  { name: "Ayrshare", initial: "A", color: "bg-blue-500", connected: true },
+  { name: "Zernio", initial: "Z", color: "bg-blue-500", connected: true },
   { name: "AutoContent", initial: "A", color: "bg-cyan-500", connected: true },
   { name: "Headliner", initial: "H", color: "bg-purple-500", connected: false },
   { name: "GitHub", initial: "G", color: "bg-neutral-700", connected: true },

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import { ConnectSocialAccounts } from "@/components/dashboard/ConnectSocialAccounts";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -34,8 +35,8 @@ interface ClientData {
   email: string | null;
   status: string | null;
   metadata: ClientMetadata | null;
-  ayrshare_profile_key: string | null;
-  ayrshare_connected_platforms: string[] | null;
+  zernio_profile_id: string | null;
+  zernio_connected_platforms: string[] | null;
   plan_name: string | null;
   plan_status: string | null;
   presentations_used: number;
@@ -154,21 +155,6 @@ function SectionCard({ title, subtitle, children }: { title: string; subtitle?: 
       {children}
     </div>
   );
-}
-
-// ─── Platform config ──────────────────────────────────────────────────────────
-
-const PLATFORMS = [
-  { key: "instagram", label: "Instagram", emoji: "📷", badge: "bg-pink-100 text-pink-700" },
-  { key: "facebook", label: "Facebook", emoji: "📘", badge: "bg-blue-100 text-blue-700" },
-  { key: "linkedin", label: "LinkedIn", emoji: "💼", badge: "bg-sky-100 text-sky-800" },
-  { key: "twitter", label: "X / Twitter", emoji: "🐦", badge: "bg-neutral-100 text-neutral-800" },
-  { key: "tiktok", label: "TikTok", emoji: "🎵", badge: "bg-purple-100 text-purple-700" },
-  { key: "youtube", label: "YouTube", emoji: "▶️", badge: "bg-red-100 text-red-700" },
-];
-
-function platformBadge(key: string) {
-  return PLATFORMS.find((p) => p.key === key)?.badge ?? "bg-neutral-100 text-neutral-600";
 }
 
 // ─── TAB: Profile ─────────────────────────────────────────────────────────────
@@ -523,45 +509,16 @@ function SocialTab({
   client: ClientData;
   onToast: (t: Toast) => void;
 }) {
-  const [connecting, setConnecting] = useState(false);
   const [disconnecting, setDisconnecting] = useState(false);
   const [autoPublish, setAutoPublish] = useState(client.metadata?.auto_publish ?? true);
   const [postTime, setPostTime] = useState(client.metadata?.post_time ?? "morning");
   const [loadingSchedule, setLoadingSchedule] = useState(false);
 
-  async function handleConnect() {
-    setConnecting(true);
-    try {
-      // First, ensure Ayrshare profile exists
-      const initRes = await fetch("/api/ayrshare/init", { method: "POST" });
-      if (!initRes.ok) {
-        const initError = await initRes.json();
-        throw new Error(initError.error || "Failed to initialize Ayrshare profile");
-      }
-
-      // Then get the connection URL
-      const res = await fetch("/api/ayrshare/connect");
-      const data = await res.json();
-      if (data.url) {
-        window.open(data.url, "_blank");
-      } else {
-        throw new Error(data.error || "No URL returned");
-      }
-    } catch (error) {
-      onToast({
-        message: error instanceof Error ? error.message : "Failed to generate connection link",
-        type: "error"
-      });
-    } finally {
-      setConnecting(false);
-    }
-  }
-
   async function handleDisconnect() {
     if (!confirm("Disconnect all social accounts?")) return;
     setDisconnecting(true);
     try {
-      const res = await fetch("/api/ayrshare/disconnect", { method: "POST" });
+      const res = await fetch("/api/zernio/disconnect", { method: "POST" });
       if (!res.ok) throw new Error("Failed");
       onToast({ message: "Social accounts disconnected", type: "success" });
       window.location.reload();
@@ -589,88 +546,28 @@ function SocialTab({
     }
   }
 
-  const connectedPlatforms = client.ayrshare_connected_platforms ?? [];
+  const connectedPlatforms = client.zernio_connected_platforms ?? [];
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Connect section */}
+      {/* Connect section — per-platform OAuth via Zernio */}
       <SectionCard
         title="Social Accounts"
-        subtitle="Connect your accounts so we can publish directly to your social profiles"
+        subtitle="Connect each account so we can post for you automatically"
       >
-        {client.ayrshare_profile_key ? (
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2 px-4 py-3 bg-green-50 border border-green-200 rounded-xl">
-              <span className="text-green-600 text-lg">✅</span>
-              <span className="text-sm font-medium text-green-700">Social accounts connected</span>
-            </div>
-
-            {connectedPlatforms.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {connectedPlatforms.map((p) => {
-                  const platform = PLATFORMS.find((pl) => pl.key === p);
-                  return (
-                    <span
-                      key={p}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${platformBadge(p)}`}
-                    >
-                      <span>{platform?.emoji}</span>
-                      {platform?.label ?? p}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={handleConnect}
-                disabled={connecting}
-                className="px-4 py-2 text-sm font-medium bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60"
-              >
-                {connecting ? "Opening…" : "Manage Connections"}
-              </button>
-              <button
-                type="button"
-                onClick={handleDisconnect}
-                disabled={disconnecting}
-                className="px-4 py-2 text-sm font-medium border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-colors disabled:opacity-60"
-              >
-                {disconnecting ? "Disconnecting…" : "Disconnect"}
-              </button>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-6">
-            <div className="grid grid-cols-3 gap-3">
-              {PLATFORMS.map((p) => (
-                <div
-                  key={p.key}
-                  className="flex flex-col items-center gap-2 p-4 border border-neutral-200 rounded-xl bg-neutral-50"
-                >
-                  <span className="text-2xl">{p.emoji}</span>
-                  <span className="text-sm font-medium text-neutral-700">{p.label}</span>
-                  <span className="text-xs text-neutral-400">Not connected</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-col gap-3">
-              <button
-                type="button"
-                onClick={handleConnect}
-                disabled={connecting}
-                className="w-full py-3 bg-indigo-600 text-white text-sm font-semibold rounded-xl hover:bg-indigo-700 transition-colors disabled:opacity-60"
-              >
-                {connecting ? "Generating link…" : "Connect Social Accounts"}
-              </button>
-              <p className="text-xs text-neutral-400 text-center">
-                You&apos;ll be redirected to connect your accounts. This takes about 2 minutes.
-              </p>
-            </div>
-          </div>
-        )}
+        <div className="flex flex-col gap-4">
+          <ConnectSocialAccounts connectedPlatforms={connectedPlatforms} />
+          {connectedPlatforms.length > 0 && (
+            <button
+              type="button"
+              onClick={handleDisconnect}
+              disabled={disconnecting}
+              className="self-start px-4 py-2 text-sm font-medium border border-red-300 text-red-600 rounded-xl hover:bg-red-50 transition-colors disabled:opacity-60"
+            >
+              {disconnecting ? "Disconnecting…" : "Disconnect all"}
+            </button>
+          )}
+        </div>
       </SectionCard>
 
       {/* Publishing Schedule */}
@@ -678,8 +575,8 @@ function SocialTab({
         <Toggle
           checked={autoPublish}
           onChange={setAutoPublish}
-          label="Auto-publish approved posts"
-          description="Automatically publish posts once they are approved"
+          label="Auto-publish posts"
+          description="We publish your posts automatically on your schedule — no approval needed"
         />
         <InputRow label="Post time preference">
           <select

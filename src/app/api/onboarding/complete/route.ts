@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { createAyrshareProfile } from "@/lib/ayrshare";
+import { zernioConfigured } from "@/lib/zernio";
+import { ensureZernioProfile } from "@/lib/zernio-profile";
 import { sendOnboardingCompleteEmail } from "@/lib/email";
 import { generatePostForClient } from "@/lib/generate-post-for-client";
 
@@ -18,7 +19,7 @@ export async function POST() {
   // Step 2: Fetch client row
   const { data: client } = await admin
     .from("clients")
-    .select("id, business_name, email, ayrshare_profile_key")
+    .select("id, business_name, email")
     .eq("user_id", user.id)
     .single();
 
@@ -33,20 +34,13 @@ export async function POST() {
     .update({ status: "active" })
     .eq("id", client.id);
 
-  // Step 5: Create Ayrshare profile if not already set
-  if (!client.ayrshare_profile_key) {
+  // Step 5: Ensure the client has a Zernio profile (for connecting socials).
+  if (zernioConfigured()) {
     try {
-      const profile = await createAyrshareProfile({
-        title: client.business_name,
-        email: client.email,
-      });
-      await admin
-        .from("clients")
-        .update({ ayrshare_profile_key: profile.profileKey })
-        .eq("id", client.id);
-    } catch (ayrshareErr: unknown) {
-      const msg = ayrshareErr instanceof Error ? ayrshareErr.message : String(ayrshareErr);
-      console.error("[onboarding/complete] Ayrshare profile creation failed:", msg);
+      await ensureZernioProfile(admin, client.id);
+    } catch (zernioErr: unknown) {
+      const msg = zernioErr instanceof Error ? zernioErr.message : String(zernioErr);
+      console.error("[onboarding/complete] Zernio profile creation failed:", msg);
     }
   }
 

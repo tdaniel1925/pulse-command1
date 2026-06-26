@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { listZernioAccounts, postToZernio, zernioConfigured, type ZernioAccount } from '@/lib/zernio'
 
 interface MonthlyContentShape {
   tweets?: Array<{ tweets: string[] }>
@@ -29,17 +30,32 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Content not found' }, { status: 404 })
     }
 
-    // Get client's Ayrshare profile key and connected platforms
-    const { data: brandProfile, error: brandError } = await admin
-      .from('brand_profiles')
-      .select('ayrshare_profile_id, connected_platforms')
-      .eq('client_id', monthlyContent.client_id)
-      .single()
-
-    if (brandError || !brandProfile?.ayrshare_profile_id) {
-      console.error('Ayrshare profile not found:', brandError)
-      return NextResponse.json({ error: 'Ayrshare not connected' }, { status: 400 })
+    if (!zernioConfigured()) {
+      return NextResponse.json({ error: 'Social posting not configured' }, { status: 503 })
     }
+
+    // Resolve the client's Zernio profile + connected accounts.
+    let profileId: string | null = null
+    try {
+      const { data: client } = await admin
+        .from('clients')
+        .select('zernio_profile_id')
+        .eq('id', monthlyContent.client_id)
+        .single()
+      profileId = (client?.zernio_profile_id as string | null) ?? null
+    } catch {
+      profileId = null
+    }
+    if (!profileId) {
+      return NextResponse.json({ error: 'Social accounts not connected' }, { status: 400 })
+    }
+    const accounts = (await listZernioAccounts(profileId)).filter((a) => a.isActive)
+
+    // Build per-platform target lists once.
+    const targetsFor = (platforms: string[]) =>
+      accounts
+        .filter((a) => platforms.includes(a.platform.toLowerCase()))
+        .map((a: ZernioAccount) => ({ platform: a.platform, accountId: a.id }))
 
     const content = monthlyContent.content as MonthlyContentShape
 
@@ -50,11 +66,10 @@ export async function POST(request: NextRequest) {
           // Post each tweet in the thread
           for (let i = 0; i < thread.tweets.length; i++) {
             const tweetText = thread.tweets[i]
-            await publishToAyrshare({
-              profileId: brandProfile.ayrshare_profile_id,
-              post: tweetText,
-              platforms: ['twitter'],
-            })
+            const targets = targetsFor(['twitter'])
+            if (targets.length) {
+              await postToZernio({ content: tweetText, targets, publishNow: true })
+            }
             // Small delay between posts
             await new Promise(resolve => setTimeout(resolve, 1000))
           }
@@ -69,11 +84,14 @@ export async function POST(request: NextRequest) {
       for (const article of content.articles) {
         try {
           const snippet = article.content.substring(0, 500) + '...'
-          await publishToAyrshare({
-            profileId: brandProfile.ayrshare_profile_id,
-            post: `${article.title}\n\n${snippet}\n\nRead full article on our blog`,
-            platforms: ['linkedin'],
-          })
+          const targets = targetsFor(['linkedin'])
+          if (targets.length) {
+            await postToZernio({
+              content: `${article.title}\n\n${snippet}\n\nRead full article on our blog`,
+              targets,
+              publishNow: true,
+            })
+          }
         } catch (err) {
           console.error('Failed to publish article:', err)
         }
@@ -85,11 +103,10 @@ export async function POST(request: NextRequest) {
       for (const caseStudy of content.caseStudies) {
         try {
           const post = `Case Study: ${caseStudy.clientName}\n\nChallenge: ${caseStudy.challenge}\n\nResult: ${Object.values(caseStudy.results)[0]}`
-          await publishToAyrshare({
-            profileId: brandProfile.ayrshare_profile_id,
-            post,
-            platforms: ['linkedin', 'twitter'],
-          })
+          const targets = targetsFor(['linkedin', 'twitter'])
+          if (targets.length) {
+            await postToZernio({ content: post, targets, publishNow: true })
+          }
         } catch (err) {
           console.error('Failed to publish case study:', err)
         }
@@ -117,34 +134,4 @@ export async function POST(request: NextRequest) {
     console.error('Failed to publish content:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-}
-
-async function publishToAyrshare({
-  profileId,
-  post,
-  platforms,
-}: {
-  profileId: string
-  post: string
-  platforms: string[]
-}) {
-  const response = await fetch('https://app.ayrshare.com/api/post', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.AYRSHARE_API_KEY}`,
-    },
-    body: JSON.stringify({
-      post,
-      platforms,
-      profileKey: profileId,
-    }),
-  })
-
-  if (!response.ok) {
-    const error = await response.text()
-    throw new Error(`Ayrshare API error: ${error}`)
-  }
-
-  return response.json()
 }

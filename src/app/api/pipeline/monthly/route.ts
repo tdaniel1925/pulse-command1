@@ -11,7 +11,7 @@ import { generateMonthlyPostsForClient } from '@/lib/generate-monthly-posts'
  * For each active client it generates the full monthly social-post quota defined
  * by the client's plan entitlement (see generate-monthly-posts.ts), then notifies
  * the client via the deliver-client route. Post generation runs in-process (real
- * Gemini image + OpenRouter caption + Ayrshare publish path); it is idempotent
+ * Gemini image + OpenRouter caption + Zernio publish path); it is idempotent
  * within a month, so cron retries won't over-produce.
  *
  * Auth: cron secret only (Vercel Cron / admin trigger-cron forwards it).

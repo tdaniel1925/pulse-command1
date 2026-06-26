@@ -23,9 +23,9 @@ export function ApproveButton({ type, id }: Props) {
         body: JSON.stringify({ type, id, action }),
       });
 
-      // If approving a social post, publish it via Ayrshare
+      // If approving a social post, publish it via Zernio
       if (action === "approve" && type === "post") {
-        await fetch("/api/ayrshare/publish", {
+        await fetch("/api/zernio/publish", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ postId: id }),

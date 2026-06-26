@@ -109,7 +109,7 @@ export interface SocialPost {
   scheduled_at?: string
   published_at?: string
   status: PostStatus
-  ayrshare_post_id?: string
+  zernio_post_id?: string
   performance?: Record<string, unknown>
   month_batch?: string
 }

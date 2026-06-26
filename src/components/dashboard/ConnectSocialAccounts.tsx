@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Share2, ExternalLink, Loader2, CheckCircle } from "lucide-react";
+import { Share2, Loader2, CheckCircle, Plus } from "lucide-react";
 
 const PLATFORMS = [
   { id: "instagram", label: "Instagram", color: "bg-pink-100 text-pink-700" },
@@ -9,6 +9,7 @@ const PLATFORMS = [
   { id: "linkedin", label: "LinkedIn", color: "bg-blue-100 text-blue-800" },
   { id: "twitter", label: "Twitter / X", color: "bg-sky-100 text-sky-700" },
   { id: "tiktok", label: "TikTok", color: "bg-neutral-100 text-neutral-700" },
+  { id: "youtube", label: "YouTube", color: "bg-red-100 text-red-700" },
 ];
 
 interface ConnectSocialAccountsProps {
@@ -16,21 +17,22 @@ interface ConnectSocialAccountsProps {
 }
 
 export function ConnectSocialAccounts({ connectedPlatforms }: ConnectSocialAccountsProps) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function handleConnect() {
-    setLoading(true);
+  async function handleConnect(platform: string) {
+    setLoading(platform);
     setError(null);
     try {
-      const res = await fetch("/api/ayrshare/connect");
+      const res = await fetch(`/api/zernio/connect?platform=${platform}`);
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to generate link");
-      window.open(data.url, "_blank", "width=600,height=700");
+      if (!res.ok) throw new Error(data.error ?? "Failed to start connection");
+      // Redirect the whole window so Zernio's OAuth + redirect back to
+      // /api/zernio/callback works cleanly (popups get blocked / lose session).
+      window.location.assign(data.url);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setLoading(false);
+      setLoading(null);
     }
   }
 
@@ -42,45 +44,46 @@ export function ConnectSocialAccounts({ connectedPlatforms }: ConnectSocialAccou
         </div>
         <div>
           <h3 className="font-semibold text-neutral-900">Social Accounts</h3>
-          <p className="text-xs text-neutral-500">Connect your accounts so we can post on your behalf</p>
+          <p className="text-xs text-neutral-500">Connect each account so we can post for you automatically</p>
         </div>
-      </div>
-
-      {/* Platform status */}
-      <div className="flex flex-wrap gap-2">
-        {PLATFORMS.map((p) => {
-          const connected = connectedPlatforms.includes(p.id);
-          return (
-            <span
-              key={p.id}
-              className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
-                connected ? p.color : "bg-neutral-100 text-neutral-400"
-              }`}
-            >
-              {connected && <CheckCircle className="w-3 h-3" />}
-              {p.label}
-            </span>
-          );
-        })}
       </div>
 
       {error && <p className="text-xs text-red-500">{error}</p>}
 
-      <button
-        onClick={handleConnect}
-        disabled={loading}
-        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-600 text-white text-sm font-semibold rounded-xl hover:bg-primary-700 transition-colors disabled:opacity-60"
-      >
-        {loading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <ExternalLink className="w-4 h-4" />
-        )}
-        {connectedPlatforms.length > 0 ? "Manage Connected Accounts" : "Connect Social Accounts"}
-      </button>
+      {/* Per-platform connect rows */}
+      <div className="space-y-2">
+        {PLATFORMS.map((p) => {
+          const connected = connectedPlatforms.includes(p.id);
+          const busy = loading === p.id;
+          return (
+            <div
+              key={p.id}
+              className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border border-neutral-200"
+            >
+              <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${p.color}`}>
+                {p.label}
+              </span>
+              {connected ? (
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-green-600">
+                  <CheckCircle className="w-4 h-4" /> Connected
+                </span>
+              ) : (
+                <button
+                  onClick={() => handleConnect(p.id)}
+                  disabled={busy}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary-600 hover:text-primary-700 disabled:opacity-60"
+                >
+                  {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  Connect
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
 
       <p className="text-xs text-neutral-400 text-center">
-        A secure window will open to connect your accounts. We never store your passwords.
+        You&apos;ll be taken to each platform to authorize access. We never see or store your passwords.
       </p>
     </div>
   );

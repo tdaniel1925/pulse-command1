@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       await admin.from('activities').insert({
         client_id: client.id,
         type: 'post',
-        title: action === 'approve' ? 'Post approved — sending to Ayrshare' : 'Post rejected',
+        title: action === 'approve' ? 'Post approved — publishing' : 'Post rejected',
         description: action === 'approve'
           ? 'Social post approved and being submitted for publishing.'
           : 'Social post rejected and removed from queue.',
@@ -71,13 +71,13 @@ export async function POST(request: NextRequest) {
           console.error('[approve] email lookup failed:', msg)
         }
 
-        // Publish to Ayrshare (fire and forget)
+        // Publish to Zernio (fire and forget)
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://pulse-command1.vercel.app'
-        fetch(`${baseUrl}/api/ayrshare/publish`, {
+        fetch(`${baseUrl}/api/zernio/publish`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ postId: id }),
-        }).catch((err: Error) => console.error('ayrshare publish trigger failed:', err))
+        }).catch((err: Error) => console.error('zernio publish trigger failed:', err))
       }
 
     } else if (type === 'video') {

@@ -33,8 +33,9 @@ const navItems: {
 }[] = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, exact: true },
   { label: "Social Posts", href: "/dashboard/social", icon: Share2 },
-  { label: "Landing Pages", href: "/dashboard/pages", icon: Globe },
-  { label: "Page Builder", href: "/studio", icon: Sparkles },
+  // Hidden for now — product is focused on interview → auto-post to socials.
+  { label: "Landing Pages", href: "/dashboard/pages", icon: Globe, enabled: false },
+  { label: "Page Builder", href: "/studio", icon: Sparkles, enabled: false },
   { label: "Upload Content", href: "/dashboard/upload", icon: Upload },
   { label: "Settings", href: "/dashboard/settings", icon: Settings },
   { label: "Billing", href: "/dashboard/billing", icon: CreditCard },

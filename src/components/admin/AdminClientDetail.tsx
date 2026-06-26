@@ -25,8 +25,8 @@ interface Client {
   status: string | null;
   created_at: string;
   metadata: Record<string, unknown> | null;
-  ayrshare_profile_key: string | null;
-  ayrshare_connected_platforms: string[] | null;
+  zernio_profile_id: string | null;
+  zernio_connected_platforms: string[] | null;
   plan_name: string | null;
   plan_status: string | null;
   plan_period_end: string | null;
@@ -296,7 +296,7 @@ export function AdminClientDetail({ client, posts, videos, presentations, activi
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const metadata = (client.metadata ?? {}) as Record<string, any>;
-  const connectedPlatforms = client.ayrshare_connected_platforms ?? [];
+  const connectedPlatforms = client.zernio_connected_platforms ?? [];
 
   const TABS = [
     { key: "posts", label: "Posts", icon: FileText },
@@ -712,10 +712,10 @@ export function AdminClientDetail({ client, posts, videos, presentations, activi
                 </div>
               )}
 
-              {/* Ayrshare */}
+              {/* Zernio */}
               <div>
-                <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Ayrshare Status</p>
-                {client.ayrshare_profile_key ? (
+                <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide mb-2">Social Status</p>
+                {client.zernio_profile_id ? (
                   <div className="space-y-2">
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 px-3 py-1 rounded-full">
                       <span className="w-2 h-2 rounded-full bg-green-500 block" />
