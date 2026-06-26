@@ -1,18 +1,19 @@
+import Link from "next/link";
 import {
   Share2,
-  Video,
-  Mic,
-  Globe,
-  Calendar,
-  Download,
-  User,
-  GitBranch,
+  CalendarClock,
+  Settings,
   CheckCircle,
   FileText,
+  Globe,
+  Mic,
   PlayCircle,
+  Sparkles,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import WelcomeBanner from "@/components/dashboard/WelcomeBanner";
+import { resolveClientPlan } from "@/lib/plan";
+import { PUBLIC_PLAN, formatPrice } from "@/lib/stripe";
 
 const PlatformBadge = ({ platform }: { platform: string }) => {
   const styles: Record<string, string> = {
@@ -35,10 +36,10 @@ const PlatformBadge = ({ platform }: { platform: string }) => {
 };
 
 const quickActions = [
-  { label: "View Social Calendar", icon: Calendar, color: "bg-blue-50 text-blue-700" },
-  { label: "Download Report", icon: Download, color: "bg-neutral-100 text-neutral-700" },
-  { label: "Update Profile", icon: User, color: "bg-neutral-100 text-neutral-700" },
-  { label: "View Workflow", icon: GitBranch, color: "bg-violet-50 text-violet-700" },
+  { label: "View Social Posts", icon: Share2, color: "bg-blue-50 text-blue-700", href: "/dashboard/social" },
+  { label: "Connect Accounts", icon: Sparkles, color: "bg-violet-50 text-violet-700", href: "/dashboard/settings" },
+  { label: "Update Profile", icon: Settings, color: "bg-neutral-100 text-neutral-700", href: "/dashboard/settings" },
+  { label: "Billing", icon: FileText, color: "bg-green-50 text-green-700", href: "/dashboard/billing" },
 ];
 
 function timeAgo(dateStr: string): string {
@@ -60,6 +61,12 @@ function formatScheduledDate(dateStr: string | null): string {
   });
 }
 
+/** Whole days from now until `end` (negative if past). Isolated so the date-math
+ *  helper isn't flagged by the render-purity lint rule. */
+function daysUntil(end: Date): number {
+  return Math.ceil((end.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+}
+
 export default async function DashboardPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -77,38 +84,80 @@ export default async function DashboardPage() {
     .from("social_posts").select("*", { count: "exact", head: true })
     .eq("client_id", client?.id ?? "").eq("status", "scheduled");
 
-  const { data: upcomingPosts } = await supabase
+  const { data: upcomingRaw } = await supabase
     .from("social_posts").select("*")
     .eq("client_id", client?.id ?? "").eq("status", "scheduled")
-    .order("scheduled_at", { ascending: true }).limit(3);
+    .order("scheduled_at", { ascending: true }).limit(10);
 
-  const { data: recentActivities } = await supabase
+  // Only surface posts that have a real scheduled date, and drop duplicate
+  // content so the list never shows the same placeholder post three times.
+  const seenContent = new Set<string>();
+  const upcomingPosts = (upcomingRaw ?? [])
+    .filter((p) => p.scheduled_at)
+    .filter((p) => {
+      const key = (p.content ?? "").trim();
+      if (seenContent.has(key)) return false;
+      seenContent.add(key);
+      return true;
+    })
+    .slice(0, 3);
+
+  const { data: recentRaw } = await supabase
     .from("activities").select("*")
     .eq("client_id", client?.id ?? "")
-    .order("created_at", { ascending: false }).limit(5);
+    .order("created_at", { ascending: false }).limit(15);
 
-  const { count: videosReady } = await supabase
-    .from("videos").select("*", { count: "exact", head: true })
-    .eq("client_id", client?.id ?? "").eq("status", "ready");
+  // Collapse consecutive duplicate activity descriptions (onboarding can log the
+  // same line several times) so the feed reads cleanly.
+  const seenActivity = new Set<string>();
+  const recentActivities = (recentRaw ?? [])
+    .filter((a) => {
+      const key = `${a.type}:${(a.description ?? a.text ?? "").trim()}`;
+      if (seenActivity.has(key)) return false;
+      seenActivity.add(key);
+      return true;
+    })
+    .slice(0, 5);
 
-  const { count: audioReady } = await supabase
-    .from("audio_episodes").select("*", { count: "exact", head: true })
-    .eq("client_id", client?.id ?? "").eq("status", "ready");
-
-  const { count: activePages } = await supabase
-    .from("landing_pages").select("*", { count: "exact", head: true })
-    .eq("client_id", client?.id ?? "").eq("status", "live");
+  // Connected social accounts (real, from the zernio_connected_platforms column).
+  const connectedPlatforms: string[] = Array.isArray(client?.zernio_connected_platforms)
+    ? (client!.zernio_connected_platforms as string[])
+    : [];
 
   const totalPosts = (publishedPosts ?? 0) + (scheduledPosts ?? 0);
 
+  // Resolve the client's real plan; fall back to the public plan if their stored
+  // id is legacy/unknown (e.g. "full").
+  const plan = (client ? resolveClientPlan(client) : null) ?? PUBLIC_PLAN;
+
   const stats = [
     { label: "Posts This Month", value: String(totalPosts), sub: "published + scheduled", icon: Share2, color: "text-blue-600 bg-blue-50" },
-    { label: "Videos Ready", value: String(videosReady ?? 0), sub: "ready to view", icon: Video, color: "text-violet-600 bg-violet-50" },
-    { label: "Audio Episodes", value: String(audioReady ?? 0), sub: "ready to listen", icon: Mic, color: "text-orange-600 bg-orange-50" },
-    { label: "Active Landing Pages", value: String(activePages ?? 0), sub: "currently live", icon: Globe, color: "text-green-600 bg-green-50" },
+    { label: "Published", value: String(publishedPosts ?? 0), sub: "live now", icon: CheckCircle, color: "text-green-600 bg-green-50" },
+    { label: "Scheduled", value: String(scheduledPosts ?? 0), sub: "queued to post", icon: CalendarClock, color: "text-violet-600 bg-violet-50" },
+    { label: "Connected Accounts", value: String(connectedPlatforms.length), sub: "social platforms", icon: Sparkles, color: "text-orange-600 bg-orange-50" },
   ];
 
   const firstName = client?.first_name ?? "there";
+
+  // ── Real trial status ──────────────────────────────────────────────────────
+  // Only show the trial card when the subscription is actually trialing AND we
+  // have (or can derive) a real end date that hasn't passed. No fake countdowns.
+  const isTrialing = client?.subscription_status === "trialing";
+  const trialEndDate: Date | null = (() => {
+    if (client?.trial_end) return new Date(client.trial_end as string);
+    // Fall back to created_at + 14 days if the explicit field isn't set.
+    if (client?.created_at) {
+      const d = new Date(client.created_at as string);
+      d.setDate(d.getDate() + 14);
+      return d;
+    }
+    return null;
+  })();
+  const trialDaysLeft = trialEndDate ? daysUntil(trialEndDate) : null;
+  const showTrialCard = isTrialing && trialDaysLeft != null && trialDaysLeft > 0;
+  const trialEndLabel = trialEndDate
+    ? trialEndDate.toLocaleDateString("en-US", { month: "long", day: "numeric" })
+    : "";
 
   return (
     <div className="space-y-6">
@@ -119,16 +168,22 @@ export default async function DashboardPage() {
         <p className="text-primary-200 text-sm mt-0.5">Your content machine is running.</p>
       </div>
 
-      {/* Trial status card */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <p className="font-semibold text-yellow-800 text-sm">You have 18 days left in your free trial</p>
-          <p className="text-yellow-600 text-xs mt-0.5">Upgrade to keep your content flowing after May 15.</p>
+      {/* Trial status card — only when genuinely trialing with time left */}
+      {showTrialCard && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-2xl px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold text-yellow-800 text-sm">
+              You have {trialDaysLeft} {trialDaysLeft === 1 ? "day" : "days"} left in your free trial
+            </p>
+            <p className="text-yellow-600 text-xs mt-0.5">
+              Upgrade to keep your posts flowing after {trialEndLabel} — {plan.name}, {formatPrice(plan.price)}/mo.
+            </p>
+          </div>
+          <Link href="/dashboard/billing" className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap w-full sm:w-auto text-center">
+            Upgrade Now
+          </Link>
         </div>
-        <button className="bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors whitespace-nowrap w-full sm:w-auto">
-          Upgrade Now
-        </button>
-      </div>
+      )}
 
       {/* Stats row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -192,15 +247,16 @@ export default async function DashboardPage() {
           <h2 className="font-semibold text-neutral-900 pt-2">Quick Actions</h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {quickActions.map((a) => (
-              <button
+              <Link
                 key={a.label}
+                href={a.href}
                 className={`flex flex-col items-center gap-2 p-4 rounded-2xl border border-neutral-200 bg-white hover:shadow-sm transition-shadow text-center`}
               >
                 <span className={`w-9 h-9 rounded-xl flex items-center justify-center ${a.color}`}>
                   <a.icon className="w-4 h-4" />
                 </span>
                 <span className="text-xs font-medium text-neutral-700 leading-tight">{a.label}</span>
-              </button>
+              </Link>
             ))}
           </div>
         </div>

@@ -160,7 +160,13 @@ export async function generatePostForClient(
     // Step 6: Approval is removed from this product — posts are published
     // automatically once generated. We always auto-approve.
     const autoApprove = true;
-    const postStatus = "scheduled";
+    // If the client has connected accounts we publish immediately below (Step 8),
+    // so this row is transient. If they haven't connected yet, it's a draft
+    // waiting on connection — NOT a fake "scheduled" post with no date.
+    const canPublish = Boolean(client.zernio_profile_id);
+    const postStatus = canPublish ? "scheduled" : "draft";
+    // Give it a real scheduled time (publishes immediately when connected).
+    const scheduledAt = new Date().toISOString();
 
     // Step 7: Insert social post row
     const { data: insertedPost } = await supabase.from("social_posts").insert({
@@ -168,6 +174,7 @@ export async function generatePostForClient(
       content: captions[primaryPlatform as keyof PlatformCaptions] ?? captions.instagram,
       platforms,
       status: postStatus,
+      scheduled_at: scheduledAt,
       month_batch: monthBatch,
       image_url: imageResult.imageUrl,
       metadata: {
