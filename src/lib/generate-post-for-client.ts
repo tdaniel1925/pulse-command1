@@ -83,12 +83,23 @@ Return ONLY valid JSON:
 
 export async function generatePostForClient(
   clientId: string,
-  opts?: { topic?: string }
-): Promise<{ ok: boolean; error?: string }> {
+  opts?: {
+    topic?: string;
+    /**
+     * 'auto' (default): publish immediately when accounts are connected — the
+     * hands-off cron behavior.
+     * 'draft': create as a draft for the user to review (on-demand generation).
+     */
+    mode?: "auto" | "draft";
+    /** ISO date-time to schedule the post for (future-dating). */
+    scheduledFor?: string;
+  }
+): Promise<{ ok: boolean; error?: string; postId?: string }> {
   try {
     const supabase = createAdminClient();
     const weekTopic = opts?.topic ?? getWeekTopic();
     const monthBatch = new Date().toISOString().slice(0, 7);
+    const mode = opts?.mode ?? "auto";
 
     // Step 1: Fetch client row
     const { data: client, error: clientError } = await supabase
@@ -157,16 +168,19 @@ export async function generatePostForClient(
       clientTier: "starter" as ClientTier,
     });
 
-    // Step 6: Approval is removed from this product — posts are published
-    // automatically once generated. We always auto-approve.
-    const autoApprove = true;
-    // If the client has connected accounts we publish immediately below (Step 8),
-    // so this row is transient. If they haven't connected yet, it's a draft
-    // waiting on connection — NOT a fake "scheduled" post with no date.
-    const canPublish = Boolean(client.zernio_profile_id);
-    const postStatus = canPublish ? "scheduled" : "draft";
-    // Give it a real scheduled time (publishes immediately when connected).
-    const scheduledAt = new Date().toISOString();
+    // Step 6: Decide status + schedule.
+    // - draft mode (on-demand): always a draft for the user to review, never
+    //   auto-published.
+    // - auto mode (cron): publish immediately if connected; draft if not.
+    // - scheduledFor: future-dated → "scheduled", published by Zernio at that time.
+    const autoApprove = mode !== "draft";
+    const hasAccounts = Boolean(client.zernio_profile_id);
+    const isFutureScheduled = Boolean(opts?.scheduledFor);
+    const scheduledAt = opts?.scheduledFor ?? new Date().toISOString();
+    let postStatus: string;
+    if (mode === "draft") postStatus = "draft";
+    else if (isFutureScheduled) postStatus = "scheduled";
+    else postStatus = hasAccounts ? "scheduled" : "draft";
 
     // Step 7: Insert social post row
     const { data: insertedPost } = await supabase.from("social_posts").insert({
@@ -189,15 +203,20 @@ export async function generatePostForClient(
       },
     } as never).select("id").single();
 
-    // Step 8: Auto-publish via Zernio. The product posts automatically (no
-    // approval step), so publish whenever the client has connected accounts.
-    if (insertedPost?.id && client.zernio_profile_id) {
+    // Step 8: Send to Zernio when appropriate.
+    // - draft mode → never send (user reviews first).
+    // - auto + connected → publish now (or schedule for a future time).
+    const shouldSend = mode === "auto" && insertedPost?.id && client.zernio_profile_id;
+    if (shouldSend) {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
         await fetch(`${baseUrl}/api/zernio/publish`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ postId: insertedPost.id }),
+          body: JSON.stringify({
+            postId: insertedPost.id,
+            ...(isFutureScheduled ? { scheduledFor: opts!.scheduledFor } : {}),
+          }),
         });
       } catch (publishErr: unknown) {
         const msg = publishErr instanceof Error ? publishErr.message : String(publishErr);
@@ -248,7 +267,7 @@ export async function generatePostForClient(
       ` | $${imageResult.generationCost.toFixed(4)} | ${postStatus}`
     );
 
-    return { ok: true };
+    return { ok: true, postId: insertedPost?.id };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(`[generate-post] ✗ clientId=${clientId}:`, message);

@@ -89,13 +89,13 @@ export default function ClientsPage() {
               className="pl-9 pr-4 py-2 text-sm border border-neutral-200 rounded-xl bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-600 w-60"
             />
           </div>
-          <button
-            onClick={() => setShowModal(true)}
+          <Link
+            href="/admin/clients/new"
             className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-xl hover:bg-primary-700 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            Add Client
-          </button>
+            New Client
+          </Link>
         </div>
       </div>
 

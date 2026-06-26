@@ -14,8 +14,11 @@ export async function POST(req: NextRequest) {
     if (!zernioConfigured()) {
       return NextResponse.json({ error: 'Social posting is not configured' }, { status: 503 })
     }
-    const { postId } = await req.json()
+    const { postId, scheduledFor } = (await req.json()) as { postId?: string; scheduledFor?: string }
     if (!postId) return NextResponse.json({ error: 'postId required' }, { status: 400 })
+    const validScheduledFor = scheduledFor && !Number.isNaN(Date.parse(scheduledFor))
+      ? new Date(scheduledFor).toISOString()
+      : undefined
 
     const admin = createAdminClient()
 
@@ -63,13 +66,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No connected accounts match this post\'s platforms' }, { status: 400 })
     }
 
+    const scheduling = Boolean(validScheduledFor)
     let result
     try {
       result = await postToZernio({
         content: post.content ?? '',
         targets,
         mediaUrls: post.image_url ? [post.image_url] : undefined,
-        publishNow: true,
+        scheduledFor: validScheduledFor,
+        publishNow: !scheduling,
       })
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
@@ -79,12 +84,11 @@ export async function POST(req: NextRequest) {
 
     const platformNames = [...new Set(targets.map((t) => t.platform))]
 
-    // Mark published (zernio_post_id column may be missing — retry without it).
-    const update = {
-      status: 'published',
-      published_at: new Date().toISOString(),
-      zernio_post_id: result.id,
-    }
+    // If scheduled for the future, Zernio publishes at that time → mark
+    // "scheduled". Otherwise it's live now → "published".
+    const update = scheduling
+      ? { status: 'scheduled', scheduled_at: validScheduledFor!, zernio_post_id: result.id }
+      : { status: 'published', published_at: new Date().toISOString(), zernio_post_id: result.id }
     const { error: updErr } = await admin.from('social_posts').update(update).eq('id', postId)
     if (updErr) {
       const fallback: Record<string, unknown> = { ...update }
