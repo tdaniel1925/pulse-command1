@@ -245,6 +245,24 @@ export function AdminClientDetail({ client, posts, videos, presentations, activi
     }
   }
 
+  async function cancelSubscription() {
+    if (!confirm("Cancel this client's subscription at the end of the current period?")) return;
+    setActionLoading("cancel");
+    try {
+      const res = await fetch("/api/admin/cancel-subscription", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientId: client.id }),
+      });
+      const data = await res.json();
+      showResult(res.ok ? "Subscription set to cancel at period end." : data.error ?? "Failed");
+    } catch {
+      showResult("Request failed");
+    } finally {
+      setActionLoading(null);
+    }
+  }
+
   async function updateStatus(newStatus: string) {
     setStatusValue(newStatus);
     try {
@@ -402,6 +420,17 @@ export function AdminClientDetail({ client, posts, videos, presentations, activi
                 View in Stripe
                 <ExternalLink className="w-3.5 h-3.5 text-neutral-400" />
               </a>
+            )}
+
+            {client.stripe_customer_id && client.subscription_status !== "cancelled" && (
+              <button
+                onClick={cancelSubscription}
+                disabled={!!actionLoading}
+                className="w-full flex items-center gap-2 text-sm font-medium border border-red-200 text-red-600 rounded-xl px-4 py-2.5 hover:bg-red-50 disabled:opacity-60 transition-colors justify-center"
+              >
+                <CreditCard className="w-4 h-4" />
+                {actionLoading === "cancel" ? "Cancelling…" : "Cancel Subscription"}
+              </button>
             )}
 
             <div>

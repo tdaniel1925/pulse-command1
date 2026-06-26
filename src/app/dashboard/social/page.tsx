@@ -2,15 +2,22 @@ import { createClient } from "@/lib/supabase/server";
 import { AutoApproveToggle } from "@/components/dashboard/AutoApproveToggle";
 import { PausePostingToggle } from "@/components/dashboard/PausePostingToggle";
 import { SocialViewToggle } from "@/components/dashboard/SocialViewToggle";
+import { getZernioAnalyticsSummary, zernioConfigured } from "@/lib/zernio";
 
 export default async function SocialPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   const { data: client } = await supabase
     .from("clients")
-    .select("id, auto_approve, metadata")
+    .select("id, auto_approve, metadata, zernio_profile_id")
     .eq("user_id", user?.id ?? "")
     .single();
+
+  // Live, best-effort engagement summary from Zernio (null when unavailable).
+  const profileId = client?.zernio_profile_id as string | null;
+  const analytics = profileId && zernioConfigured()
+    ? await getZernioAnalyticsSummary(profileId).catch(() => null)
+    : null;
 
   const postingPaused = Boolean(
     client?.metadata && typeof client.metadata === "object"
@@ -65,6 +72,20 @@ export default async function SocialPage() {
           </div>
         ))}
       </div>
+
+      {/* Live engagement summary from Zernio (only when there's data) */}
+      {analytics && (analytics.totalPosts > 0 || analytics.totalEngagement > 0) && (
+        <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
+            <p className="text-sm text-neutral-500">Posts published</p>
+            <p className="text-3xl font-bold mt-1 text-neutral-900">{analytics.totalPosts.toLocaleString()}</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm p-5">
+            <p className="text-sm text-neutral-500">Total engagement</p>
+            <p className="text-3xl font-bold mt-1 text-primary-600">{analytics.totalEngagement.toLocaleString()}</p>
+          </div>
+        </div>
+      )}
 
       <SocialViewToggle posts={posts ?? []} failed={failed} />
     </div>
