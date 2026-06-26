@@ -5,9 +5,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "PulseCommand — AI Marketing for Every Business",
+  title: "BundledContent — Done-for-you AI social media",
   description:
-    "From automated social posts to AI-powered campaigns. PulseCommand gives you a Fortune 500 marketing operation without the overhead.",
+    "One interview. We write, design, and auto-publish your social posts every month — across Instagram, Facebook, LinkedIn, X, and TikTok.",
   icons: {
     icon: "/favicon.png",
     apple: "/favicon.png",

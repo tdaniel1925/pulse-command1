@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  Check, Share2, Image as ImageIcon, Star, ChevronRight,
+  Check, Share2, Image as ImageIcon, ChevronRight,
   ArrowRight, Sparkles, Send, MessageSquare
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -62,22 +62,16 @@ const deliverables = [
 
 const testimonials = [
   {
-    quote: "We went from zero online presence to 30 branded posts a month — every one with a custom image, published automatically. I haven't logged into a scheduler since.",
-    name: "James T.",
-    role: "Business Owner",
-    rating: 5,
+    quote: "One interview, then 30 branded posts a month — each with a custom image, published automatically. Nothing to log into.",
+    role: "What BundledContent does",
   },
   {
-    quote: "I did one interview and never thought about social again. The posts sound like us and just show up across every platform.",
-    name: "Priya K.",
-    role: "Founder",
-    rating: 5,
+    quote: "Posts written for each platform in your brand voice, then auto-published across Instagram, Facebook, LinkedIn, X, and TikTok.",
+    role: "How it works",
   },
   {
-    quote: "It replaced our whole social workflow. Posts written for each platform, images included, auto-published across all of them. Unreal value for the price.",
-    name: "Sarah M.",
-    role: "Marketing Director",
-    rating: 5,
+    quote: "Your whole social workflow, replaced. Written, designed, and published for one flat monthly price.",
+    role: "Why it's different",
   },
 ];
 
@@ -294,22 +288,14 @@ export default function HomePage() {
       <section className="py-24 bg-neutral-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-neutral-900 mb-4">Real Businesses. Real Results.</h2>
-            <p className="text-lg text-neutral-600">These businesses stopped wrestling with social tools — and got better output on autopilot.</p>
+            <h2 className="text-4xl font-bold text-neutral-900 mb-4">Social Media, Off Your Plate.</h2>
+            <p className="text-lg text-neutral-600">Stop wrestling with social tools — get consistent, on-brand output on autopilot.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((t) => (
-              <div key={t.name} className="bg-white rounded-2xl p-8 border border-neutral-200 shadow-sm">
-                <div className="flex gap-1 mb-4">
-                  {Array.from({ length: t.rating }).map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-neutral-700 leading-relaxed mb-6 italic">&ldquo;{t.quote}&rdquo;</p>
-                <div>
-                  <p className="font-bold text-neutral-900">{t.name}</p>
-                  <p className="text-sm text-neutral-500">{t.role}</p>
-                </div>
+              <div key={t.role} className="bg-white rounded-2xl p-8 border border-neutral-200 shadow-sm">
+                <p className="text-neutral-700 leading-relaxed mb-6">{t.quote}</p>
+                <p className="text-sm font-semibold text-primary-600">{t.role}</p>
               </div>
             ))}
           </div>

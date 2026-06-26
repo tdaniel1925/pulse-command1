@@ -104,7 +104,7 @@ export async function generatePostForClient(
     // Step 1: Fetch client row
     const { data: client, error: clientError } = await supabase
       .from("clients")
-      .select("id, business_name, website, brand_vibe, email, zernio_profile_id")
+      .select("id, business_name, website, brand_vibe, email, zernio_profile_id, auto_approve")
       .eq("id", clientId)
       .single();
 
@@ -169,16 +169,19 @@ export async function generatePostForClient(
     });
 
     // Step 6: Decide status + schedule.
-    // - draft mode (on-demand): always a draft for the user to review, never
-    //   auto-published.
-    // - auto mode (cron): publish immediately if connected; draft if not.
+    // - draft mode (on-demand): always a draft for the user to review.
+    // - auto mode + client opted into review (auto_approve=false): land in the
+    //   approval queue (pending_approval) — do NOT auto-publish.
+    // - auto mode + auto_approve (default): publish if connected; draft if not.
     // - scheduledFor: future-dated → "scheduled", published by Zernio at that time.
-    const autoApprove = mode !== "draft";
+    const wantsReview = mode === "auto" && client.auto_approve === false;
+    const autoApprove = mode !== "draft" && !wantsReview;
     const hasAccounts = Boolean(client.zernio_profile_id);
     const isFutureScheduled = Boolean(opts?.scheduledFor);
     const scheduledAt = opts?.scheduledFor ?? new Date().toISOString();
     let postStatus: string;
     if (mode === "draft") postStatus = "draft";
+    else if (wantsReview) postStatus = "pending_approval";
     else if (isFutureScheduled) postStatus = "scheduled";
     else postStatus = hasAccounts ? "scheduled" : "draft";
 
@@ -204,9 +207,9 @@ export async function generatePostForClient(
     } as never).select("id").single();
 
     // Step 8: Send to Zernio when appropriate.
-    // - draft mode → never send (user reviews first).
-    // - auto + connected → publish now (or schedule for a future time).
-    const shouldSend = mode === "auto" && insertedPost?.id && client.zernio_profile_id;
+    // - draft mode or review-requested → never auto-send (user acts first).
+    // - auto + auto-approve + connected → publish now (or schedule for later).
+    const shouldSend = mode === "auto" && !wantsReview && insertedPost?.id && client.zernio_profile_id;
     if (shouldSend) {
       try {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";

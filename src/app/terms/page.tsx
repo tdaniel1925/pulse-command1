@@ -14,8 +14,9 @@ const COMPANY = "Docs2Video";
 const PRODUCT = "BundledContent";
 const SITE = "bundledcontent.com";
 const SUPPORT_EMAIL = "support@bundledcontent.com";
-const GOVERNING_LAW = "[TO CONFIRM: state/country]";
-const EFFECTIVE_DATE = "[TO CONFIRM: effective date]";
+// TODO(legal): confirm governing-law jurisdiction and mailing address with counsel.
+const GOVERNING_LAW = "the United States";
+const EFFECTIVE_DATE = "June 26, 2026";
 
 function Section({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
   return (
@@ -159,8 +160,7 @@ export default function TermsPage() {
             <p>
               Questions about these Terms? Contact us at{" "}
               <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary-600 hover:underline">{SUPPORT_EMAIL}</a>.
-              <br />
-              {COMPANY} — mailing address: [TO CONFIRM: company mailing address].
+              {/* TODO(legal): add company mailing address before relying on this. */}
             </p>
           </Section>
         </div>

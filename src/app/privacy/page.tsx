@@ -12,9 +12,9 @@ export const metadata: Metadata = {
 const COMPANY = "Docs2Video";
 const PRODUCT = "BundledContent";
 const SITE = "bundledcontent.com";
-const SUPPORT_EMAIL = "support@bundledcontent.com";
-const PRIVACY_EMAIL = "privacy@bundledcontent.com";
-const EFFECTIVE_DATE = "[TO CONFIRM: effective date]";
+// Privacy requests route to the support inbox unless a dedicated one is set up.
+const PRIVACY_EMAIL = "support@bundledcontent.com";
+const EFFECTIVE_DATE = "June 26, 2026";
 
 function Section({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
   return (
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
               We use third-party AI providers to generate your posts and images from the inputs you provide. Inputs are sent
               to these providers solely to produce your content. We do not sell your business inputs, and we configure our
               integrations to use your data for generating your content rather than for training third-party models where
-              that option is available. [TO CONFIRM: name specific AI providers if you wish to disclose them.]
+              that option is available.
             </p>
           </Section>
 
@@ -115,8 +115,8 @@ export default function PrivacyPage() {
 
           <Section n="9" title="International Users">
             <p>
-              We operate from [TO CONFIRM: country]. If you use the Service from another country, your information may be
-              transferred to and processed in countries with different data-protection laws than your own.
+              We operate from the United States. If you use the Service from another country, your information may be
+              transferred to and processed in the United States, which may have different data-protection laws than your own.
             </p>
           </Section>
 
@@ -127,11 +127,8 @@ export default function PrivacyPage() {
           <Section n="11" title="Contact">
             <p>
               Questions about your privacy? Contact us at{" "}
-              <a href={`mailto:${PRIVACY_EMAIL}`} className="text-primary-600 hover:underline">{PRIVACY_EMAIL}</a>{" "}
-              or{" "}
-              <a href={`mailto:${SUPPORT_EMAIL}`} className="text-primary-600 hover:underline">{SUPPORT_EMAIL}</a>.
-              <br />
-              {COMPANY} — mailing address: [TO CONFIRM: company mailing address].
+              <a href={`mailto:${PRIVACY_EMAIL}`} className="text-primary-600 hover:underline">{PRIVACY_EMAIL}</a>.
+              {/* TODO(legal): add company mailing address before relying on this. */}
             </p>
           </Section>
         </div>

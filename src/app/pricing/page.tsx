@@ -1,9 +1,13 @@
 import { ACTIVE_PLANS } from '@/lib/stripe'
 import PricingClient from './PricingClient'
+import Navbar from '@/components/Navbar'
+import Footer from '@/components/Footer'
 
 export default function PricingPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-white">
       {/* Header */}
       <div className="text-center py-20 bg-gradient-to-b from-indigo-50 to-white px-8">
         <h1 className="text-5xl font-bold text-neutral-900 mb-4">
@@ -21,6 +25,8 @@ export default function PricingPage() {
       <div className="text-center py-8 border-t border-neutral-100">
         <p className="text-sm text-neutral-400">&copy; {new Date().getFullYear()} BundledContent</p>
       </div>
-    </div>
+      </div>
+      <Footer />
+    </>
   )
 }

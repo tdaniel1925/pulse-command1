@@ -208,7 +208,7 @@ export default function SamplesPage() {
               className="px-7 py-3.5 bg-accent-400 hover:bg-accent-500 text-white font-bold rounded-xl transition-all shadow-lg text-base">
               Get My Free Sample →
             </Link>
-            <Link href="/#pricing"
+            <Link href="/sign-up"
               className="px-7 py-3.5 bg-white border border-neutral-200 text-neutral-700 font-semibold rounded-xl hover:bg-neutral-50 transition-all shadow-sm">
               See Plans
             </Link>
@@ -225,7 +225,7 @@ export default function SamplesPage() {
             label="AI-Generated Social Content"
             title="Platform-Perfect Posts, Every Month"
             desc="We write differently for every platform — LinkedIn sounds professional, Instagram is visual and punchy, Facebook drives local engagement. Each post ships with a matching AI-generated image and auto-publishes to your accounts."
-            count="Up to 300 posts/mo"
+            count="30 posts/mo"
             countColor="bg-primary-50 text-primary-700 border-primary-200"
           />
 

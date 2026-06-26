@@ -6,7 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   Globe, Loader2, Sparkles, Check, ArrowRight,
-  Users, Target, Trophy, Mic, Video, Share2
+  Users, Target, Trophy, Share2
 } from "lucide-react";
 
 type Step = 1 | 2;
@@ -129,9 +129,7 @@ export default function DemoPage() {
             {/* What you get */}
             <div className="space-y-3">
               {[
-                { icon: Share2,  label: "5 Social Posts",         sub: "Instagram, Facebook, LinkedIn, X — written for your brand", iconColor: "text-primary-600", iconBg: "bg-primary-50",  border: "border-primary-100" },
-                { icon: Mic,     label: "2-Minute Podcast Sample", sub: "AI voice narration of your brand story",                    iconColor: "text-purple-600",  iconBg: "bg-purple-50",   border: "border-purple-100"  },
-                { icon: Video,   label: "AI Presenter Video",      sub: "HeyGen avatar delivering your brand message",               iconColor: "text-accent-500",  iconBg: "bg-accent-50",   border: "border-accent-100"  },
+                { icon: Share2,  label: "5 Social Posts",         sub: "Instagram, Facebook, LinkedIn, X, TikTok — written for your brand", iconColor: "text-primary-600", iconBg: "bg-primary-50",  border: "border-primary-100" },
               ].map(item => (
                 <div key={item.label} className={`flex items-center gap-4 bg-white border ${item.border} rounded-xl px-4 py-3 shadow-sm`}>
                   <div className={`w-9 h-9 ${item.iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
@@ -155,7 +153,7 @@ export default function DemoPage() {
                   <div key={i} className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 border-2 border-white flex items-center justify-center text-white text-xs font-bold shadow-sm">{i}</div>
                 ))}
               </div>
-              <p className="text-neutral-500 text-sm"><span className="text-neutral-900 font-semibold">247 businesses</span> generated their demo this week</p>
+              <p className="text-neutral-500 text-sm"><span className="text-neutral-900 font-semibold">Join the businesses</span> putting their social on autopilot</p>
             </div>
 
             {/* Discount teaser */}

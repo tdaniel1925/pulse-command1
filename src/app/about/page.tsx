@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { ArrowRight, Zap, Heart, BarChart3, Users, Star, Quote } from "lucide-react";
+import { ArrowRight, Zap, Heart, BarChart3, Users, Quote } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const stats = [
-  { value: "12+", label: "Years in Marketing" },
-  { value: "500+", label: "Businesses Served" },
-  { value: "2M+", label: "Pieces of Content Delivered" },
-  { value: "98%", label: "Client Retention Rate" },
+  { value: "Decades", label: "of brand & marketing experience" },
+  { value: "AI-written", label: "human-quality posts" },
+  { value: "On-brand", label: "every single post" },
+  { value: "Cancel", label: "anytime — no contracts" },
 ];
 
 const timeline = [
@@ -260,18 +260,12 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* ── Testimonial strip ── */}
+      {/* ── Mission strip ── */}
       <section className="py-16 bg-white border-t border-neutral-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="flex justify-center gap-1 mb-4">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-            ))}
-          </div>
-          <p className="text-2xl font-semibold text-neutral-800 italic max-w-2xl mx-auto mb-6">
-            &ldquo;Working with Trent and Sella feels like having a full marketing team in your corner — at a fraction of the cost. They actually care about your brand.&rdquo;
+          <p className="text-2xl font-semibold text-neutral-800 max-w-2xl mx-auto">
+            Our goal is simple: give every business a full marketing team&apos;s output — written, designed, and published for one flat monthly price.
           </p>
-          <p className="text-neutral-500 font-medium">— James T., Business Owner · client since 2024</p>
         </div>
       </section>
 

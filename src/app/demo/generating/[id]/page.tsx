@@ -10,8 +10,7 @@ const STEPS = [
   { key: "scanning", label: "Scanning your website" },
   { key: "profiling", label: "Building your brand profile" },
   { key: "posts", label: "Writing your social posts" },
-  { key: "audio", label: "Rendering your podcast sample" },
-  { key: "video", label: "Generating your AI presenter video" },
+  { key: "images", label: "Designing an image for each post" },
   { key: "notifying", label: "Sending your notification" },
 ];
 
@@ -24,7 +23,7 @@ export default function GeneratingPage() {
   useEffect(() => {
     // Animate steps visually regardless of actual backend progress
     const intervals: ReturnType<typeof setTimeout>[] = [];
-    const delays = [0, 4000, 8000, 14000, 22000, 34000];
+    const delays = [0, 4000, 8000, 14000, 22000];
     delays.forEach((delay, i) => {
       intervals.push(setTimeout(() => setCurrentStep(i), delay));
     });
