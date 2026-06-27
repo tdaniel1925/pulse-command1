@@ -9,7 +9,7 @@ export default async function SocialPage() {
   const { data: { user } } = await supabase.auth.getUser();
   const { data: client } = await supabase
     .from("clients")
-    .select("id, auto_approve, metadata, zernio_profile_id")
+    .select("id, auto_approve, zernio_profile_id")
     .eq("user_id", user?.id ?? "")
     .single();
 
@@ -19,11 +19,18 @@ export default async function SocialPage() {
     ? await getZernioAnalyticsSummary(profileId).catch(() => null)
     : null;
 
-  const postingPaused = Boolean(
-    client?.metadata && typeof client.metadata === "object"
-      ? (client.metadata as Record<string, unknown>).posting_paused
-      : false
-  );
+  // Pause flag lives in metadata, which may not exist on every deployment.
+  // Read it separately and default to "not paused" if the column is missing.
+  let postingPaused = false;
+  if (client) {
+    const { data: metaRow } = await supabase
+      .from("clients").select("metadata").eq("id", client.id).single();
+    postingPaused = Boolean(
+      metaRow?.metadata && typeof metaRow.metadata === "object"
+        ? (metaRow.metadata as Record<string, unknown>).posting_paused
+        : false
+    );
+  }
 
   const { data: posts } = await supabase
     .from("social_posts")

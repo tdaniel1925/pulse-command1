@@ -101,10 +101,11 @@ export async function generatePostForClient(
     const monthBatch = new Date().toISOString().slice(0, 7);
     const mode = opts?.mode ?? "auto";
 
-    // Step 1: Fetch client row
+    // Step 1: Fetch client row (no metadata here — that column may not exist on
+    // every deployment, and a missing column would 42703 the whole query).
     const { data: client, error: clientError } = await supabase
       .from("clients")
-      .select("id, business_name, website, brand_vibe, email, zernio_profile_id, auto_approve, metadata")
+      .select("id, business_name, website, brand_vibe, email, zernio_profile_id, auto_approve")
       .eq("id", clientId)
       .single();
 
@@ -112,11 +113,24 @@ export async function generatePostForClient(
       return { ok: false, error: clientError?.message ?? "Client not found" };
     }
 
-    // Respect the client's pause switch for automatic (cron) generation. On-demand
-    // generation (mode:'draft') is always allowed.
-    const meta = (client.metadata && typeof client.metadata === "object" ? client.metadata : {}) as Record<string, unknown>;
-    if (mode === "auto" && meta.posting_paused === true) {
-      return { ok: false, error: "Posting is paused for this client." };
+    // Respect the client's pause switch for automatic (cron) generation. Read
+    // metadata separately and tolerate its absence — if the column doesn't exist
+    // yet, we simply treat the client as not paused. On-demand (mode:'draft') is
+    // always allowed regardless.
+    if (mode === "auto") {
+      try {
+        const { data: metaRow } = await supabase
+          .from("clients")
+          .select("metadata")
+          .eq("id", clientId)
+          .single();
+        const meta = (metaRow?.metadata && typeof metaRow.metadata === "object" ? metaRow.metadata : {}) as Record<string, unknown>;
+        if (meta.posting_paused === true) {
+          return { ok: false, error: "Posting is paused for this client." };
+        }
+      } catch {
+        // metadata column missing → treat as not paused
+      }
     }
 
     // Step 2: Fetch brand profile
